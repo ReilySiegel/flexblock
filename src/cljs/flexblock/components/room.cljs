@@ -171,5 +171,5 @@
                                     (:name (rm/get-teacher %))))
                     (sort-by #(rm/search @(rf/subscribe [:search]) %))
                     (map card)))
-              (doall (map attendance/attendance @rooms))]]
+              (doall (map attendance/modal @rooms))]]
             [:div.grid-room])))})))

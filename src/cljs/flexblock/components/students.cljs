@@ -29,7 +29,7 @@
                                        :flex   "FlexBlock"} "") " "
               (:date room))]])
 
-(defn- modal
+(defn modal
   "The bottom sheet modal that shows a list of students."
   [user]
   (r/create-class
@@ -52,15 +52,6 @@
                                  reverse))]
               [:h6.amber-text.center
                "This Student is not enrolled in any Sessions."])]]]]))}))
-
-(defn sessions
-  "A simple wrapper for `flexblock.components.students/modal`.
-  Because `flexblock.components.students/modal` uses
-  `react.core/create-class`, it cannot be used as a function in
-  map. This wrapper function allows for use in map by returning simple
-  hiccup."
-  [room]
-  [modal (assoc room :key (:id room))])
 
 (defn card
   "Creates a card with information about a `room`."
@@ -96,5 +87,5 @@
              (map card (->> students
                             (map #(update % :rooms rooms/get-flexblock-on-date date))
                             (filter #(empty? (:rooms %)))))))
-          (doall (map sessions students))]])
+          (doall (map modal students))]])
       [:div.grid-user])))

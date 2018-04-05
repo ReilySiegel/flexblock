@@ -18,7 +18,7 @@
    {:key (:id user)}
    [:div (:name user)]])
 
-(defn- modal
+(defn modal
   "The bottom sheet modal that shows a list of students."
   [room]
   (let [students (rm/get-students room)]
@@ -31,12 +31,3 @@
           [:ul.collection
            (map student students)]
           [:h6.amber-text.center "No students have joined yet."])]]]]))
-
-(defn attendance
-  "A simple wrapper for `flexblock.components.attendance/modal`.
-  Because `flexblock.components.attendance/modal` uses
-  `react.core/create-class`, it cannot be used as a function in
-  map. This wrapper function allows for use in map by returning simple
-  hiccup."
-  [room]
-  [modal (assoc room :key (:id room))])
