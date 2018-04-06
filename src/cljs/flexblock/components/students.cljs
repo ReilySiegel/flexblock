@@ -3,10 +3,8 @@
             [re-frame.core :as rf] 
             [flexblock.rooms :as rooms]
             [flexblock.users :as user]
-            [flexblock.components.search :as search]))
-
-(defn- get-id [user]
-  (str "sessionmodal" (:id user)))
+            [flexblock.components.search :as search]
+            [flexblock.components.modal :as modal]))
 
 (defn- buttons
   "Returns the appropriate actions that a user can take on a `room`."
@@ -15,7 +13,9 @@
         user]
     [:div.card-action 
      [:a.btn-flat.amber-text.waves-effect.waves-purple.modal-trigger
-      {:href (str "#" (get-id user))} "Sessions"]]))
+      {:href (str "#sessionmodal" (:id user))} "Sessions"]
+     [:a.btn-flat.amber-text.waves-effect.waves-purple.modal-trigger
+      {:href (str "#passwordmodal" (:id user))}]]))
 
 (defn- session
   "One session in :rooms list."
@@ -29,29 +29,27 @@
                                        :flex   "FlexBlock"} "") " "
               (:date room))]])
 
+(defn password-modal
+  "Shows a modal that allows a teacher to change the password of `user`."
+  [user])
+
 (defn modal
   "The bottom sheet modal that shows a list of students."
   [user]
-  (r/create-class
-   {:component-did-mount #(let [id (str "#" (get-id user))
-                                e  (.querySelector js/document id)]
-                            (if e
-                              (.init js/M.Modal e)))
-    :reagent-render
-    (fn [user]
-      (let [sessions (:rooms user)]
-        [:div.modal.bottom-sheet {:id (get-id user)}
-         [:div.modal-content
-          [:h4.purple-text.text-lighten-3 "Sessions"]
-          [:div.row
-           [:div.col.l8.offset-l2.s12
-            (if (seq sessions)
-              [:ul.collection
-               (map session (->> sessions
-                                 (sort-by :date)
-                                 reverse))]
-              [:h6.amber-text.center
-               "This Student is not enrolled in any Sessions."])]]]]))}))
+  (let [sessions (:rooms user)]
+    ^{:key (:id user)}
+    [modal/bottom-sheet (str "sessionmodal" (:id user)) 
+     [:div.modal-content
+      [:h4.purple-text.text-lighten-3 "Sessions"]
+      [:div.row
+       [:div.col.l8.offset-l2.s12
+        (if (seq sessions)
+          [:ul.collection
+           (map session (->> sessions
+                             (sort-by :date)
+                             reverse))]
+          [:h6.amber-text.center
+           "This Student is not enrolled in any Sessions."])]]]]))
 
 (defn card
   "Creates a card with information about a `room`."
