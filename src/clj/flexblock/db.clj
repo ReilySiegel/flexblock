@@ -176,6 +176,9 @@
       "Only a student's password can be set"
 
       :else
-      (update users
-              (set-fields {:passwordhash (h/derive password)})
-              (where {:id (:id user)})))))
+      (do (update users
+                  (set-fields {:passwordhash (h/derive password)})
+                  (where {:id (:id user)}))
+          (a/put! n/notifier {:event     :user/set-password
+                              :recipient user
+                              :user      setter})))))
