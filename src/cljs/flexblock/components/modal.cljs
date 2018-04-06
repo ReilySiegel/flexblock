@@ -10,7 +10,7 @@
    {:component-did-mount #(let [e (.getElementById js/document id)]
                             (.init js/M.Modal e)) 
     :reagent-render
-    (fn []
+    (fn [id class children]
       (into [:div.modal {:id         id
                          :class-name class}]
             children))}))
