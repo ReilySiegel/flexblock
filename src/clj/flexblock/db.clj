@@ -160,3 +160,22 @@
       (-> user (dissoc :passwordhash))
       false)
     false))
+
+
+(defn set-password [password user-id setter-id]
+  (let [user   (get-user user-id)
+        setter (get-user setter-id)]
+    (cond
+      (not (and user setter))
+      "The user could not be found."
+      
+      (not (:teacher setter))
+      "Only a teacher can set a password"
+
+      (:teacher user)
+      "Only a student's password can be set"
+
+      :else
+      (update users
+              (set-fields {:passwordhash (h/derive password)})
+              (where {:id (:id user)})))))
