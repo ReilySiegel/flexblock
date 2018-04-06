@@ -1,6 +1,6 @@
 (ns flexblock.routes.home
   (:require [flexblock.layout :as layout]
-            [compojure.core :refer [defroutes GET POST DELETE]]
+            [compojure.core :refer [defroutes GET POST PATCH DELETE]]
             [ring.util.http-response :as response]
             [clojure.java.io :as io]
             [clj-time.core :as time]
@@ -74,6 +74,18 @@
         (response/internal-server-error {:message delete})
         (response/ok)))))
 
+(defn update-password [request]
+  (if-not (authenticated? request)
+    (response/unauthorized)
+    (let [{:keys [user-id password]} (:params request)
+          delete                     (db/set-password
+                                      password
+                                      user-id
+                                      (get-in request [:identity :id]))]
+      (if (string? delete)
+        (response/internal-server-error {:message delete})
+        (response/ok)))))
+
 (defroutes home-routes
   (GET "/" [] home-page)
   (POST "/login" [] login)
@@ -82,4 +94,5 @@
   (POST "/rooms" [] post-rooms)
   (DELETE "/rooms" [] delete-rooms)
   (POST "/rooms/join" [] join-rooms)
-  (POST "/rooms/leave" [] leave-rooms))
+  (POST "/rooms/leave" [] leave-rooms)
+  (PATCH "/user/password" [] update-password))

@@ -1,6 +1,10 @@
 (ns flexblock.pages.students
-  (:require [flexblock.components.students :as students]))
+  (:require [flexblock.components.students :as students]
+            [flexblock.components.emailer :as emailer]))
 
 (defn page
   []
-  [students/grid])
+  [:div
+   [emailer/fab]
+   [emailer/modal]
+   [students/grid]])

@@ -3,8 +3,10 @@
             [re-frame.core :as rf] 
             [flexblock.rooms :as rooms]
             [flexblock.users :as user]
+            [flexblock.utils :as u]
             [flexblock.components.search :as search]
-            [flexblock.components.modal :as modal]))
+            [flexblock.components.modal :as modal]
+            [flexblock.components.input :as input]))
 
 (defn- buttons
   "Returns the appropriate actions that a user can take on a `room`."
@@ -15,7 +17,7 @@
      [:a.btn-flat.amber-text.waves-effect.waves-purple.modal-trigger
       {:href (str "#sessionmodal" (:id user))} "Sessions"]
      [:a.btn-flat.amber-text.waves-effect.waves-purple.modal-trigger
-      {:href (str "#passwordmodal" (:id user))}]]))
+      {:href (str "#passwordmodal" (:id user))} "Reset Password"]]))
 
 (defn- session
   "One session in :rooms list."
@@ -31,7 +33,23 @@
 
 (defn password-modal
   "Shows a modal that allows a teacher to change the password of `user`."
-  [user])
+  [user]
+  ^{:key (:id user)}
+  [modal/standard (str "passwordmodal" (:id user))
+   [:div.modal-content
+    [:h4.center.purple-text.text-lighten-3
+     (str "Reset Password for " (:name user))]
+    [:div.row [:div.col.l6.offset-l3.m12
+               [input/input-rf-dispatch
+                {:type        :password
+                 :placeholder "New Password"}
+                "Password"
+                :set-reset-password
+                :reset-password]]]]
+   [:div.modal-footer
+    [:a.btn-flat.amber-text.waves-effect.waves-purple
+     {:on-click #(u/set-password (:id user))}
+     "Reset Password"]]])
 
 (defn modal
   "The bottom sheet modal that shows a list of students."
@@ -85,5 +103,6 @@
              (map card (->> students
                             (map #(update % :rooms rooms/get-flexblock-on-date date))
                             (filter #(empty? (:rooms %)))))))
-          (doall (map modal students))]])
+          (doall (map modal students))
+          (doall (map password-modal students))]])
       [:div.grid-user])))

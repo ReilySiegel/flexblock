@@ -1,6 +1,6 @@
 (ns flexblock.utils
   (:require [re-frame.core :as rf]
-            [ajax.core :refer [GET POST DELETE]]
+            [ajax.core :refer [GET POST PATCH DELETE]]
             [flexblock.components.input :as input]))
 
 (defn open-modal [query-selector]
@@ -95,3 +95,14 @@
                             (.toast js/M (clj->js {:html "Your room has been deleted."}))
                             (get-rooms))
            :error-handler default-error-handler}))
+
+(defn set-password [user-id]
+  (PATCH "user/password"
+         {:params        {:user-id  user-id
+                          :password @(rf/subscribe [:reset-password])}
+          :headers       {"Authorization" (str "Token " @(rf/subscribe [:token]))}
+          :handler       (fn [_]
+                           (.toast js/M (clj->js {:html "Password Updated."}))
+                           (rf/dispatch-sync [:set-reset-password ""])
+                           (close-modal (str "#passwordmodal" user-id)))
+          :error-handler default-error-handler}))

@@ -108,6 +108,10 @@
  (fn [db [_ date]]
    (assoc db :date date)))
 
+(reg-event-db
+ :set-reset-password
+ (fn [db [_ reset-password]]
+   (assoc db :reset-password reset-password)))
 
 ;;subscriptions
 
@@ -195,3 +199,8 @@
  :date
  (fn [db _]
    (:date db)))
+
+(reg-sub
+ :reset-password
+ (fn [db _]
+   (:reset-password db)))
