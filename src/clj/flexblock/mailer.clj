@@ -1,12 +1,11 @@
-(ns flexblock.emailer
+(ns flexblock.mailer
   (:require
    [mount.core :as mount]
    [flexblock.config :refer [env]]
    [postal.core :as postal]))
 
-(mount/defstate mailer
-  :start (:smtp env))
-
+(mount/defstate settings
+  :start (:email env))
 
 (defn send [message] 
-  (postal/send-message mailer message))
+  (postal/send-message (:smtp settings) message))
