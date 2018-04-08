@@ -9,9 +9,9 @@
             [flexblock.config :refer [env]] 
             [mount.core :as mount]))
 
-(defdb db (postgres {:db       (get (System/getenv) "db__db")
-                     :user     (get (System/getenv) "db__user")
-                     :password (get (System/getenv) "db__password")}))
+(mount/defstate db
+  :start (default-connection
+          (create-db (get-in env [:db :connection]))))
 
 (declare rooms)
 
