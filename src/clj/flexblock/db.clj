@@ -10,8 +10,11 @@
             [mount.core :as mount]))
 
 (mount/defstate db
-  :start (default-connection
-          (create-db (get-in env [:db :connection]))))
+  :start (let [db-info (get-in env [:db :connection])]
+           (if db-info
+             (default-connection (create-db db-info))
+             (throw (Exception. "Invalid DB info.")))
+           db-info))
 
 (declare rooms)
 
