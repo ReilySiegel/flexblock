@@ -41,6 +41,6 @@ export DB__CONNECTION__PASSWORD="password"
 
 ## Development
 
-During development, either a `dev-config.edn` file can be used to
-store configuration. This file should **NOT** be checked in to git, as
-it will contain sensitive information, such as database connections.
+During development, a `dev-config.edn` file can be used to store
+configuration. This file should **NOT** be checked in to git, as it
+will contain sensitive information, such as database connections.
