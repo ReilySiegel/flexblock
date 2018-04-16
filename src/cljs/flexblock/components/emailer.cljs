@@ -2,7 +2,7 @@
   (:require
    [clojure.string :as str]
    [flexblock.components.modal :as modal]
-   [flexblock.rooms :as rooms]
+   [flexblock.users :as users]
    [re-frame.core :as rf]))
 
 (defn fab
@@ -22,16 +22,15 @@
   "The modal to display the emailer."
   [] 
   (let [users    (rf/subscribe [:users])
+        date     (rf/subscribe [:date])
         students (->> @users
                       (remove :teacher)
-                      (map #(update % :rooms rooms/get-flexblock-on-date
-                                    @(rf/subscribe [:date])))
-                      (filter #(empty? (:rooms %)))
+                      (remove #(users/flexblock-on-date? % @date))
                       (sort-by :name))] 
     [modal/fixed-footer "emailermodal"
      [:div.modal-content
       [:h4.center.purple-text.text-lighten-3 "Emailer"] 
-      (if (str/blank? @(rf/subscribe [:date]))
+      (if (str/blank? @date)
         [:h6.amber-text
          "No Date Selected"]
         (if (zero? (count students))

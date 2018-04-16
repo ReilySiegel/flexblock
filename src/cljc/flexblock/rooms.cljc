@@ -34,13 +34,3 @@
                 (+ (search/search-string search (:description room))
                    (search/search-string search (:title room))
                    (search/search-string search (:name (get-teacher room))))))))
-
-(defn get-flexblock-on-date
-  "Takes a seq of `rooms`. Returns only rooms on `date` that are :flex
-  rooms."
-  [rooms date]
-  (let [filter-fn #(and
-                    (= "flex" (:time %))
-                    (= date (:date %)))]    
-    (->> rooms
-         (filter filter-fn))))

@@ -100,9 +100,8 @@
           (doall
            (if (empty? date)
              (map card students)
-             (map card (->> students
-                            (map #(update % :rooms rooms/get-flexblock-on-date date))
-                            (filter #(empty? (:rooms %)))))))
+             (map card
+                  (remove #(user/flexblock-on-date? % date) students))))
           (doall (map modal students))
           (doall (map password-modal students))]])
       [:div.grid-user])))
