@@ -45,6 +45,13 @@
        (format "Your password for FlexBlock has been reset by %s."
                (get-in event [:user :name]))))
 
+(defmethod message :user/unenrolled [event]
+  (str (format "Hello %s,\n"
+               (get-in event [:recipient :name]))
+       (format "You are currently not enrolled in a flexblock session on %s. "
+               (get event :date))
+       "Enrollment in a Flexblock session is mandatory."))
+
 (defmulti subject :event)
 
 (defmethod subject :default [_]
@@ -74,6 +81,9 @@
       (format "You have left %s's Session"
               (:name teacher)))))
 
+(defmethod subject :user/unenrolled [event]
+  (format "You have not enrolled in a Flexblock session on %s."
+          (get event :date)))
 
 (defn create-mail [event]
   {:from    (:from mailer/settings)

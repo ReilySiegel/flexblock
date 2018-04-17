@@ -1,6 +1,7 @@
 (ns flexblock.events
   (:require [flexblock.db :as db]
-            [re-frame.core :refer [dispatch reg-event-db reg-sub]]))
+            [ajax.core :as ajax]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-sub]]))
 
 ;;dispatchers
 
@@ -112,6 +113,16 @@
  :set-reset-password
  (fn [db [_ reset-password]]
    (assoc db :reset-password reset-password)))
+
+(reg-event-fx
+ :mailer/post-date
+ (fn [{:keys [db]} _]
+   {:http-xhrio {:method          :post
+                 :uri             "/user/flexblock"
+                 :headers         {"Authorization" (str "Token " (:token db))}
+                 :params          {:date (:date db)}
+                 :format          (ajax/json-request-format)
+                 :response-format (ajax/json-response-format {:keywords? true})}}))
 
 ;;subscriptions
 

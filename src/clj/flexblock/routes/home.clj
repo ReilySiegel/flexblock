@@ -6,7 +6,10 @@
             [clj-time.core :as time]
             [flexblock.middleware :as m]
             [buddy.auth :refer [authenticated? throw-unauthorized]]
-            [flexblock.db :as db]))
+            [flexblock.db :as db]
+            [flexblock.users :as users]
+            [clojure.core.async :as async]
+            [flexblock.notifier :as notifier]))
 
 (defn home-page [request]
   (layout/render "home.html"))
@@ -86,6 +89,22 @@
         (response/internal-server-error {:message delete})
         (response/ok)))))
 
+(defn flexblock-date-mailer [request]
+  (if-not (and (authenticated? request)
+               (get-in request [:identity :teacher]))
+    (response/unauthorized)
+    (let [users    (db/get-users)
+          date     (get-in request [:params :date])
+          students (->> users
+                        (remove :teacher)
+                        (remove #(users/flexblock-on-date? % date)))]
+      (doseq [student students]
+        (async/put! notifier/notifier
+                    {:event     :user/unenrolled
+                     :recipient student
+                     :date      date}))
+      (response/ok))))
+
 (defroutes home-routes
   (GET "/" [] home-page)
   (POST "/login" [] login)
@@ -95,4 +114,5 @@
   (DELETE "/rooms" [] delete-rooms)
   (POST "/rooms/join" [] join-rooms)
   (POST "/rooms/leave" [] leave-rooms)
-  (PATCH "/user/password" [] update-password))
+  (PATCH "/user/password" [] update-password)
+  (POST "/user/flexblock" [] flexblock-date-mailer))

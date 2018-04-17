@@ -6,7 +6,7 @@
             [goog.history.EventType :as HistoryEventType] 
             [ajax.core :refer [GET POST]]
             [flexblock.ajax :refer [load-interceptors!]]
-            [flexblock.events] 
+            [day8.re-frame.http-fx]
             [flexblock.utils :as u] 
             [flexblock.components.login :as login]
             [flexblock.pages.rooms :as rooms]

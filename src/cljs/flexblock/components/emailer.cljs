@@ -45,5 +45,6 @@
                                 (interpose ", ")))]]]))]
      [:div.modal-footer
       [:a.btn-flat.amber-text.waves-effect.waves-purple
-       {:disabled (zero? (count students))}
+       {:disabled (zero? (count students))
+        :on-click #(rf/dispatch [:mailer/post-date])}
        "Send Mail"]]]))
