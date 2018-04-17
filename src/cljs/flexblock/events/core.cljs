@@ -1,14 +1,17 @@
 (ns flexblock.events
   (:require [flexblock.db :as db]
+            [day8.re-frame.http-fx]
             [ajax.core :as ajax]
-            [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-sub]]))
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-sub]]
+            [flexblock.events.http]
+            [flexblock.events.mailer]))
 
 ;;dispatchers
 
 (reg-event-db
-  :initialize-db
-  (fn [_ _]
-    db/default-db))
+ :initialize-db
+ (fn [_ _]
+   db/default-db))
 
 (reg-event-db
   :set-active-page
@@ -115,14 +118,9 @@
    (assoc db :reset-password reset-password)))
 
 (reg-event-fx
- :mailer/post-date
- (fn [{:keys [db]} _]
-   {:http-xhrio {:method          :post
-                 :uri             "/user/flexblock"
-                 :headers         {"Authorization" (str "Token " (:token db))}
-                 :params          {:date (:date db)}
-                 :format          (ajax/json-request-format)
-                 :response-format (ajax/json-response-format {:keywords? true})}}))
+ :notification
+ (fn [_ [_ message]]
+   {:notification message}))
 
 ;;subscriptions
 
