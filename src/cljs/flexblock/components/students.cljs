@@ -6,7 +6,8 @@
             [flexblock.utils :as u]
             [flexblock.components.search :as search]
             [flexblock.components.modal :as modal]
-            [flexblock.components.input :as input]))
+            [flexblock.components.input :as input]
+            [flexblock.components.password :as password]))
 
 (defn- buttons
   "Returns the appropriate actions that a user can take on a `room`."
@@ -30,26 +31,6 @@
                                        :after  "After School"
                                        :flex   "FlexBlock"} "") " "
               (.toDateString (:date room)))]])
-
-(defn password-modal
-  "Shows a modal that allows a teacher to change the password of `user`."
-  [user]
-  ^{:key (:id user)}
-  [modal/standard (str "passwordmodal" (:id user))
-   [:div.modal-content
-    [:h4.center.purple-text.text-lighten-3
-     (str "Reset Password for " (:name user))]
-    [:div.row [:div.col.l6.offset-l3.m12
-               [input/input-rf-dispatch
-                {:type        :password
-                 :placeholder "New Password"}
-                "Password"
-                :set-reset-password
-                :reset-password]]]]
-   [:div.modal-footer
-    [:a.btn-flat.amber-text.waves-effect.waves-purple
-     {:on-click #(u/set-password (:id user))}
-     "Reset Password"]]])
 
 (defn modal
   "The bottom sheet modal that shows a list of students."
@@ -103,5 +84,5 @@
              (map card
                   (remove #(user/flexblock-on-date? % date) students))))
           (doall (map modal students))
-          (doall (map password-modal students))]])
+          (doall (map password/modal students))]])
       [:div.grid-user])))

@@ -4,7 +4,7 @@
   {:title       ""
    :max-cap     0
    :description ""
-   :date        ""
+   :date        nil
    :time        ""
    :room-number 0})
 
@@ -18,6 +18,6 @@
    :users          []
    :loading        0
    :search         ""
-   :date           ""
+   :date           nil
    :reset-password ""
    :add-room       room-db})

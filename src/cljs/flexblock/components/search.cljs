@@ -17,4 +17,5 @@
   [:div.row
    [:div.col.l4.m12.offset-l4
     [input/datepicker
-     {:dispatch-key :set-date}]]])
+     {:dispatch-key  :set-date
+      :subscribe-key :date}]]])

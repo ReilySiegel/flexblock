@@ -167,17 +167,20 @@
 
 
 (defn set-password [password user-id setter-id]
-  (let [user   (get-user user-id)
-        setter (get-user setter-id)]
+  (let [user          (get-user user-id)
+        setter        (get-user setter-id)
+        setting-self? (= user setter)]
     (cond
       (not (and user setter))
       "The user could not be found."
       
-      (not (:teacher setter))
-      "Only a teacher can set a password"
+      (and (not setting-self?)
+           (not (:teacher setter)))
+      "Only a teacher can set another user's password."
 
-      (:teacher user)
-      "Only a student's password can be set"
+      (and (not setting-self?)
+           (:teacher user))
+      "Only a student's password can be set by a teacher."
 
       :else
       (do (update users

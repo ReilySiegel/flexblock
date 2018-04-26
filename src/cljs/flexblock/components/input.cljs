@@ -2,7 +2,9 @@
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
             [flexblock.validation :as v]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [goog.string :as gstring]
+            [goog.string.format]))
 
 (defn input-rf-dispatch
   ([opts label dispatch-key subscribe-key]
@@ -54,8 +56,9 @@
   gensym if excluded (a safe default). If you need to refer to the
   datepicker by #id, you must provide a UNIQUE identifier."
   [opts]
-  (let [{:keys [id dispatch-key]
-         :or   {id (str (gensym "datepicker"))}}
+  (let [{:keys [id dispatch-key subscribe-key placeholder]
+         :or   {id          (str (gensym "datepicker"))
+                placeholder "Date"}}
         opts
         datepicker-el (atom nil)]
     (r/create-class
@@ -77,7 +80,17 @@
       :reagent-render
       (fn [opts]
         [:input.datepicker
-         {:id id}])})))
+         (-> {:id          id
+              :placeholder placeholder} 
+             (merge
+              (when subscribe-key
+                (when-let [date @(rf/subscribe [subscribe-key])]
+                  (when-not (nil? date)
+                    (println date)
+                    {:default-value (->> (str/split (.toDateString date) #" ")
+                                         rest 
+                                         (apply gstring/format
+                                                "%s %s, %s"))})))))])})))
 
 (defn clear-selector [selector]
   (when-let [e (array-seq (.querySelectorAll js/document selector))] 
