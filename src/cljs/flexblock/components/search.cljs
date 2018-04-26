@@ -16,10 +16,5 @@
 (defn date-bar [] 
   [:div.row
    [:div.col.l4.m12.offset-l4
-    [input/input-rf-dispatch
-     {:placeholder "Date YYYY/MM/DD"}
-     "Date"
-     :set-date
-     :date
-     false
-     true]]])
+    [input/datepicker
+     {:dispatch-key :set-date}]]])

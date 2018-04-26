@@ -64,7 +64,8 @@
      (let [room-id (:id (insert rooms
                                 (values {:title        title
                                          :description  description
-                                         :date         date
+                                         :date         (java.sql.Date.
+                                                        (inst-ms date))
                                          :time         time
                                          :room_number  room-number
                                          :max_capacity max-capacity})))]

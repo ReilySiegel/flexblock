@@ -1,3 +1,4 @@
+
 (ns flexblock.components.room
   "Render functions for elements related to showing rooms."
   (:require
@@ -10,21 +11,19 @@
    [flexblock.components.input :as input :refer [input-rf-dispatch]]
    [flexblock.components.attendance :as attendance]
    [flexblock.components.modal :as modal]
-   [flexblock.components.search :as search]))
-
+   [flexblock.components.search :as search])
+  (:import goog.date.Date))
 
 (defn form
   "The form for creating a new room."
-  []
+  [] 
   (r/create-class
-   {:component-did-mount (fn []
-                           (.init js/M.CharacterCounter
-                                  (.querySelectorAll js/document ".charcount"))
-                           (.init js/M.Select
-                                  (.querySelectorAll js/document "select"))
-                           (.init js/M.Datepicker
-                                  (.querySelectorAll js/document ".datepicker")
-                                  (clj->js {})))
+   {:component-did-mount
+    (fn []
+      (.init js/M.CharacterCounter
+             (.querySelectorAll js/document ".charcount"))
+      (.init js/M.Select
+             (.querySelectorAll js/document "select")))
     :reagent-render
     (fn []
       [:div.row
@@ -49,13 +48,13 @@
          {:placeholder "Description" 
           :class-name  "charcount room-form"
           :data-length 250} "Description" :add-room/set-description :room/description true]]
+
        [:div.col.m6.s12
-        [input-rf-dispatch
-         {:placeholder "Date: YYYY/MM/DD"
-          :class-name  "room-form"}
-         "Date"
-         :add-room/set-date
-         :room/date true]]
+        [:div.input-field
+         ;; Styles defined in resources/public/css/styles.css, options
+         ;; defined above.
+         [input/datepicker {:dispatch-key :add-room/set-date}]]]
+       
        [:div.input-field.col.l6.m12
         [:select
          {:on-change     #(rf/dispatch [:add-room/set-time (-> % .-target .-value)])
@@ -123,7 +122,7 @@
       [:div.card-content
        [:span.card-title.truncate title]
        [:h6.truncate (or (->> users (filter :teacher) first :name) "")]
-       [:span date]
+       [:span (.toDateString date)]
        [:p ((keyword time) {:before "Before School"
                             :after  "After School"
                             :flex   "FlexBlock"} "")] 
@@ -155,8 +154,8 @@
                  (clj->js {:itemSelector    ".grid-item"
                            :horizontalOrder true})))]      
     (r/create-class
-     {:component-did-mount  layout 
-      :component-did-update layout 
+     {:component-did-mount  layout
+      :component-did-update layout
       :reagent-render
       (fn []
         (let [rooms (rf/subscribe [:rooms])]

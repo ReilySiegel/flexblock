@@ -29,7 +29,7 @@
               ((keyword (:time room)) {:before "Before School"
                                        :after  "After School"
                                        :flex   "FlexBlock"} "") " "
-              (:date room))]])
+              (.toDateString (:date room)))]])
 
 (defn password-modal
   "Shows a modal that allows a teacher to change the password of `user`."
@@ -98,7 +98,7 @@
          [search/date-bar]
          [:div.row.grid-user
           (doall
-           (if (empty? date)
+           (if (nil? date)
              (map card students)
              (map card
                   (remove #(user/flexblock-on-date? % date) students))))
