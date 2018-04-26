@@ -13,6 +13,9 @@
 .datepicker-table  td.is-today {
     color: #9c27b0 !important;
 }
+.datepicker-table  td.is-today.is-selected {
+    color: #FFF !important;
+}
 
 .datepicker-day-button:focus {
     background-color: rgba(156, 39, 176, 0.25) !important;
