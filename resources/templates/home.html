@@ -31,9 +31,10 @@
     <!-- scripts and styles -->
     {% style "https://fonts.googleapis.com/icon?family=Material+Icons" %}
     {% style "https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-alpha.3/css/materialize.min.css" %}
-
+    {% style "css/screen.css" %}
+    
     {% script "https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-alpha.3/js/materialize.min.js" %}
-    {% script "https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js" %}    
+    {% script "https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js" %}
     <script type="text/javascript">
         var context = "{{servlet-context}}";
         var csrfToken = "{{csrf-token}}";

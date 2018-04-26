@@ -1,1 +1,23 @@
- 
+.datepicker-modal {
+    z-index: 9999 !important;
+}
+
+.datepicker-date-display {
+    background-color: #9c27b0 !important;
+}
+
+.datepicker-table  td.is-selected {
+    background-color: #9c27b0 !important;
+}
+
+.datepicker-table  td.is-today {
+    color: #9c27b0 !important;
+}
+
+.datepicker-day-button:focus {
+    background-color: rgba(156, 39, 176, 0.25) !important;
+}
+
+.month-next:focus, .month-prev:focus {
+    background-color: rgba(156, 39, 176, 0.25) !important;
+}

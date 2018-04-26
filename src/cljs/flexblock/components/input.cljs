@@ -46,6 +46,39 @@
            [:span.helper-text {:data-error (str error)}]
            #_[:label {:for id} label]])))})))
 
+
+
+(defn datepicker
+  "Returns a datepicker object.
+  Can take an optional argument `id`. `id` will be constructed from a
+  gensym if excluded (a safe default). If you need to refer to the
+  datepicker by #id, you must provide a UNIQUE identifier."
+  [opts]
+  (let [{:keys [id dispatch-key]
+         :or   {id (str (gensym "datepicker"))}}
+        opts
+        datepicker-el (atom nil)]
+    (r/create-class
+     {:display-name "datepicker"
+      :component-did-mount
+      (fn []
+        (reset! datepicker-el
+                (.init js/M.Datepicker
+                       (.getElementById js/document id)
+                       (-> {:container       "#app"
+                            :disableWeekends true
+                            :yearRange       1}
+                           (merge (when dispatch-key
+                                    {:onClose
+                                     #(rf/dispatch
+                                       [dispatch-key
+                                        (.-date @datepicker-el)])}))
+                           clj->js))))
+      :reagent-render
+      (fn [opts]
+        [:input.datepicker
+         {:id id}])})))
+
 (defn clear-selector [selector]
   (when-let [e (array-seq (.querySelectorAll js/document selector))] 
     (doall (map #(set! (.-value %) "") e))))
