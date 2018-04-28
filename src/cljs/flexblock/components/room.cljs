@@ -81,7 +81,7 @@
 (defn- buttons
   "Returns the appropriate actions that a user can take on a `room`."
   [room]
-  (let [{:keys [id title users description date room_number max_capacity]}
+  (let [{:keys [id title users description date room-number max-capacity]}
         room
         user          @(rf/subscribe [:user])
         user-in-room? ((->> users (map :id) (apply hash-set)) (:id user))]
@@ -115,7 +115,7 @@
 (defn card
   "Creates a card with information about a `room`."
   [room] 
-  (when-let [{:keys [id title users description date time room_number max_capacity]} room] 
+  (when-let [{:keys [id title users description date time room-number max-capacity]} room]
     [:div.col.s12.m6.l4.grid-item
      {:key id} 
      [:div.card.hoverable
@@ -126,8 +126,8 @@
        [:p ((keyword time) {:before "Before School"
                             :after  "After School"
                             :flex   "FlexBlock"} "")] 
-       [:p (str "Room: " room_number)]
-       [:p (str (->> users (remove :teacher) count) "/" max_capacity)]]
+       [:p (str "Room: " room-number)]
+       [:p (str (->> users (remove :teacher) count) "/" max-capacity)]]
       [:div.divider]
       [:div.card-content
        {:style {:overflow :hidden}}

@@ -2,7 +2,8 @@
   "Functions that interact with the database."
   (:require [korma.core :refer :all]
             [korma.db :refer :all]
-            [buddy.hashers :as h] 
+            [buddy.hashers :as h]
+            [clojure.string :as str]
             [clojure.core.async :as a]
             [flexblock.rooms :as r]
             [flexblock.notifier :as n]
@@ -10,7 +11,8 @@
             [mount.core :as mount]))
 
 (mount/defstate db
-  :start (let [db-info (get-in env [:db :connection])]
+  :start (let [db-info (merge (get-in env [:db :connection])
+                              {:naming {:keys #(str/replace % #"_" "-")}})]
            (if db-info
              (default-connection (create-db db-info))
              (throw (Exception. "Invalid DB info.")))
@@ -111,7 +113,7 @@
        "You are already in this room."
 
        (>= joined
-           (:max_capacity room))
+           (:max-capacity room))
        "This room is full."
 
        :else

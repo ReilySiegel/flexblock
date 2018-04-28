@@ -1,7 +1,23 @@
 (ns flexblock.rooms
   "Contains functions for operating on rooms."
   (:require [flexblock.search :as search]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.spec.alpha :as s]))
+
+(s/def ::title (s/and string?
+                      #(not (empty? %))
+                      #(<= (count %) 50)))
+(s/def ::description (s/and string?
+                            #(not (empty? %))
+                            #(<= (count %) 250)))
+(s/def ::date inst?)
+(s/def ::room-number pos-int?)
+(s/def ::max-capacity pos-int?)
+(s/def ::room (s/keys :req-un [::title
+                               ::description
+                               ::date
+                               ::room-number
+                               ::max-capacity]))
 
 (defn get-teacher
   "Given a `room`, returns the teacher."
