@@ -6,49 +6,35 @@
             [goog.string :as gstring]
             [goog.string.format]))
 
-(defn input-rf-dispatch
-  ([opts label dispatch-key subscribe-key]
-   (input-rf-dispatch opts label dispatch-key subscribe-key false false))
-  ([opts label dispatch-key subscribe-key validate]
-   (input-rf-dispatch opts label dispatch-key subscribe-key validate false))
-  ([opts label dispatch-key subscribe-key validate on-change]
-   (r/create-class
-    {:component-did-mount #(.updateTextFields js/M)
-     :reagent-render
-     (fn
-       render
-       ([opts label dispatch-key subscribe-key]
-        (render opts label dispatch-key subscribe-key false false)) 
-       ([opts label dispatch-key subscribe-key validate]
-        (render opts label dispatch-key subscribe-key validate false))
-       ([opts label dispatch-key subscribe-key validate on-change] 
-        (let [id          (str (gensym "formid"))
-              val         @(rf/subscribe [subscribe-key])
-              error       (when validate
-                            (v/get-error-message subscribe-key val v/errors))
-              show-error? (not (or (str/blank? val)
-                                   (not validate)
-                                   (nil? val)
-                                   (zero? val)))]
-          [:div.input-field
-           [(if (:textarea opts) :textarea :input)
-            (-> opts
-                (dissoc :textarea)
-                (assoc :id id)
-                (assoc :default-value (str val))
-                (update :class-name str (if show-error?
-                                          " validate"))
-                (update :class-name str (if show-error?
-                                          (if error
-                                            " invalid")) )
-                (assoc (if on-change :on-change :on-blur)
-                       #(rf/dispatch
-                         [dispatch-key
-                          (-> % .-target .-value)])))]
-           [:span.helper-text {:data-error (str error)}]
-           #_[:label {:for id} label]])))})))
+(defn text
+  [{:keys [id placeholder class-name type
+           dispatch-key subscribe-key
+           on-change? validate? textarea?]
+    :or   {id (str (gensym "formid"))}}]
+  (let [val         (when subscribe-key (rf/subscribe [subscribe-key]))
+        val-empty?  (or (str/blank? @val) 
+                        (nil? @val)
+                        (zero? @val))
+        error       (when validate? (v/get-error-message subscribe-key @val v/errors))
+        show-error? (not (or validate?
+                             val-empty?))]
+    [:div.input-field
+     [(if textarea? :textarea :input)
+      {:id             id
+       (if type :type) type
+       :default-value  (str @val)
+       :placeholder    placeholder
 
-
+       :class-name (str class-name 
+                        (if show-error?
+                          (if error
+                            " validate invalid"
+                            " validate")))
+       (when dispatch-key
+         (if on-change? :on-change :on-blur))
+       #(rf/dispatch
+         [dispatch-key (-> % .-target .-value)])}]
+     [:span.helper-text {:data-error (str error)}]]))
 
 (defn datepicker
   "Returns a datepicker object.

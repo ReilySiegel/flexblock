@@ -8,7 +8,7 @@
    [flexblock.rooms :as room]
    [flexblock.utils :as u]
    [flexblock.rooms :as rm]
-   [flexblock.components.input :as input :refer [input-rf-dispatch]]
+   [flexblock.components.input :as input]
    [flexblock.components.attendance :as attendance]
    [flexblock.components.modal :as modal]
    [flexblock.components.search :as search])
@@ -28,26 +28,31 @@
     (fn []
       [:div.row
        [:div.col.s12
-        [input-rf-dispatch
-         {:placeholder "Title"
-          :class-name  "charcount room-form"
-          :data-length 50} "Title" :add-room/set-title :room/title true]]
+        [input/text
+         {:placeholder   "Title"
+          :class-name    "room-form" 
+          :dispatch-key  :add-room/set-title
+          :subscribe-key :room/title}]]
        [:div.col.l6.m12
-        [input-rf-dispatch
-         {:placeholder "Room Number"
-          :class-name  "room-form"
-          :type        :number} "Room Number" :add-room/set-room-number :room/number]]
+        [input/text
+         {:placeholder   "Room Number"
+          :class-name    "room-form"
+          :type          :number
+          :dispatch-key  :add-room/set-room-number
+          :subscribe-key :room/number}]]
        [:div.col.l6.m12
-        [input-rf-dispatch
-         {:placeholder "Max Capacity"
-          :class-name  "room-form"
-          :type        :number}
-         "Max Capacity" :add-room/set-max-capacity :room/max-capacity]]
+        [input/text
+         {:placeholder   "Max Capacity"
+          :class-name    "room-form"
+          :type          :number
+          :dispatch-key  :add-room/set-max-capacity
+          :subscribe-key :room/max-capacity}]]
        [:div.col.s12
-        [input-rf-dispatch
-         {:placeholder "Description" 
-          :class-name  "charcount room-form"
-          :data-length 250} "Description" :add-room/set-description :room/description true]]
+        [input/text
+         {:placeholder   "Description" 
+          :class-name    "charcount room-form"
+          :dispatch-key  :add-room/set-description
+          :subscribe-key :room/description}]]
 
        [:div.col.m6.s12
         [:div.input-field

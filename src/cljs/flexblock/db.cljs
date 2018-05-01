@@ -2,11 +2,11 @@
 
 (def room-db
   {:title       ""
-   :max-cap     0
+   :max-cap     ""
    :description ""
    :date        nil
    :time        ""
-   :room-number 0})
+   :room-number ""})
 
 (def default-db
   {:page           :rooms

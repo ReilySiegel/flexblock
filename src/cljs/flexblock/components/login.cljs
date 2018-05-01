@@ -3,7 +3,7 @@
             [re-frame.core :as rf]
             [flexblock.utils :as u]
             [ajax.core :refer [POST]]
-            [flexblock.components.input :as input :refer [input-rf-dispatch]]
+            [flexblock.components.input :as input]
             [flexblock.components.modal :as modal]))
 
 (defn- submit-login []
@@ -27,17 +27,19 @@
     [:h4.center.purple-text.text-lighten-3 "Login"]
     [:div.row
      [:div.col.l6.m12
-      [input-rf-dispatch
-       {:placeholder "Username"
-        :type        :email
-        :class-name  "validate login-form"}
-       "Username" :login/set-username :login/username]]
+      [input/text
+       {:placeholder   "Username"
+        :type          :email
+        :class-name    "login-form"
+        :dispatch-key  :login/set-username
+        :subscribe-key :login/username}]]
      [:div.col.l6.m12
-      [input-rf-dispatch
-       {:placeholder "Password"
-        :class-name  "login-form"
-        :type        :password}
-       "Password" :login/set-password :login/password]]]] 
+      [input/text
+       {:placeholder   "Password"
+        :class-name    "login-form"
+        :type          :password
+        :dispatch-key  :login/set-password
+        :subscribe-key :login/password}]]]] 
    [:div.modal-footer 
     [:a.btn-flat.amber-text.darken-1.waves-effect.waves-purple
      {:on-click submit-login}

@@ -4,13 +4,11 @@
 (defn search-bar [] 
   [:div.row
    [:div.col.l6.m12.offset-l3
-    [input/input-rf-dispatch
-     {:placeholder "Search"}
-     "Search"
-     :set-search
-     :search
-     false
-     true]]])
+    [input/text
+     {:placeholder   "Search" 
+      :dispatch-key  :set-search
+      :sunscribe-key :search
+      :on-change?    true}]]])
 
 
 (defn date-bar [] 
