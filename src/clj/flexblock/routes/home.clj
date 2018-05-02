@@ -8,8 +8,11 @@
             [buddy.auth :refer [authenticated? throw-unauthorized]]
             [flexblock.db :as db]
             [flexblock.users :as users]
+            [flexblock.rooms :as rooms]
             [clojure.core.async :as async]
-            [flexblock.notifier :as notifier]))
+            [flexblock.notifier :as notifier]
+            [flexblock.validation]
+            [phrase.alpha :as phrase]))
 
 (defn home-page [request]
   (layout/render "home.html"))
@@ -36,17 +39,20 @@
 
 (defn post-rooms [request] 
   (if (authenticated? request)
-    (if-let [{:keys [title description date time room-number max-capacity]} (:params request)] 
-      (let [insert (db/insert-room! (get-in request [:identity :id])
-                                    title
-                                    description
-                                    date
-                                    time
-                                    room-number
-                                    max-capacity)] 
-        (if (string? insert)
-          (response/internal-server-error {:message insert})
-          (response/ok)))
+    (if-let [{:keys [title description date time room-number max-capacity]
+              :as   room} (:params request)] 
+      (if-let [error (phrase/phrase-first {} ::rooms/room room)]
+        (response/unprocessable-entity {:message error})
+        (let [insert (db/insert-room! (get-in request [:identity :id])
+                                      title
+                                      description
+                                      date
+                                      time
+                                      room-number
+                                      max-capacity)] 
+          (if (string? insert)
+            (response/internal-server-error {:message insert})
+            (response/ok))))
       (response/internal-server-error {:message "Invalid Request"}))
     (response/unauthorized)))
 

@@ -44,7 +44,8 @@
                  [clj-fuzzy "0.4.1"]
                  [criterium "0.4.4"]
                  [com.draines/postal "2.0.2"]
-                 [day8.re-frame/http-fx "0.1.6"]]
+                 [day8.re-frame/http-fx "0.1.6"]
+                 [phrase "0.3-SNAPSHOT"]]
 
   :min-lein-version "2.0.0"
   

@@ -1,40 +1,29 @@
+
 (ns flexblock.components.input
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
             [flexblock.validation :as v]
             [clojure.string :as str]
             [goog.string :as gstring]
-            [goog.string.format]))
+            [goog.string.format]
+            [phrase.alpha :as phrase]))
 
 (defn text
   [{:keys [id placeholder class-name type
            dispatch-key subscribe-key
-           on-change? validate? textarea?]
+           on-change? textarea?]
     :or   {id (str (gensym "formid"))}}]
-  (let [val         (when subscribe-key (rf/subscribe [subscribe-key]))
-        val-empty?  (or (str/blank? @val) 
-                        (nil? @val)
-                        (zero? @val))
-        error       (when validate? (v/get-error-message subscribe-key @val v/errors))
-        show-error? (not (or validate?
-                             val-empty?))]
+  (let [val (when subscribe-key @(rf/subscribe [subscribe-key]))]
     [:div.input-field
      [(if textarea? :textarea :input)
       {:id             id
        (if type :type) type
-       :default-value  (str @val)
+       :default-value  (str val)
        :placeholder    placeholder
-
-       :class-name (str class-name 
-                        (if show-error?
-                          (if error
-                            " validate invalid"
-                            " validate")))
        (when dispatch-key
          (if on-change? :on-change :on-blur))
        #(rf/dispatch
-         [dispatch-key (-> % .-target .-value)])}]
-     [:span.helper-text {:data-error (str error)}]]))
+         [dispatch-key (-> % .-target .-value)])}]]))
 
 (defn datepicker
   "Returns a datepicker object.

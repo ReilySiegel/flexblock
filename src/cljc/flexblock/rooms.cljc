@@ -5,17 +5,19 @@
             [clojure.spec.alpha :as s]))
 
 (s/def ::title (s/and string?
-                      #(not (empty? %))
-                      #(<= (count %) 50)))
+                      #(not (str/blank? %))
+                      #(>= 50 (count %))))
 (s/def ::description (s/and string?
-                            #(not (empty? %))
-                            #(<= (count %) 250)))
+                            #(not (str/blank? %))
+                            #(>= 250 (count %))))
 (s/def ::date inst?)
+(s/def ::time #(contains? (hash-set "after" "before" "flex") %))
 (s/def ::room-number pos-int?)
 (s/def ::max-capacity pos-int?)
 (s/def ::room (s/keys :req-un [::title
                                ::description
                                ::date
+                               ::time
                                ::room-number
                                ::max-capacity]))
 
