@@ -2,13 +2,16 @@
   "Functions that interact with the database."
   (:require [korma.core :refer :all]
             [korma.db :refer :all]
+            [honeysql.core :as sql]
             [buddy.hashers :as h]
             [clojure.string :as str]
             [clojure.core.async :as a]
             [flexblock.rooms :as r]
             [flexblock.notifier :as n]
             [flexblock.config :refer [env]] 
-            [mount.core :as mount]))
+            [mount.core :as mount]
+            [clojure.java.jdbc :as jdbc]
+            [clj-time.core :as time]))
 
 (mount/defstate db
   :start (let [db-info (merge (get-in env [:db :connection])
@@ -24,25 +27,53 @@
   (table :users_rooms))
 
 (defentity users
-  (entity-fields :id :name :email :teacher :advisor) 
+  (entity-fields :id :name :email :teacher :advisor_id)
   (many-to-many rooms :users_rooms))
 
 (defentity rooms
   (many-to-many users :users_rooms))
 
+(defn get-advisor [id]
+  (first (jdbc/query db (sql/format
+                         {:select [[:a.name :advisor]]
+                          :from   [[:users :u]]
+                          :join   [[:users :a] [:= :a.id :u.advisor_id]]
+                          :where  [:= :u.id 2]}))))
+
+(defn school-year []
+  (let [time  (time/now)
+        year  (time/year time)
+        month (time/month time)]
+    (if (>= month 7)
+      (inc year)
+      year)))
+
 (defn get-users
   "Get all users saved in the database."
   []
-  (select users
-          (with rooms
-                (with users
-                      (where {:teacher true})))))
+  (map #(merge % (get-advisor (:id %)))
+       (select users
+               (where (or {:class [= nil]}
+                          {:class [>= (school-year)]}))
+               (with rooms
+                     (with users
+                           (where {:teacher true}))))))
 
 (defn get-user
   "Get one user by `id`."
   [id]
   (first (select users
                  (where {:id id}))))
+
+(defn insert-user! [email password name teacher? admin? class advisor-id]
+  (insert users
+          (values {:email        email
+                   :passwordhash (h/derive password)
+                   :name         name
+                   :teacher      teacher?
+                   :admin        admin?
+                   :class        class
+                   :advisor_id   advisor-id})))
 
 (defn get-rooms
   "Get all rooms saved in the database."

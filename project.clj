@@ -45,7 +45,10 @@
                  [criterium "0.4.4"]
                  [com.draines/postal "2.0.2"]
                  [day8.re-frame/http-fx "0.1.6"]
-                 [phrase "0.3-SNAPSHOT"]]
+                 [phrase "0.3-SNAPSHOT"]
+                 [java-jdbc/dsl "0.1.3"]
+                 [honeysql "0.9.2"]
+                 [clj-time "0.14.3"]]
 
   :min-lein-version "2.0.0"
   

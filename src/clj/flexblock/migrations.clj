@@ -18,7 +18,9 @@
       [:passwordhash "character(98)" :not :null]
       [:email "varchar(50)" :unique :not :null]
       [:teacher :boolean :not :null]
-      [:advisor "varchar(50)"]])
+      [:admin :boolean :not :null]
+      [:advisor_id :integer :references "users(id)"]
+      [:class :integer]])
     (jdbc/create-table-ddl
      :rooms
      [[:id :bigserial :primary :key]
