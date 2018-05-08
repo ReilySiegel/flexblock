@@ -1,20 +1,22 @@
 (ns flexblock.components.students
-  (:require [reagent.core :as r]
-            [re-frame.core :as rf] 
-            [flexblock.rooms :as rooms]
-            [flexblock.users :as user]
-            [flexblock.utils :as u]
-            [flexblock.components.search :as search]
-            [flexblock.components.modal :as modal]
-            [flexblock.components.input :as input]
-            [flexblock.components.password :as password]))
+  (:require
+   [clojure.string :as str]
+   [reagent.core :as r]
+   [re-frame.core :as rf]
+   [flexblock.rooms :as rooms]
+   [flexblock.users :as user]
+   [flexblock.utils :as u]
+   [flexblock.components.search :as search]
+   [flexblock.components.modal :as modal]
+   [flexblock.components.input :as input]
+   [flexblock.components.password :as password]))
 
 (defn- buttons
   "Returns the appropriate actions that a user can take on a `room`."
   [user]
   (let [{:keys [id name rooms]}
         user]
-    [:div.card-action 
+    [:div.card-action
      [:a.btn-flat.amber-text.waves-effect.waves-purple.modal-trigger
       {:href (str "#sessionmodal" (:id user))} "Sessions"]
      [:a.btn-flat.amber-text.waves-effect.waves-purple.modal-trigger
@@ -22,7 +24,7 @@
 
 (defn- session
   "One session in :rooms list."
-  [room] 
+  [room]
   [:li.collection-item
    {:key (:id room)}
    [:div (str (:title room) "  - "
@@ -37,7 +39,7 @@
   [user]
   (let [sessions (:rooms user)]
     ^{:key (:id user)}
-    [modal/bottom-sheet (str "sessionmodal" (:id user)) 
+    [modal/bottom-sheet (str "sessionmodal" (:id user))
      [:div.modal-content
       [:h4.purple-text.text-lighten-3 "Sessions"]
       [:div.row
@@ -50,17 +52,89 @@
           [:h6.amber-text.center
            "This Student is not enrolled in any Sessions."])]]]]))
 
+(defn get-years [date]
+  (let [year  (.getFullYear date)
+        month (.getMonth date)]
+    (if (>= month 7)
+      (range (inc year) (+ 5 year))
+      (range year (+ 4 year)))))
+
+(defn add-user-form
+  "The form for creating a new user."
+  []
+  (r/create-class
+   {:component-did-mount
+    (fn []
+      (.init js/M.CharacterCounter
+             (.querySelectorAll js/document ".charcount"))
+      (.init js/M.Select
+             (.querySelectorAll js/document "select")))
+    :reagent-render
+    (fn []
+      [:div.row
+       [:div.col.s12
+        [input/text
+         {:placeholder   "Email"
+          :class-name    "user-form"
+          :dispatch-key  :add-user/set-email
+          :subscribe-key :add-user/email}]]
+       [:div.col.l6.m12
+        [input/text
+         {:placeholder   "Name"
+          :class-name    "user-form"
+          :dispatch-key  :add-user/set-name
+          :subscribe-key :add-user/name}]]
+
+       [:div.input-field.col.l6.m12
+        (into [:select
+               {:on-change     #(rf/dispatch
+                                 [:add-user/set-class
+                                  (-> %
+                                      .-target
+                                      .-value
+                                      js/parseInt)])
+                :default-value ""
+                :class-name    "user-form"}]
+              (conj (for [year (get-years (js/Date.))]
+                      ^{:key year} [:option {:value year} (str year)])
+                    [:option {:value    ""
+                              :disabled true} "Class"]))]])}))
+
+(defn add
+  "The modal that contains `flexblock.components.room/form`."
+  []
+  [modal/standard "add-user-modal"
+   [:div.modal-content
+    [:h4.center.purple-text.text-lighten-3 "Add Student"]
+    [add-user-form]]
+   [:div.modal-footer
+    [:a.btn-flat.amber-text.darken-1.waves-effect.waves-purple
+     {:on-click #(rf/dispatch [:user/post-user])}
+     "Submit"]]])
+
+(defn fab []
+  (when (and
+         (:teacher @(rf/subscribe [:user]))
+         (not (str/blank? @(rf/subscribe [:token]))))
+    [:div {:style {:position :fixed
+                   :right    24
+                   :bottom   24}}
+     [:a.btn-floating.btn-large.amber.hoverable.modal-trigger
+      {:href "#add-user-modal"}
+      [:i.large.material-icons "add"]]]))
+
+
 (defn card
   "Creates a card with information about a `room`."
   [user]
-  (when-let [{:keys [id name rooms]} user] 
+  (when-let [{:keys [id name rooms]} user]
     [:div.col.s12.m6.l4.grid-item
-     {:key id} 
+     {:key id}
      [:div.card.hoverable
       [:div.card-content
        [:span.card-title.truncate name]
        [:p (:advisor user)]]
-      [:div.divider] 
+      [:div.divider]
       [buttons user]]]))
 
 
@@ -72,8 +146,9 @@
       (let [date     @(rf/subscribe [:date])
             students (->> @users
                           (remove :teacher)
-                          (sort-by :name) 
-                          (sort-by #(user/search @(rf/subscribe [:search]) %)))]
+                          (sort-by :name)
+                          (sort-by #(user/search
+                                     @(rf/subscribe [:search]) %)))]
         [:div.container
          [search/search-bar]
          [search/date-bar]

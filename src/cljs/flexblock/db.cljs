@@ -8,6 +8,11 @@
    :time        ""
    :room-number ""})
 
+(def user-db
+  {:email ""
+   :name  ""
+   :class ""})
+
 (def default-db
   {:page           :rooms
    :token          ""
@@ -20,4 +25,5 @@
    :search         ""
    :date           nil
    :reset-password ""
-   :add-room       room-db})
+   :add-room       room-db
+   :add-user       user-db})

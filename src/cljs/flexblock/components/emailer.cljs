@@ -9,7 +9,7 @@
   "FAB to open emailer modal."
   [] 
   (when (and
-         (:teacher @(rf/subscribe [:user]))
+         (:admin @(rf/subscribe [:user]))
          (not (str/blank? @(rf/subscribe [:token]))))
     [:div {:style {:position :fixed
                    :right    24

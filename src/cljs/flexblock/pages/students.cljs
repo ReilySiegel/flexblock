@@ -7,4 +7,6 @@
   [:div
    [emailer/fab]
    [emailer/modal]
+   [students/fab]
+   [students/add]
    [students/grid]])

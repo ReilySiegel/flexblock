@@ -4,7 +4,8 @@
             [ajax.core :as ajax]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-sub]]
             [flexblock.events.http]
-            [flexblock.events.mailer]))
+            [flexblock.events.mailer]
+            [flexblock.events.students]))
 
 ;;dispatchers
 

@@ -65,15 +65,21 @@
   (first (select users
                  (where {:id id}))))
 
-(defn insert-user! [email password name teacher? admin? class advisor-id]
-  (insert users
-          (values {:email        email
-                   :passwordhash (h/derive password)
-                   :name         name
-                   :teacher      teacher?
-                   :admin        admin?
-                   :class        class
-                   :advisor_id   advisor-id})))
+(defn insert-user! [user-id email password name teacher? admin? class advisor-id]
+  (let [creator (get-user user-id)]
+    (if-not (some #(% creator) [:teacher :admin])
+      "Only teachers can add users."
+      (let [new-user (insert users
+                             (values {:email        email
+                                      :passwordhash (h/derive password)
+                                      :name         name
+                                      :teacher      teacher?
+                                      :admin        admin?
+                                      :class        class
+                                      :advisor_id   advisor-id}))]
+        (a/put! n/notifier {:event     :user/create
+                            :recipient new-user
+                            :password  password})))))
 
 (defn get-rooms
   "Get all rooms saved in the database."
@@ -91,7 +97,7 @@
 (defn insert-room!
   "Inserts a room into the database.
   Also adds an entry to users-rooms between the new room and its creator."
-  [creator-id title description date time room-number max-capacity] 
+  [creator-id title description date time room-number max-capacity]
   (transaction
    (if (:teacher (get-user creator-id))
      (let [room-id (:id (insert rooms
@@ -123,7 +129,7 @@
                    (where {:id room-id}))
            (doseq [recipient (:users room)]
              (a/put! n/notifier {:event     :room/delete
-                                 :recipient recipient 
+                                 :recipient recipient
                                  :room      room})))))))
 
 (defn join-room
@@ -132,13 +138,13 @@
   (transaction
    (let [room   (get-room room-id)
          joined (->> room :users (remove :teacher) count)
-         user   (get-user user-id)]     
+         user   (get-user user-id)]
      (cond
        (nil? room)
        "Room does not exist."
 
        (:teacher user)
-       "Teachers cannot join rooms." 
+       "Teachers cannot join rooms."
 
        (r/in-room? room user-id)
        "You are already in this room."
@@ -156,7 +162,7 @@
            (a/put! n/notifier {:event     :room/join
                                :recipient recipient
                                :user      user
-                               :room      room}))))))) 
+                               :room      room})))))))
 
 (defn leave-room
   "Removes a users-rooms relationship between `user-id` and `room-id`."
@@ -164,16 +170,16 @@
   (transaction
    (let [room   (get-room room-id)
          joined (->> room :users (remove :teacher) count)
-         user   (get-user user-id)]     
+         user   (get-user user-id)]
      (cond
        (nil? room)
        "Room does not exist."
 
        (:teacher user)
-       "Teachers cannot leave rooms." 
+       "Teachers cannot leave rooms."
 
        (not (r/in-room? room user-id))
-       "You are not in this room." 
+       "You are not in this room."
 
        :else
        (do
@@ -184,7 +190,7 @@
            (a/put! n/notifier {:event     :room/leave
                                :recipient recipient
                                :user      user
-                               :room      room}))))))) 
+                               :room      room})))))))
 
 (defn check-login
   "Checks if `password` is valid for a user with `email`."
@@ -205,7 +211,7 @@
         setting-self? (= user setter)]
     (cond
       (not (and user setter))
-      "The user could not be found."
+      "The user could not be found"
       
       (and (not setting-self?)
            (not (:teacher setter)))
