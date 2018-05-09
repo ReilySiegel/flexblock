@@ -10,13 +10,10 @@
   [] 
   (when (and
          (:admin @(rf/subscribe [:user]))
-         (not (str/blank? @(rf/subscribe [:token]))))
-    [:div {:style {:position :fixed
-                   :right    24
-                   :bottom   24}}
-     [:a.btn-floating.btn-large.amber.hoverable.modal-trigger
-      {:href "#emailermodal"}
-      [:i.large.material-icons "email"]]]))
+         (not (str/blank? @(rf/subscribe [:token])))) 
+    [:a.btn-flat.amber-text.modal-trigger
+     {:href "#emailermodal"}
+     "Reminder"]))
 
 (defn modal
   "The modal to display the emailer."

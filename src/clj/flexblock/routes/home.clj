@@ -60,7 +60,8 @@
   (if-not (authenticated? request)
     (response/unauthorized)
     (let [{:keys [room-id]} (:params request)
-          join              (db/join-room (get-in request [:identity :id]) room-id)]
+          join              (db/join-room
+                             (get-in request [:identity :id]) room-id)]
       (if (string? join)
         (response/internal-server-error {:message join})
         (response/ok)))))
@@ -116,7 +117,8 @@
 (defn post-users [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [{:keys [name email class password teacher? admin?]
+    (let [{:keys [name email class password teacher admin]
+           :as   user
            :or   {teacher? false
                   admin?   false
                   password (apply str
@@ -125,20 +127,23 @@
                                          #(char
                                            (+ (rand 26) (rand-nth
                                                          [97 65]))))))}}
-          (:params request)
-          result (try (db/insert-user! (get-in request [:identity :id])
-                                       email
-                                       password
-                                       name
-                                       teacher?
-                                       admin?
-                                       class
-                                       (get-in request [:identity :id]))
-                      (catch Throwable t
-                        (:cause (Throwable->map t))))]
-      (if (string? result)
-        (response/unprocessable-entity {:message result})
-        (response/ok)))))
+          (:params request)]
+      (if-let [error (phrase/phrase-first {} ::users/user user)]
+        (response/unprocessable-entity {:message error})
+        (let [result (try
+                       (db/insert-user! (get-in request [:identity :id])
+                                        email
+                                        password
+                                        name
+                                        teacher
+                                        admin
+                                        class
+                                        (get-in request [:identity :id]))
+                       (catch Throwable t
+                         (:cause (Throwable->map t))))]
+          (if (string? result)
+            (response/unprocessable-entity {:message result})
+            (response/ok)))))))
 
 (defroutes home-routes
   (GET "/" [] home-page)

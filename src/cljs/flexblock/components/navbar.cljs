@@ -19,23 +19,24 @@
                  [:a "Sessions"]])))
 
 (defn navbar []
-  (let [loading (rf/subscribe [:loading])]
+  (let [loading (rf/subscribe [:loading])
+        user    (rf/subscribe [:user])]
     [:divs
-     [password/modal @(rf/subscribe [:user]) {:id "reset-password-modal"}]
-     [:nav     
+     [password/modal @user {:id "reset-password-modal"}]
+     [:nav
       [:div.nav-wrapper.purple
-       [:a.brand-logo.center 
+       [:a.brand-logo.center
         {:on-click #(do (u/get-rooms)
                         (u/get-users))
          :style    {:cursor :pointer}}
         "FlexBlock"]
        [:ul.left
-        (if (:teacher @(rf/subscribe [:user]))
+        (if (some #(% @user) [:teacher :admin])
           [page-button])]
        [:ul.right
         (if (empty? @(rf/subscribe [:token]))
           [:li [:a.modal-trigger {:href "#login-modal"} "Login"]]
-          [:div 
+          [:div
            [:li [:a.modal-trigger {:href "#reset-password-modal"}
                  "Reset Password"]]
            [:li [:a {:on-click (fn [_]

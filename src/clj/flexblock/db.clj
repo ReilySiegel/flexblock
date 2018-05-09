@@ -8,7 +8,7 @@
             [clojure.core.async :as a]
             [flexblock.rooms :as r]
             [flexblock.notifier :as n]
-            [flexblock.config :refer [env]] 
+            [flexblock.config :refer [env]]
             [mount.core :as mount]
             [clojure.java.jdbc :as jdbc]
             [clj-time.core :as time]))
@@ -27,7 +27,7 @@
   (table :users_rooms))
 
 (defentity users
-  (entity-fields :id :name :email :teacher :advisor_id)
+  (entity-fields :id :name :email :teacher :advisor_id :admin)
   (many-to-many rooms :users_rooms))
 
 (defentity rooms
@@ -65,7 +65,8 @@
   (first (select users
                  (where {:id id}))))
 
-(defn insert-user! [user-id email password name teacher? admin? class advisor-id]
+(defn insert-user!
+  [user-id email password name teacher? admin? class advisor-id]
   (let [creator (get-user user-id)]
     (if-not (some #(% creator) [:teacher :admin])
       "Only teachers can add users."
@@ -212,7 +213,7 @@
     (cond
       (not (and user setter))
       "The user could not be found"
-      
+
       (and (not setting-self?)
            (not (:teacher setter)))
       "Only a teacher can set another user's password."

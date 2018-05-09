@@ -6,6 +6,7 @@
    [flexblock.rooms :as rooms]
    [flexblock.users :as user]
    [flexblock.utils :as u]
+   [flexblock.components.emailer :as emailer]
    [flexblock.components.search :as search]
    [flexblock.components.modal :as modal]
    [flexblock.components.input :as input]
@@ -85,27 +86,46 @@
           :dispatch-key  :add-user/set-name
           :subscribe-key :add-user/name}]]
 
-       [:div.input-field.col.l6.m12
-        (into [:select
-               {:on-change     #(rf/dispatch
-                                 [:add-user/set-class
-                                  (-> %
-                                      .-target
-                                      .-value
-                                      js/parseInt)])
-                :default-value ""
-                :class-name    "user-form"}]
-              (conj (for [year (get-years (js/Date.))]
-                      ^{:key year} [:option {:value year} (str year)])
-                    [:option {:value    ""
-                              :disabled true} "Class"]))]])}))
+       (if (:admin @(rf/subscribe [:user]))
+         [:div
+          [:div.input-field.col.l3.m6
+           [:label
+            [:input {:type      :checkbox
+                     :on-change #(rf/dispatch [:add-user/set-teacher
+                                               (-> %
+                                                   .-target
+                                                   .-checked)])}]
+            [:span "Teacher"]]]
+          [:div.input-field.col.l3.m6
+           [:label
+            [:input {:type      :checkbox
+                     :on-change #(rf/dispatch [:add-user/set-admin
+                                               (-> %
+                                                   .-target
+                                                   .-checked)])}]
+            [:span "Admin"]]]]
+         [:div.input-field.col.l6.m12
+          (into [:select
+                 {:on-change     #(rf/dispatch
+                                   [:add-user/set-class
+                                    (-> %
+                                        .-target
+                                        .-value
+                                        js/parseInt)])
+                  :default-value ""
+                  :class-name    "user-form"}]
+                (conj (for [year (get-years (js/Date.))]
+                        ^{:key year} [:option {:value year} (str year)])
+                      [:option {:value    ""
+                                :disabled true} "Class"]))])])}))
 
 (defn add
   "The modal that contains `flexblock.components.room/form`."
   []
   [modal/standard "add-user-modal"
    [:div.modal-content
-    [:h4.center.purple-text.text-lighten-3 "Add Student"]
+    [:h4.center.purple-text.text-lighten-3
+     (if (:admin @(rf/subscribe [:user])) "Add Teacher" "Add Student")]
     [add-user-form]]
    [:div.modal-footer
     [:a.btn-flat.amber-text.darken-1.waves-effect.waves-purple
@@ -114,7 +134,7 @@
 
 (defn fab []
   (when (and
-         (:teacher @(rf/subscribe [:user]))
+         (some #(% @(rf/subscribe [:user])) [:teacher :admin])
          (not (str/blank? @(rf/subscribe [:token]))))
     [:div {:style {:position :fixed
                    :right    24
@@ -143,12 +163,16 @@
   []
   (let [users (rf/subscribe [:users])]
     (if (seq @users)
-      (let [date     @(rf/subscribe [:date])
-            students (->> @users
-                          (remove :teacher)
-                          (sort-by :name)
-                          (sort-by #(user/search
-                                     @(rf/subscribe [:search]) %)))]
+      (let [date        @(rf/subscribe [:date])
+            students-uf (->> @users
+                             (sort-by :name)
+                             (sort-by #(user/search
+                                        @(rf/subscribe [:search]) %)))
+            students    (if (:admin @(rf/subscribe [:user]))
+                          students-uf
+                          (->> students-uf
+                               (remove :teacher)
+                               (remove :admin)))]
         [:div.container
          [search/search-bar]
          [search/date-bar]

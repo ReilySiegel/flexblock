@@ -23,7 +23,7 @@
   (let [teacher (rooms/get-teacher (:room event))]
     (if (= (:email teacher)
            (:email (:recipient event)))
-      (format "%s Has joined %s." 
+      (format "%s Has joined %s."
               (:name (:user event))
               (:title (:room event)))
       (format "You have joined %s's Session."
@@ -33,7 +33,7 @@
   (let [teacher (rooms/get-teacher (:room event))]
     (if (= (:email teacher)
            (:email (:recipient event)))
-      (format "%s Has left %s." 
+      (format "%s Has left %s."
               (:name (:user event))
               (:title (:room event)))
       (format "You have left %s's Session."
@@ -52,6 +52,17 @@
                (get event :date))
        "Enrollment in a Flexblock session is mandatory."))
 
+(defmethod message :user/create [event]
+  (str (format "Hello %s,\n"
+               (get-in event [:recipient :name]))
+       "You are now registered to use FlexBlock!\n\n"
+       (format "You have been assigned a random password: %s\n\n"
+               (get event :password))
+       "We recommend that you change this password immediately "
+       "for security reasons. You can change this password by "
+       "logging in and pressing the 'Reset Password' button in "
+       "the top right."))
+
 (defmulti subject :event)
 
 (defmethod subject :default [_]
@@ -59,6 +70,10 @@
 
 (defmethod subject :user/set-password [event]
   "Your Password Has Been Reset")
+
+(defmethod subject :user/create [event]
+  (format "Welcome to FlexBlock, %s!"
+          (get-in event [:recipient :name])))
 
 (defmethod subject :room/delete [event]
   "A Session you had joined has been deleted.")

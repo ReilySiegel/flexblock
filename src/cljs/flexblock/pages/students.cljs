@@ -5,7 +5,6 @@
 (defn page
   []
   [:div
-   [emailer/fab]
    [emailer/modal]
    [students/fab]
    [students/add]

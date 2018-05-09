@@ -9,9 +9,11 @@
    :room-number ""})
 
 (def user-db
-  {:email ""
-   :name  ""
-   :class ""})
+  {:email   ""
+   :name    ""
+   :class   nil
+   :teacher false
+   :admin   false})
 
 (def default-db
   {:page           :rooms
