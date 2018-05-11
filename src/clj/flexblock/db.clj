@@ -13,14 +13,6 @@
             [clojure.java.jdbc :as jdbc]
             [clj-time.core :as time]))
 
-(mount/defstate db
-  :start (let [db-info (merge (get-in env [:db :connection])
-                              {:naming {:keys #(str/replace % #"_" "-")}})]
-           (if db-info
-             (default-connection (create-db db-info))
-             (throw (Exception. "Invalid DB info.")))
-           db-info))
-
 (declare rooms)
 
 (defentity users-rooms
@@ -32,6 +24,27 @@
 
 (defentity rooms
   (many-to-many users :users_rooms))
+
+(defn init-seed-user! [user]
+  (if (empty? (select users (where {:email (:email user)})))
+    (let [password-hash (h/derive (:password user))]
+      (insert users
+              (values (-> user
+                          (dissoc :password)
+                          (assoc :passwordhash password-hash)))))))
+
+(mount/defstate db
+  :start (let [db-info   (merge (get-in env [:db :connection])
+                                {:naming
+                                 {:keys #(str/replace % #"_" "-")}})
+               seed-user (get-in env [:db :seed-user])]
+           (if db-info
+             (default-connection (create-db db-info))
+             (throw (Exception. "Invalid DB info.")))
+           (if seed-user
+             (init-seed-user! seed-user))
+           db-info))
+
 
 (defn get-advisor [id]
   (first (jdbc/query db (sql/format
