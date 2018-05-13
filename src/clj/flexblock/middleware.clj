@@ -118,12 +118,12 @@
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
       wrap-auth
-      wrap-webjars
+      #_wrap-webjars
       wrap-flash
       (wrap-session {:cookie-attrs {:http-only true}})
       (wrap-defaults
-        (-> site-defaults
-            (assoc-in [:security :anti-forgery] false)
-            (dissoc :session)))
+       (-> site-defaults
+           (assoc-in [:security :anti-forgery] false)
+           (dissoc :session)))
       wrap-context
       wrap-internal-error))
