@@ -1,6 +1,5 @@
 (ns flexblock.migrations
-  (:require [clojure.java.jdbc :as jdbc]
-            [flexblock.db :as db]))
+  (:require [clojure.java.jdbc :as jdbc]))
 
 (def table-specs
   [[:users
