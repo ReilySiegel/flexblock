@@ -8,13 +8,11 @@ and updating the environment configuration to use that driver.
 
 ## Table Setup
 
-FLexblock currently uses three tables: `users`, `rooms`, and
+Flexblock currently uses three tables: `users`, `rooms`, and
 `users_rooms`. The details of these tables are explained below. If you
-have a database that does not have these tables, you can run
-`flexblock.migrations/reset!`. However, please note that this function
-is dangerous, and should only be used on a fresh, empty database. It
-will **permanently** delete any data contained in any of the tables
-listed.
+have a database that does not have these tables, Flexblock will
+automatically create them for you, if your database connection is set
+up correctly.
 
 ### users
 
@@ -45,7 +43,7 @@ This table only contains three columns: `id`, `users_id`, and
 ## Configuration
 
 The database connection is configured entirely by the system described
-in [configuration.md](configuration.md). Below an example `config.edn`
+in [environment.md](environment.md). Below an example `config.edn`
 for a PostgreSQL database running on the local machine.
 
 ```edn
@@ -55,5 +53,22 @@ for a PostgreSQL database running on the local machine.
    :subprotocol "postgresql"
    :subname     "//localhost:5432/my_db"
    :user        "user"
-   :password    "password"}}}
+   :password    "password"}
+  :seed-user
+  {:name     "The Administrator"
+   :email    "admin@school.edu"
+   :password "password"
+   :admin    true
+   :teacher  false}}}
 ```
+
+### Connection
+
+`:connection` should contain a map that constitutes a valid
+[JDBC](https://github.com/clojure/java.jdbc) connection.
+
+### Seed User
+
+`:seed-user` should contain a USERS entry, as shown above. If this
+user does not already exist in the database, it will be added on
+startup.
