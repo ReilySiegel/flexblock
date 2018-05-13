@@ -9,6 +9,7 @@
             [flexblock.rooms :as r]
             [flexblock.notifier :as n]
             [flexblock.config :refer [env]]
+            [flexblock.migrations :as migrations]
             [mount.core :as mount]
             [clojure.java.jdbc :as jdbc]
             [clj-time.core :as time]))
@@ -39,11 +40,16 @@
                                  {:keys #(str/replace % #"_" "-")}})
                seed-user (get-in env [:db :seed-user])]
            (if db-info
-             (default-connection (create-db db-info))
-             (throw (Exception. "Invalid DB info.")))
-           (if seed-user
-             (init-seed-user! seed-user))
-           db-info))
+             (do
+               ;; Set default connection for Korma.
+               (default-connection (create-db db-info))
+               ;; Create tables if they don't already exist.
+               (migrations/init-tables! db-info)
+               ;; Add in a seed user if provided in config.
+               (if seed-user
+                 (init-seed-user! seed-user))
+               db-info)
+             (throw (Exception. "Invalid DB info.")))))
 
 
 (defn get-advisor [id]
