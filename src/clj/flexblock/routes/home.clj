@@ -117,7 +117,7 @@
 (defn post-users [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [{:keys [name email class password teacher admin]
+    (let [{:keys [name email class password teacher admin advisor-id]
            :as   user
            :or   {teacher? false
                   admin?   false
@@ -127,7 +127,8 @@
                                          #(char
                                            (+ (rand 26) (rand-nth
                                                          [97 65]))))))}}
-          (:params request)]
+          (merge (:params request)
+                 {:advisor-id (get-in request [:identity :id])})]
       (if-let [error (phrase/phrase-first {} ::users/user user)]
         (response/unprocessable-entity {:message error})
         (let [result (try
@@ -138,7 +139,7 @@
                                         teacher
                                         admin
                                         class
-                                        (get-in request [:identity :id]))
+                                        advisor-id)
                        (catch Throwable t
                          (:cause (Throwable->map t))))]
           (if (string? result)

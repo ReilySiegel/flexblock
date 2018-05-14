@@ -73,12 +73,7 @@
                  :uri             "/users"
                  :headers         {"Authorization" (str "Token "
                                                         (:token db))}
-                 :params          (if (get-in db [:user :admin])
-                                    (:add-user db)
-                                    (merge (:add-user db)
-                                           {:advisor-id
-                                            (get-in db
-                                                    [:user :id])}))
+                 :params          (:add-user db)
                  :format          (ajax/json-request-format)
                  :response-format (ajax/detect-response-format)
                  :on-success      [:user/post-user-success]
