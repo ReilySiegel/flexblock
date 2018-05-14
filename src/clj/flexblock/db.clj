@@ -53,11 +53,13 @@
 
 
 (defn get-advisor [id]
-  (first (jdbc/query db (sql/format
-                         {:select [[:a.name :advisor]]
-                          :from   [[:users :u]]
-                          :join   [[:users :a] [:= :a.id :u.advisor_id]]
-                          :where  [:= :u.id 2]}))))
+  (or (first (jdbc/query db (sql/format
+                             {:select [[:a.name :advisor]]
+                              :from   [[:users :u]]
+                              :join   [[:users :a]
+                                       [:= :a.id :u.advisor_id]]
+                              :where  [:= :u.id id]})))
+      ""))
 
 (defn school-year []
   (let [time  (time/now)
