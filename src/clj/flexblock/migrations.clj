@@ -25,7 +25,7 @@
      [:rooms_id :bigint :references "rooms(id)" :not :null]]]])
 
 (defn init-tables! [connection]
-  (for [[table spec] table-specs]
+  (doseq [[table spec] table-specs]
     (try
       (jdbc/db-do-commands
        connection
@@ -33,7 +33,7 @@
       (catch Throwable t))))
 
 (defn destroy-tables! [connection]
-  (for [[table] (reverse table-specs)]
+  (doseq [[table] (reverse table-specs)]
     (try
       (jdbc/db-do-commands
        connection
