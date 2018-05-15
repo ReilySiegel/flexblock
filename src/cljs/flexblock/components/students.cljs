@@ -33,7 +33,8 @@
               ((keyword (:time room)) {:before "Before School"
                                        :after  "After School"
                                        :flex   "FlexBlock"} "") " "
-              (.toDateString (:date room)))]])
+              (.toDateString (:date room)) " - "
+              "Room " (:room-number room))]])
 
 (defn modal
   "The bottom sheet modal that shows a list of students."
