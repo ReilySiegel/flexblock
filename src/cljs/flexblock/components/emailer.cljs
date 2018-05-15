@@ -7,26 +7,26 @@
 
 (defn fab
   "FAB to open emailer modal."
-  [] 
+  []
   (when (and
          (:admin @(rf/subscribe [:user]))
-         (not (str/blank? @(rf/subscribe [:token])))) 
+         (not (str/blank? @(rf/subscribe [:token]))))
     [:a.btn-flat.amber-text.modal-trigger
      {:href "#emailermodal"}
      "Reminder"]))
 
 (defn modal
   "The modal to display the emailer."
-  [] 
+  []
   (let [users    (rf/subscribe [:users])
         date     (rf/subscribe [:date])
         students (->> @users
-                      (remove :teacher)
+                      (remove :admin)
                       (remove #(users/flexblock-on-date? % @date))
-                      (sort-by :name))] 
+                      (sort-by :name))]
     [modal/fixed-footer "emailermodal"
      [:div.modal-content
-      [:h4.center.purple-text.text-lighten-3 "Emailer"] 
+      [:h4.center.purple-text.text-lighten-3 "Emailer"]
       (if (str/blank? @date)
         [:h6.amber-text
          "No Date Selected"]

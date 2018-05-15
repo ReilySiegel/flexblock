@@ -105,7 +105,7 @@
     (let [users    (db/get-users)
           date     (get-in request [:params :date])
           students (->> users
-                        (remove :teacher)
+                        (remove :admin)
                         (remove #(users/flexblock-on-date? % date)))]
       (doseq [student students]
         (async/put! notifier/notifier

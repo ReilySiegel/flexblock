@@ -181,7 +181,9 @@
            (if (nil? date)
              (map card students)
              (map card
-                  (remove #(user/flexblock-on-date? % date) students))))
+                  (->> students
+                       (remove #(user/flexblock-on-date? % date))
+                       (remove :admin)))))
           (doall (map modal students))
           (doall (map password/modal students))]])
       [:div.grid-user])))
