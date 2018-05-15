@@ -13,7 +13,9 @@
     (condp = page
       :rooms    [:li
                  {:on-click #(rf/dispatch [:set-active-page :students])}
-                 [:a "Students"]]
+                 [:a (if (:admin @(rf/subscribe [:user]))
+                       "Users"
+                       "Students")]]
       :students [:li
                  {:on-click #(rf/dispatch [:set-active-page :rooms])}
                  [:a "Sessions"]])))
