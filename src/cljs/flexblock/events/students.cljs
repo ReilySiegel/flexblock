@@ -63,8 +63,7 @@
  :user/post-user-success
  (fn [_ [_ response]]
    (u/get-users)
-   {:notification "User added."
-    :dispatch     [:add-user/reset]}))
+   {:notification "User added."}))
 
 (rf/reg-event-fx
  :user/post-user
