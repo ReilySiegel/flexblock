@@ -236,11 +236,13 @@
       "The user could not be found"
 
       (and (not setting-self?)
-           (not (:teacher setter)))
+           (not (some #(% user) [:teacher :admin])))
       "Only a teacher can set another user's password."
 
       (and (not setting-self?)
-           (:teacher user))
+           (or (:teacher user)
+               (:admin user))
+           (not (:admin setter)))
       "Only a student's password can be set by a teacher."
 
       :else
