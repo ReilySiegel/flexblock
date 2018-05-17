@@ -2,6 +2,8 @@
   (:require [compojure.core :refer [routes wrap-routes]]
             [flexblock.layout :refer [error-page]]
             [flexblock.routes.home :refer [home-routes]]
+            [flexblock.routes.user :as user]
+            [flexblock.routes.room :as room]
             [compojure.route :as route]
             [flexblock.env :refer [defaults]]
             [mount.core :as mount]
@@ -16,7 +18,13 @@
   (middleware/wrap-base
    (routes
     (-> #'home-routes
-        #_(wrap-routes middleware/wrap-csrf)
+        (wrap-routes middleware/wrap-csrf)
+        (wrap-routes middleware/wrap-formats))
+    (-> #'user/routes
+        (wrap-routes middleware/wrap-csrf)
+        (wrap-routes middleware/wrap-formats))
+    (-> #'room/routes
+        (wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats))
     (route/not-found
      (:body

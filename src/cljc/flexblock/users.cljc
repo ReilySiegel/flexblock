@@ -40,3 +40,8 @@
                  (= date (:date %))))
        empty?
        not))
+
+(defn gen-password [n]
+  (apply str
+         (take n (repeatedly
+                  #(char (+ (rand 26) (rand-nth [97 65])))))))

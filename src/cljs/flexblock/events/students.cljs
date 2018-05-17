@@ -69,7 +69,7 @@
  :user/post-user
  (fn [{:keys [db]}]
    {:http-xhrio {:method          :post
-                 :uri             "/users"
+                 :uri             "/user"
                  :headers         {"Authorization" (str "Token "
                                                         (:token db))}
                  :params          (:add-user db)

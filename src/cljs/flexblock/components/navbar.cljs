@@ -45,6 +45,7 @@
                                  (rf/dispatch [:set-rooms []])
                                  (rf/dispatch [:set-user {}])
                                  (rf/dispatch [:set-token ""])
+                                 (rf/dispatch [:add-user/reset])
                                  (rf/dispatch [:set-active-page :rooms]))}
                  "Logout"]]])]
        [:ul.left.hide-on-med-and-down]

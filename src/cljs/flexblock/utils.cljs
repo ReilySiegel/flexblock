@@ -23,18 +23,19 @@
   (.reload js/location true))
 
 (defn default-error-handler [response]
-  (rf/dispatch-sync [:dec-loading]) 
+  (rf/dispatch-sync [:dec-loading])
   (case (:status response)
     403 #(handle-403)
     401 #(handle-401)
-    (.toast js/M (clj->js {:html (or (get-in response [:response :message])
-                                     "An unknown error occured.")}))))
+    (.toast js/M (clj->js
+                  {:html (or (get-in response [:response :message])
+                             "An unknown error occured.")}))))
 
 (defn get-users []
   (let [token @(rf/subscribe [:token])]
     (when-not (empty? token)
       (rf/dispatch-sync [:inc-loading])
-      (GET "/users"
+      (GET "/user"
            {:headers       {"Authorization" (str "Token " token)}
             :handler       (fn [x]
                              (rf/dispatch-sync [:dec-loading])
@@ -45,7 +46,7 @@
   (let [token @(rf/subscribe [:token])]
     (when-not (empty? token)
       (rf/dispatch-sync [:inc-loading])
-      (GET "/rooms"
+      (GET "/room"
            {:headers       {"Authorization" (str "Token " token)}
             :handler       (fn [x]
                              (rf/dispatch-sync [:dec-loading])
@@ -53,11 +54,11 @@
             :error-handler default-error-handler}))))
 
 (defn post-room []
-  (POST "rooms"
+  (POST "room"
         {:params        {:title        @(rf/subscribe [:room/title])
                          :description  @(rf/subscribe [:room/description])
                          :date         @(rf/subscribe [:room/date])
-                         :time         @(rf/subscribe [:room/time])                  
+                         :time         @(rf/subscribe [:room/time])
                          :room-number  @(rf/subscribe [:room/number])
                          :max-capacity @(rf/subscribe [:room/max-capacity])}
          :headers       {"Authorization" (str "Token " @(rf/subscribe [:token]))}
@@ -69,7 +70,7 @@
          :error-handler default-error-handler}))
 
 (defn join-room [room-id]
-  (POST "rooms/join"
+  (POST "room/join"
         {:params        {:room-id room-id}
          :headers       {"Authorization" (str "Token " @(rf/subscribe [:token]))}
          :handler       (fn [_]
@@ -78,7 +79,7 @@
          :error-handler default-error-handler}))
 
 (defn leave-room [room-id]
-  (POST "rooms/leave"
+  (POST "room/leave"
         {:params        {:room-id room-id}
          :headers       {"Authorization" (str "Token " @(rf/subscribe [:token]))}
          :handler       (fn [_]
@@ -88,7 +89,7 @@
 
 
 (defn delete-room [room-id]
-  (DELETE "rooms"
+  (DELETE "room"
           {:params        {:room-id room-id}
            :headers       {"Authorization" (str "Token " @(rf/subscribe [:token]))}
            :handler       (fn [_]
