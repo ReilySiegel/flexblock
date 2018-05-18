@@ -90,7 +90,7 @@
   [user-id email password name teacher? admin? class advisor-id]
   (let [creator (get-user user-id)]
     (if-not (some #(% creator) [:teacher :admin])
-      "Only teachers can add users."
+      (throw (ex-info nil {:message "Only teachers can add users."}))
       (let [new-user (insert users
                              (values {:email        email
                                       :passwordhash (h/derive password)
@@ -133,7 +133,7 @@
        (insert users-rooms
                (values {:users_id creator-id
                         :rooms_id room-id})))
-     "Only teachers can create rooms")))
+     (throw (ex-info nil {:message "Only teachers can create rooms"})))))
 
 (defn delete-room!
   "Deletes a room, given a `room-id` and a `user-id`.
@@ -144,7 +144,8 @@
    (let [room    (get-room room-id)
          teacher (r/get-teacher room)]
      (if-not (= user-id (:id teacher))
-       "Only the creator of a room can delete it."
+       (throw (ex-info {:message
+                        "Only the creator of a room can delete it."}))
        (do (delete users-rooms
                    (where {:rooms_id room-id}))
            (delete rooms
@@ -163,17 +164,17 @@
          user   (get-user user-id)]
      (cond
        (nil? room)
-       "Room does not exist."
+       (throw (ex-info {:message "Room does not exist."}))
 
        (:teacher user)
-       "Teachers cannot join rooms."
+       (throw (ex-info {:message "Teachers cannot join rooms."}))
 
        (r/in-room? room user-id)
-       "You are already in this room."
+       (throw (ex-info {:message "You are already in this room."}))
 
        (>= joined
            (:max-capacity room))
-       "This room is full."
+       (throw (ex-info {:message "This room is full."}))
 
        :else
        (do
@@ -195,13 +196,13 @@
          user   (get-user user-id)]
      (cond
        (nil? room)
-       "Room does not exist."
+       (throw (ex-info nil {:message "Room does not exist."}))
 
        (:teacher user)
-       "Teachers cannot leave rooms."
+       (throw (ex-info nil {:message "Teachers cannot leave rooms."}))
 
        (not (r/in-room? room user-id))
-       "You are not in this room."
+       (throw (ex-info nil {:message "You are not in this room."}))
 
        :else
        (do
@@ -233,17 +234,22 @@
         setting-self? (= user setter)]
     (cond
       (not (and user setter))
-      "The user could not be found"
+      (throw (ex-info nil {:message "User does not exist!"}))
 
       (and (not setting-self?)
            (not (some #(% user) [:teacher :admin])))
-      "Only a teacher can set another user's password."
+      (throw
+       (ex-info nil {:message
+                     "Only a teacher can set another user's password."}))
 
       (and (not setting-self?)
            (or (:teacher user)
                (:admin user))
            (not (:admin setter)))
-      "Only a student's password can be set by a teacher."
+      (throw
+       (ex-info nil
+                {:message
+                 "Only a student's password can be set by a teacher."}))
 
       :else
       (do (update users

@@ -19,14 +19,14 @@
 (defn update-password [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [{:keys [user-id password]} (:params request)
-          delete                     (db/set-password
-                                      password
-                                      user-id
-                                      (get-in request [:identity :id]))]
-      (if (string? delete)
-        (response/internal-server-error {:message delete})
-        (response/ok)))))
+    (let [{:keys [user-id password]} (:params request)]
+      (try (db/set-password
+            password
+            user-id
+            (get-in request [:identity :id]))
+           (response/ok)
+           (catch Exception e
+             (response/internal-server-error (ex-data e)))))))
 
 (defn flexblock-date-mailer [request]
   (if-not (and (authenticated? request)
@@ -49,27 +49,30 @@
     (response/unauthorized)
     (let [{:keys [name email class password teacher admin advisor-id]
            :as   user
-           :or   {teacher? false
-                  admin?   false
+           :or   {teacher  false
+                  admin    false
                   password (users/gen-password 16)}}
           (merge (:params request)
                  {:advisor-id (get-in request [:identity :id])})]
       (if-let [error (phrase/phrase-first {} ::users/user user)]
         (response/unprocessable-entity {:message error})
-        (let [result (try
-                       (db/insert-user! (get-in request [:identity :id])
-                                        email
-                                        password
-                                        name
-                                        teacher
-                                        admin
-                                        class
-                                        advisor-id)
-                       (catch Throwable t
-                         (:cause (Throwable->map t))))]
-          (if (string? result)
-            (response/unprocessable-entity {:message result})
-            (response/ok)))))))
+        (try
+          (db/insert-user! (get-in request [:identity :id])
+                           email
+                           password
+                           name
+                           teacher
+                           admin
+                           class
+                           advisor-id)
+          (response/ok)
+          (catch Exception e
+            (response/unprocessable-entity
+             (or
+              ;; Application Exception
+              (ex-data e)
+              ;; SQL Exception: user already exists
+              {:message "User already exists."}))))))))
 
 (defroutes routes
   (GET "/user" [] get-users)

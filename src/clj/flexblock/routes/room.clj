@@ -17,53 +17,49 @@
         (assoc :status 401))))
 
 (defn post-rooms [request]
-  (if (authenticated? request)
-    (if-let [{:keys [title description date time room-number max-capacity]
-              :as   room} (:params request)]
+  (if-not (authenticated? request)
+    (response/unauthorized)
+    (let [{:keys [title description date time room-number max-capacity]
+           :as   room} (:params request)]
       (if-let [error (phrase/phrase-first {} ::rooms/room room)]
         (response/unprocessable-entity {:message error})
-        (let [insert (db/insert-room! (get-in request [:identity :id])
-                                      title
-                                      description
-                                      date
-                                      time
-                                      room-number
-                                      max-capacity)]
-          (if (string? insert)
-            (response/internal-server-error {:message insert})
-            (response/ok))))
-      (response/internal-server-error {:message "Invalid Request"}))
-    (response/unauthorized)))
+        (try (db/insert-room! (get-in request [:identity :id])
+                              title
+                              description
+                              date
+                              time
+                              room-number
+                              max-capacity)
+             (response/ok)
+             (catch Exception e
+               (response/unprocessable-entity (ex-data e))))))))
 
 (defn join-rooms [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [{:keys [room-id]} (:params request)
-          join              (db/join-room
-                             (get-in request [:identity :id]) room-id)]
-      (if (string? join)
-        (response/internal-server-error {:message join})
-        (response/ok)))))
+    (let [{:keys [room-id]} (:params request)]
+      (try (db/join-room (get-in request [:identity :id]) room-id)
+           (response/ok)
+           (catch Exception e
+             (response/unprocessable-entity (ex-data e)))))))
 
 (defn leave-rooms [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [{:keys [room-id]} (:params request)
-          leave             (db/leave-room
-                             (get-in request [:identity :id]) room-id)]
-      (if (string? leave)
-        (response/internal-server-error {:message leave})
-        (response/ok)))))
+    (let [{:keys [room-id]} (:params request)]
+      (try (db/leave-room (get-in request [:identity :id]) room-id)
+           (response/ok)
+           (catch Exception e
+             (response/unprocessable-entity (ex-info e)))))))
 
 (defn delete-rooms [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [{:keys [room-id]} (:params request)
-          delete            (db/delete-room!
-                             (get-in request [:identity :id]) room-id)]
-      (if (string? delete)
-        (response/internal-server-error {:message delete})
-        (response/ok)))))
+    (let [{:keys [room-id]} (:params request)]
+      (try (db/delete-room! (get-in request [:identity :id]) room-id)
+           (response/ok)
+           (catch Exception e
+             (response/unprocessable-entity (ex-info e)))))))
 
 (defroutes routes
   (GET "/room" [] get-rooms)
