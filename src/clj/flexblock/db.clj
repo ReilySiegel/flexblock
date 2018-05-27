@@ -7,6 +7,7 @@
             [clojure.string :as str]
             [clojure.core.async :as a]
             [flexblock.rooms :as r]
+            [flexblock.users :as u]
             [flexblock.notifier :as n]
             [flexblock.config :refer [env]]
             [flexblock.migrations :as migrations]
@@ -88,17 +89,18 @@
 
 (defn insert-user!
   [user-id email password name teacher? admin? class advisor-id]
-  (let [creator (get-user user-id)]
-    (if-not (some #(% creator) [:teacher :admin])
-      (throw (ex-info nil {:message "Only teachers can add users."}))
-      (let [new-user (insert users
-                             (values {:email        email
-                                      :passwordhash (h/derive password)
-                                      :name         name
-                                      :teacher      teacher?
-                                      :admin        admin?
-                                      :class        class
-                                      :advisor_id   advisor-id}))]
+  (let [creator (get-user user-id)
+        user    {:email        email
+                 :passwordhash (h/derive password)
+                 :name         name
+                 :teacher      teacher?
+                 :admin        admin?
+                 :class        class
+                 :advisor_id   advisor-id}]
+    (if-not (u/can-edit? creator user)
+      (throw (ex-info nil {:message
+                           "You don't have permission to do that."}))
+      (let [new-user (insert users (values user))]
         (a/put! n/notifier {:event     :user/create
                             :recipient new-user
                             :password  password})))))
@@ -229,27 +231,19 @@
 
 
 (defn set-password [password user-id setter-id]
-  (let [user          (get-user user-id)
-        setter        (get-user setter-id)
-        setting-self? (= user setter)]
+  (let [user   (get-user user-id)
+        setter (get-user setter-id)]
     (cond
       (not (and user setter))
       (throw (ex-info nil {:message "User does not exist!"}))
 
-      (and (not setting-self?)
-           (some #(% user) [:teacher :admin]))
-      (throw
-       (ex-info nil {:message
-                     "Only a teacher can set another user's password."}))
-
-      (and (not setting-self?)
-           (or (:teacher user)
-               (:admin user))
-           (not (:admin setter)))
+      (not (u/can-edit? setter user))
       (throw
        (ex-info nil
                 {:message
-                 "Only a student's password can be set by a teacher."}))
+                 (format
+                  "You don't have permission to set %s's password."
+                  (:name user))}))
 
       :else
       (do (update users

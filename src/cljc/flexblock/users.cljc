@@ -48,3 +48,53 @@
   (apply str
          (take n (repeatedly
                   #(char (+ (rand 26) (rand-nth [97 65])))))))
+
+(def roles
+  "The roles that users can have in application context.
+  This map contains the role keywords mapped to their permission
+  level."
+  {:student 0
+   :teacher 1
+   :admin   2})
+
+(defn is-role?
+  "Predicate that determines if a user is a role."
+  [user role]
+  (if-not (= role :student)
+    (role user)
+    ;; Student role defined as the absense of any other roles.
+    (not (some true? (map (partial is-role? user)
+                          (keys (dissoc roles :student)))))))
+
+(defn user-roles
+  "Returns a vecor of a `user`s roles."
+  [user]
+  (filter (partial is-role? user) (keys roles)))
+
+(defn highest-role
+  "Takes a `user`, and returns their highest-permissioned role ."
+  [user]
+  (->> user
+       user-roles
+       (sort-by roles)
+       reverse
+       first))
+
+(defn can-edit?
+  "Returns true if `editor` is allowed to edit `editee`.
+  `editor` and `editee` must each have at least one unique field, such
+  as an ID or email."
+  [editor editee]
+  (cond
+    ;; A user can always edit themself.
+    (= editor editee) true
+
+    ;; Admins can edit other admins.
+    (and (= :admin (highest-role editor))
+         (= :admin (highest-role editee)))
+    true
+
+    ;; Is the highes role of `editor` above the highed role of
+    ;; `editee`?
+    :else (> (roles (highest-role editor))
+             (roles (highest-role editee)))))
