@@ -11,17 +11,20 @@
                       #(>= 50 (count %))))
 (s/def ::class pos-int?)
 (s/def ::advisor-id pos-int?)
+(s/def ::password string?)
 
 (defmulti user-type #(boolean (or (:teacher %)
                                   (:admin %))))
 
 (defmethod user-type false [_]
-  (s/keys :req-un [::name ::email ::class ::advisor-id]))
+  (s/keys :req-un [::name ::email ::class ::advisor-id]
+          :opt-un [::password]))
 
 (defmethod user-type true [_]
-  (s/keys :req-un [::name ::email]))
+  (s/keys :req-un [::name ::email]
+          :opt-un [::password]))
 
-(s/def ::user (s/multi-spec user-type ::typex))
+(s/def ::user (s/multi-spec user-type ::type))
 
 (defn search [search user]
   (let [search   (str/trim (str/lower-case search))

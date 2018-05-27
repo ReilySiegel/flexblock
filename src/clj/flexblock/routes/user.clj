@@ -1,6 +1,6 @@
 (ns flexblock.routes.user
   (:require
-   [compojure.core :refer [defroutes context GET POST PATCH DELETE]]
+   [compojure.api.sweet :refer :all :exclude [routes]]
    [ring.util.http-response :as response]
    [buddy.auth :refer [authenticated? throw-unauthorized]]
    [flexblock.db :as db]
@@ -8,7 +8,9 @@
    [clojure.core.async :as async]
    [flexblock.notifier :as notifier]
    [flexblock.validation]
-   [phrase.alpha :as phrase]))
+   [phrase.alpha :as phrase]
+   [flexblock.middleware :as m]
+   [clojure.spec.alpha :as spec]))
 
 (defn get-users [request]
   (if (authenticated? request)
@@ -74,8 +76,52 @@
               ;; SQL Exception: user already exists
               {:message "User already exists."}))))))))
 
+(defn login [request]
+  (if-let [{username :username password :password } (:params request)]
+    (if-let [user (db/check-login username password)]
+      (response/ok {:token (m/token user)
+                    :user  user})
+      (response/bad-request {:message "Login Failed"}))
+    (response/bad-request "Invalid Request")))
+
 (defroutes routes
-  (GET "/user" [] get-users)
-  (POST "/user" [] post-users)
-  (POST "/user/flexblock" [] flexblock-date-mailer)
-  (PATCH "/user/password" [] update-password))
+  (GET "/user" []
+    :swagger {:summary "Get all users."
+              ;; compojure-api does not currently handle multi-specs
+              ;; :return  (spec/coll-of ::users/user)
+              :tags    ["User"]
+              :description
+              "Returns a vector of
+    `:flexblock.users/user`. compojure-api does not currently support
+    multi-specs, so please see `:flexblock.users/user` spec for
+    details."}
+    get-users)
+  (POST "/user" []
+    :swagger {:summary     "Add a new user."
+              :tags        ["User"]
+              ;; compojure-api does not currently handle multi-specs
+              ;; :parameters {:body ::users/user}
+              :description "Takes a `:flexblock.users/user`as a body
+    parameter. compojure-api does not currently support multi-specs,
+    so please see `:flexblock.users/user` spec for details."}
+    post-users)
+  (POST "/user/flexblock" []
+    :swagger {:summary     "Send FlexBlock reminder."
+              :tags        ["User"]
+              :parameters  {:body {:date inst?}}
+              :description "Sends a reminder to all students and
+    teachers (excludes administrators who are not also teachers) that
+    have not creates a FlexBlock session on `date`."}
+    flexblock-date-mailer)
+  (POST "/login" []
+    :swagger {:summary     "Get a token for a user."
+              :tags        ["User"]
+              :parameters  {:body {:username ::users/email
+                                   :password ::users/password}}
+              :description "Get a token for a user."} login)
+  (PATCH "/user/password" []
+    :swagger {:summary    "Update password."
+              :tags       ["User"]
+              :parameters {:body {:user-id  int?
+                                  :password ::users/password}}}
+    update-password))
