@@ -1,4 +1,4 @@
-(ns flexblock.test.handler
+(ns flexblock.handler-test
   (:require [clojure.test :refer :all]
             [ring.mock.request :refer :all]
             [flexblock.handler :refer :all]

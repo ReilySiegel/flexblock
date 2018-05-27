@@ -56,13 +56,14 @@
   :min-lein-version "2.0.0"
 
   :source-paths ["src/clj" "src/cljc"]
-  :test-paths ["test/clj"]
+  :test-paths ["test/clj" "test/cljc"]
   :resource-paths ["resources" "target/cljsbuild"]
   :target-path "target/%s/"
   :main ^:skip-aot flexblock.core
 
   :plugins [[lein-cljsbuild "1.1.5"]
-            [lein-immutant "2.1.0"]]
+            [lein-immutant "2.1.0"]
+            [lein-cloverage "1.0.10"]]
   :clean-targets ^{:protect false}
   [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
   :figwheel
@@ -141,7 +142,11 @@
                   :cljsbuild
                   {:builds
                    {:test
-                    {:source-paths ["src/cljc" "src/cljs" "test/cljs"]
+                    {:source-paths ["src/cljc"
+                                    "src/cljs"
+                                    ;; Dont test cljc in cljs.
+                                    ;; "test/cljc"
+                                    "test/cljs"]
                      :compiler
                      {:output-to     "target/test.js"
                       :main          "flexblock.doo-runner"
