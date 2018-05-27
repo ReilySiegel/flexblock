@@ -237,7 +237,7 @@
       (throw (ex-info nil {:message "User does not exist!"}))
 
       (and (not setting-self?)
-           (not (some #(% user) [:teacher :admin])))
+           (some #(% user) [:teacher :admin]))
       (throw
        (ex-info nil {:message
                      "Only a teacher can set another user's password."}))
