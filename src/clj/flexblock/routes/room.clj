@@ -50,7 +50,7 @@
       (try (db/leave-room (get-in request [:identity :id]) room-id)
            (response/ok)
            (catch Exception e
-             (response/unprocessable-entity (ex-info e)))))))
+             (response/unprocessable-entity (ex-data e)))))))
 
 (defn delete-rooms [request]
   (if-not (authenticated? request)
@@ -59,7 +59,7 @@
       (try (db/delete-room! (get-in request [:identity :id]) room-id)
            (response/ok)
            (catch Exception e
-             (response/unprocessable-entity (ex-info e)))))))
+             (response/unprocessable-entity (ex-data e)))))))
 
 (defroutes routes
   (GET "/room" []

@@ -21,7 +21,7 @@
 (defn batch [in out max-time max-count]
   (let [lim-1 (dec max-count)]
     (a/go-loop [buf [] t (a/timeout max-time)]
-      (let [[v p] (a/alts! [in t])] 
+      (let [[v p] (a/alts! [in t])]
         (cond
           (= p t)
           (do

@@ -146,8 +146,8 @@
    (let [room    (get-room room-id)
          teacher (r/get-teacher room)]
      (if-not (= user-id (:id teacher))
-       (throw (ex-info {:message
-                        "Only the creator of a room can delete it."}))
+       (throw (ex-info nil {:message
+                            "Only the creator of a room can delete it."}))
        (do (delete users-rooms
                    (where {:rooms_id room-id}))
            (delete rooms
@@ -166,17 +166,17 @@
          user   (get-user user-id)]
      (cond
        (nil? room)
-       (throw (ex-info {:message "Room does not exist."}))
+       (throw (ex-info nil {:message "Room does not exist."}))
 
        (:teacher user)
-       (throw (ex-info {:message "Teachers cannot join rooms."}))
+       (throw (ex-info nil {:message "Teachers cannot join rooms."}))
 
        (r/in-room? room user-id)
-       (throw (ex-info {:message "You are already in this room."}))
+       (throw (ex-info nil {:message "You are already in this room."}))
 
        (>= joined
            (:max-capacity room))
-       (throw (ex-info {:message "This room is full."}))
+       (throw (ex-info nil {:message "This room is full."}))
 
        :else
        (do

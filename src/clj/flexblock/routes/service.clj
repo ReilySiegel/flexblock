@@ -7,13 +7,6 @@
    [flexblock.routes.user :as user]
    [flexblock.routes.room :as room]))
 
-
-(def no-response-coercion
-  (spec-coercion/create-coercion
-   spec-coercion/default-coercion))
-
-
-(swagger-routes)
 (defapi flexblock-api
   :coercion :spec
   :swagger
@@ -21,7 +14,3 @@
    :spec "/swagger.json"}
   user/routes
   room/routes)
-
-(let [{{x :x
-        y :y} :query-params} {:query-params {:x 1 :y 2}}]
-  [x y])
