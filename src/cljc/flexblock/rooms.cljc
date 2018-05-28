@@ -45,10 +45,13 @@
         (apply hash-set))
    user-id))
 
-(defn search [search room] 
+(defn search [search room]
   (let [search   (str/trim (str/lower-case search))
         searches (str/split search #"\s+")]
     (reduce + (for [search searches]
-                (+ (search/search-string search (:description room))
-                   (search/search-string search (:title room))
-                   (search/search-string search (:name (get-teacher room))))))))
+                (+ (search/search-string search
+                                         (:description room))
+                   (search/search-string search
+                                         (:title room))
+                   (search/search-string search
+                                         (:name (get-teacher room))))))))
