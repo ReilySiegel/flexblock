@@ -24,6 +24,22 @@
     (is (not (s/valid? ::u/user userc))
         "A student must have a class and advisor-id.")))
 
+(deftest search-test
+  (let [usera {:name    "A User"
+               :advisor "A Advisor"}
+        userb {:name    "B User"
+               :advisor "B Advisor"}]
+    (is (< (search "A" usera) (search "A" userb)))
+    (is (> (search "!A" usera) (search "!A" userb))
+        "Inverted search.")))
+
+(deftest gen-password-test
+  (testing "Gen password."
+    (is (string? (gen-password 10))
+        "Generates a string.")
+    (is (= 10 (count (gen-password 10)))
+        "Password is the correct lenght.")))
+
 (deftest can-edit?-test
   (let [admin   {:id 0 :admin true}
         teacher {:id 1 :teacher true}
