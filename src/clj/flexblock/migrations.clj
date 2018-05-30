@@ -30,7 +30,9 @@
       (jdbc/db-do-commands
        connection
        [(jdbc/create-table-ddl table spec)])
-      (catch Throwable t))))
+      (catch Throwable t
+        (println
+         (:cause (Throwable->map t)))))))
 
 (defn destroy-tables! [connection]
   (doseq [[table] (reverse table-specs)]

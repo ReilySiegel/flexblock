@@ -34,7 +34,7 @@
                  [selmer "1.11.6"]
                  [korma "0.4.3"]
                  [org.clojure/java.jdbc "0.7.5"]
-                 [postgresql "9.3-1102.jdbc41"]
+                 [org.postgresql/postgresql "42.1.3.jre7"]
                  [org.clojure/core.async "0.4.474"]
                  [log4j "1.2.15" :exclusions [javax.mail/mail
                                               javax.jms/jms

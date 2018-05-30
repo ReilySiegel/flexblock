@@ -37,17 +37,21 @@
                           (assoc :passwordhash password-hash)))))))
 
 (mount/defstate db
-  :start (let [connection-or-url (or (get-in env [:database-url])
-                                     (get-in env [:db :connection]))
-               connection        (if (string? connection-or-url)
-                                   (heroku/korma-connection-map
-                                    connection-or-url)
-                                   connection-or-url)
-               db-info           (merge connection
-                                        {:naming
-                                         {:keys
-                                          #(str/replace % #"_" "-")}})
-               seed-user         (get-in env [:db :seed-user])]
+  :start (let [conn-or-url (or (get-in env [:database-url])
+                               (get-in env [:db :connection]))
+               connection  (if (string? conn-or-url)
+                             (assoc
+                              (heroku/korma-connection-map
+                               conn-or-url)
+                              :ssl true
+                              :sslfactory
+                              "org.postgresql.ssl.NonValidatingFactory")
+                             conn-or-url)
+               db-info     (merge connection
+                                  {:naming
+                                   {:keys
+                                    #(str/replace % #"_" "-")}})
+               seed-user   (get-in env [:db :seed-user])]
            (if db-info
              (do
                ;; Set default connection for Korma.
