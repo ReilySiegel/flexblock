@@ -36,8 +36,6 @@
                           (dissoc :password)
                           (assoc :passwordhash password-hash)))))))
 
-(heroku/korma-connection-map nil)
-
 (mount/defstate db
   :start (let [connection-or-url (or (get-in env [:database-url])
                                      (get-in env [:db :connection]))
