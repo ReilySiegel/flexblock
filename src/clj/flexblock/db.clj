@@ -2,6 +2,7 @@
   "Functions that interact with the database."
   (:require [korma.core :refer :all]
             [korma.db :refer :all]
+            [heroku-database-url-to-jdbc.core :as heroku]
             [honeysql.core :as sql]
             [buddy.hashers :as h]
             [clojure.string :as str]
@@ -35,11 +36,20 @@
                           (dissoc :password)
                           (assoc :passwordhash password-hash)))))))
 
+(heroku/korma-connection-map nil)
+
 (mount/defstate db
-  :start (let [db-info   (merge (get-in env [:db :connection])
-                                {:naming
-                                 {:keys #(str/replace % #"_" "-")}})
-               seed-user (get-in env [:db :seed-user])]
+  :start (let [connection-or-url (or (get-in env [:database-url])
+                                     (get-in env [:db :connection]))
+               connection        (if (string? connection-or-url)
+                                   (heroku/korma-connection-map
+                                    connection-or-url)
+                                   connection-or-url)
+               db-info           (merge connection
+                                        {:naming
+                                         {:keys
+                                          #(str/replace % #"_" "-")}})
+               seed-user         (get-in env [:db :seed-user])]
            (if db-info
              (do
                ;; Set default connection for Korma.

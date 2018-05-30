@@ -51,7 +51,8 @@
                  [metosin/spec-tools "0.5.1"]
                  [metosin/compojure-api "2.0.0-SNAPSHOT"]
                  [metosin/ring-swagger-ui "3.9.0"]
-                 [metosin/ring-swagger "0.26.0"]]
+                 [metosin/ring-swagger "0.26.0"]
+                 [heroku-database-url-to-jdbc "0.2.2"]]
 
   :min-lein-version "2.0.0"
 
