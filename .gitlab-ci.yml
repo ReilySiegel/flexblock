@@ -15,9 +15,7 @@ coverage:
 staging:
   type: deploy
   script:
-  - apt-get update -qy
-  - apt-get install -y ruby2.2 ruby2.2-dev rubygems
-  - gem install dpl
-  - dpl --provider=heroku --app=flexblock-staging --api-key=$HEROKU_STAGING_API_KEY
+  - git remote add heroku https://heroku:$HEROKU_STAGING_API_KEY@git.heroku.com/flexblock-staging.git
+  - git push -f heroku master
   only:
   - master
