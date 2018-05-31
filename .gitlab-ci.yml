@@ -1,4 +1,4 @@
-image: clojure:lein-2.7.0
+	image: clojure:lein-2.7.0
 
 before_script:
   - lein deps
@@ -9,7 +9,7 @@ test:
 
 coverage:
   allow_failure: true
-  converage: '/ALL FILES\W+\d+\.\d+\W+(\d+\.\d+)/'
+  coverage: '/ALL FILES\W+\d+\.\d+\W+(\d+\.\d+)/'
   script:
   - lein cloverage
 
