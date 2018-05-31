@@ -11,7 +11,7 @@ coverage:
   allow_failure: true
   coverage: '/ALL FILES\W+\d+\.\d+\W+(\d+\.\d+)/'
   script:
-  - lein cloverage
+  - lein cloverage | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"
 
 staging:
   type: deploy
