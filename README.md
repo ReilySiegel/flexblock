@@ -1,8 +1,5 @@
 # Flexblock
 
-[![Build Status](https://travis-ci.org/ReilySiegel/flexblock.svg?branch=master)](https://travis-ci.org/ReilySiegel/flexblock)
-[![codecov](https://codecov.io/gh/ReilySiegel/flexblock/branch/master/graph/badge.svg)](https://codecov.io/gh/ReilySiegel/flexblock)
-
 generated using Luminus version "2.9.12.25"
 
 FIXME

@@ -1,0 +1,23 @@
+image: clojure:lein-2.7.0
+
+before_script:
+  - lein deps
+
+test:
+  script:
+  - lein test
+
+coverage:
+  allow_failure: true
+  script:
+  - lein cloverage
+
+staging:
+  type: deploy
+  script:
+  - apt-get update -qy
+  - apt-get install -y ruby-dev
+  - gem install dpl
+  - dpl --provider=heroku --app=flexblock-staging --api-key=$HEROKU_STAGING_API_KEY
+  only:
+  - master

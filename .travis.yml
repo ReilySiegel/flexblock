@@ -1,8 +1,0 @@
-language: clojure
-after_success:
-- lein cloverage --codecov
-- bash <(curl -s https://codecov.io/bash) -f target/coverage/codecov.json
-deploy:
-  provider: heroku
-  api_key:
-    secure: DVQM+VnZAyd1qvydumj5PrKo7Cjv+jeyaR16jY0BCqjhFNQ8kyVFiXZbvuM6kraPkCjtMQHdDKDsY5dEmYVWLziYQlEXxuZuBUldGnr0lBRexHhNAeEd+lKjjVW9LM45cfTUYhs2QCswic9JekUtS0PTX0QX6P6esVAVEKso5/5ETp/wWeUEUmxSPldMo/XOOpNRaLmUr1BwyydO5wifTQcMndMRvXpQBSost5c4UgxE5v7Wsh4vT4LTdJkAX9AhjN88FQVn/IcTpFaocc7fOhLqs7VJzUr0gm7fxbdKMqbWzrjZSHjJvqxRk/0cs+yDCsZkOJscHKcybGRWK0cwQxps/4Y/UjeN2tule/9e2wMFrgXuZAoP715nkX4R3phXnNfND1XTZrrO/3+HSLcrBVudvHtt/vuC4IHf58w6398dWMy8aQqmtucGoTZIM1/9u+YxhPmHwz6gYVn65lwRc/GVl6tlGyykovVivBwIHcOHEtrH7bXylYb4b222afdn5rmm3vCxURNgzFkGatgYitxUEY4JAsLRRXPSz5xxEtlQlwXDZ+V6gzgAW6mD9AyfUr9dycAVdFNYg86fpOWU7A7ZpRflBdyg5YFEWwYfN8Ba+zwa/NFAJIMoPBP2UWLrvz2zyYemUgnNZGmkAWTOJlCK5SGRSNSP5WzdEIcU2cQ=
