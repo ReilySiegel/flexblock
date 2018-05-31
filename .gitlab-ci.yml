@@ -16,7 +16,7 @@ staging:
   type: deploy
   script:
   - apt-get update -qy
-  - apt-get install -y ruby-dev rubygems
+  - apt-get install -y ruby-full ruby-dev rubygems
   - gem install dpl
   - dpl --provider=heroku --app=flexblock-staging --api-key=$HEROKU_STAGING_API_KEY
   only:
