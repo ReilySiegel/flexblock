@@ -7,6 +7,7 @@
    [flexblock.users :as user]
    [flexblock.utils :as u]
    [flexblock.components.emailer :as emailer]
+   [flexblock.components.grid :as grid]
    [flexblock.components.search :as search]
    [flexblock.components.modal :as modal]
    [flexblock.components.input :as input]
@@ -177,14 +178,15 @@
         [:div.container
          [search/search-bar]
          [search/date-bar]
-         [:div.row.grid-user
-          (doall
-           (if (nil? date)
-             (map card students)
-             (map card
-                  (->> students
-                       (remove #(user/flexblock-on-date? % date))
-                       (remove :admin)))))
+         [:div.row
+          [grid/grid
+           (doall
+            (if (nil? date)
+              (map card students)
+              (map card
+                   (->> students
+                        (remove #(user/flexblock-on-date? % date))
+                        (remove :admin)))))]
           (doall (map modal students))
           (doall (map password/modal students))]])
       [:div.grid-user])))
