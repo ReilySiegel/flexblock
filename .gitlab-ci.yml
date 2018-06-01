@@ -1,8 +1,5 @@
 image: clojure:lein-2.7.0
 
-before_script:
-  - lein deps
-
 test:
   script:
   - lein test
