@@ -15,8 +15,8 @@
 (defn get-users [request]
   (if (authenticated? request)
     (response/ok (db/get-users))
-    (-> (response/unauthorized)
-        (assoc :status 401))))
+    (assoc (response/unauthorized)
+           :status 401)))
 
 (defn update-password [request]
   (if-not (authenticated? request)

@@ -65,7 +65,8 @@
   :plugins [[lein-cljsbuild "1.1.5"]
             [lein-immutant "2.1.0"]
             [lein-cloverage "1.0.10"]
-            [jonase/eastwood "0.2.3"]]
+            [jonase/eastwood "0.2.3"]
+            [lein-kibit "0.1.6"]]
   :clean-targets ^{:protect false}
   [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
   :figwheel
@@ -101,6 +102,8 @@
 
    :dev  [:project/dev :profiles/dev]
    :test [:project/dev :project/test :profiles/test]
+
+   :ci {:local-repo ".m2"}
 
    :project/dev {:jvm-opts     ["-server" "-Dconf=dev-config.edn"]
                  :dependencies [[binaryage/devtools "0.9.9"]
