@@ -10,13 +10,14 @@
    [flexblock.rooms :as rm]
    [flexblock.components.input :as input]
    [flexblock.components.attendance :as attendance]
+   [flexblock.components.grid :as grid]
    [flexblock.components.modal :as modal]
    [flexblock.components.search :as search])
   (:import goog.date.Date))
 
 (defn form
   "The form for creating a new room."
-  [] 
+  []
   (r/create-class
    {:component-did-mount
     (fn []
@@ -30,7 +31,7 @@
        [:div.col.s12
         [input/text
          {:placeholder   "Title"
-          :class-name    "room-form" 
+          :class-name    "room-form"
           :dispatch-key  :add-room/set-title
           :subscribe-key :room/title}]]
        [:div.col.l6.m12
@@ -49,7 +50,7 @@
           :subscribe-key :room/max-capacity}]]
        [:div.col.s12
         [input/text
-         {:placeholder   "Description" 
+         {:placeholder   "Description"
           :class-name    "charcount room-form"
           :dispatch-key  :add-room/set-description
           :subscribe-key :room/description}]]
@@ -59,7 +60,7 @@
          ;; Styles defined in resources/public/css/styles.css, options
          ;; defined above.
          [input/datepicker {:dispatch-key :add-room/set-date}]]]
-       
+
        [:div.input-field.col.l6.m12
         [:select
          {:on-change     #(rf/dispatch [:add-room/set-time (-> % .-target .-value)])
@@ -73,12 +74,12 @@
 
 (defn add
   "The modal that contains `flexblock.components.room/form`."
-  [] 
+  []
   [modal/fixed-footer "add-room-modal"
-   [:div.modal-content 
+   [:div.modal-content
     [:h4.center.purple-text.text-lighten-3 "Add Session"]
-    [form]] 
-   [:div.modal-footer 
+    [form]]
+   [:div.modal-footer
     [:a.btn-flat.amber-text.darken-1.waves-effect.waves-purple
      {:on-click u/post-room}
      "Submit"]]])
@@ -96,7 +97,7 @@
             (not user-in-room?))
        [:a.btn-flat.amber-text.waves-effect.waves-purple
         {:on-click #(u/join-room id)} "Join"]
-       
+
        (and (not (:teacher user))
             user-in-room?)
        [:a.btn-flat.amber-text.waves-effect.waves-purple
@@ -119,10 +120,10 @@
 
 (defn card
   "Creates a card with information about a `room`."
-  [room] 
+  [room]
   (when-let [{:keys [id title users description date time room-number max-capacity]} room]
     [:div.col.s12.m6.l4.grid-item
-     {:key id} 
+     {:key id}
      [:div.card.hoverable
       [:div.card-content
        [:span.card-title.truncate title]
@@ -130,7 +131,7 @@
        [:span (.toDateString date)]
        [:p ((keyword time) {:before "Before School"
                             :after  "After School"
-                            :flex   "FlexBlock"} "")] 
+                            :flex   "FlexBlock"} "")]
        [:p (str "Room: " room-number)]
        [:p (str (->> users (remove :teacher) count) "/" max-capacity)]]
       [:div.divider]
@@ -152,28 +153,16 @@
 
 (defn grid
   "Returns a grid of rooms."
-  [] 
-  (letfn [(layout [& args] 
-            (new js/Masonry
-                 (.querySelector js/document ".grid-room")
-                 (clj->js {:itemSelector    ".grid-item"
-                           :horizontalOrder true})))]      
-    (r/create-class
-     {:component-did-mount  layout
-      :component-did-update layout
-      :reagent-render
-      (fn []
-        (let [rooms (rf/subscribe [:rooms])]
-          (if (seq @rooms) 
-            [:div.container
-             [search/search-bar]
-             [:div.row.grid-room 
-              (doall
-               (->> @rooms
-                    (sort-by :date) 
-                    (sort-by #(not= (:name @(rf/subscribe [:user]))
-                                    (:name (rm/get-teacher %))))
-                    (sort-by #(rm/search @(rf/subscribe [:search]) %))
-                    (map card)))
-              (doall (map attendance/modal @rooms))]]
-            [:div.grid-room])))})))
+  []
+  (let [rooms (rf/subscribe [:rooms])]
+    [:div.container
+     [search/search-bar]
+     [grid/grid
+      (doall
+       (->> @rooms
+            (sort-by :date)
+            (sort-by #(not= (:name @(rf/subscribe [:user]))
+                            (:name (rm/get-teacher %))))
+            (sort-by #(rm/search @(rf/subscribe [:search]) %))
+            (map card)))]
+     (doall (map attendance/modal @rooms))]))
