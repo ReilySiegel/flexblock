@@ -23,6 +23,8 @@ code_quality:
 staging:
   image: ruby
   type: deploy
+  before_script: []
+  cache: {}
   script:
   - apt-get update -qy
   - apt-get install -y ruby-dev rubygems
