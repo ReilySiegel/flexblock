@@ -13,8 +13,8 @@
 (defn get-rooms [request]
   (if (authenticated? request)
     (response/ok (db/get-rooms))
-    (-> (response/unauthorized)
-        (assoc :status 401))))
+    (assoc (response/unauthorized)
+           :status 401)))
 
 (defn post-rooms [request]
   (if-not (authenticated? request)

@@ -45,9 +45,8 @@
        not))
 
 (defn gen-password [n]
-  (apply str
-         (take n (repeatedly
-                  #(char (+ (rand 26) (rand-nth [97 65])))))))
+  (str/join
+   (repeatedly n #(char (+ (rand 26) (rand-nth [97 65]))))))
 
 (def roles
   "The roles that users can have in application context.
@@ -63,8 +62,8 @@
   (if-not (= role :student)
     (role user)
     ;; Student role defined as the absense of any other roles.
-    (not (some true? (map (partial is-role? user)
-                          (keys (dissoc roles :student)))))))
+    (not-any? true? (map (partial is-role? user)
+                         (keys (dissoc roles :student))))))
 
 (defn user-roles
   "Returns a vecor of a `user`s roles."

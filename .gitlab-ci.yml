@@ -1,14 +1,24 @@
-image: clojure:lein-2.7.0
+image: clojure:lein-alpine
+
+cache:
+  paths:
+    - .m2/
+
+before_script:
+  - lein with-profile +ci deps
 
 test:
   script:
-  - lein test
+  - lein with-profile +ci test
 
 coverage:
   allow_failure: true
   coverage: '/ALL FILES\W+\d+\.\d+\W+(\d+\.\d+)/'
   script:
-  - lein cloverage | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"
+  - lein with-profile +ci cloverage | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"
+
+code_quality:
+  script: lein with-profile +ci kibit
 
 staging:
   type: deploy

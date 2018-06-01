@@ -59,9 +59,9 @@
 
 (def joda-time-writer
   (transit/write-handler
-    (constantly "m")
-    (fn [v] (-> ^ReadableInstant v .getMillis))
-    (fn [v] (-> ^ReadableInstant v .getMillis .toString))))
+   (constantly "m")
+   (fn [v] (.getMillis ^ReadableInstant v))
+   (fn [v] (-> ^ReadableInstant v .getMillis .toString))))
 
 (cheshire/add-encoder
   org.joda.time.DateTime

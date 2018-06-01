@@ -237,7 +237,7 @@
                                (where {:email email})
                                (limit 1)))]
     (if (h/check (str password) (:passwordhash user))
-      (-> user (dissoc :passwordhash))
+      (dissoc user :passwordhash)
       false)
     false))
 
