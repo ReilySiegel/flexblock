@@ -21,10 +21,12 @@ code_quality:
   script: lein with-profile +ci kibit
 
 staging:
-  image: alpine/git
+  image: ruby
   type: deploy
   script:
-  - git remote add heroku https://heroku:$HEROKU_STAGING_API_KEY@git.heroku.com/flexblock-staging.git
-  - git push -f heroku master
+  - apt-get update -qy
+  - apt-get install -y ruby-dev rubygems
+  - gem install dpl
+  - dpl --provider=heroku --app=flexblock-staging --api-key=$HEROKU_STAGING_API_KEY
   only:
   - master
