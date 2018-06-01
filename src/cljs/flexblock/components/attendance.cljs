@@ -8,7 +8,7 @@
 
 (defn get-id
   "Given a `room`, returns an ID that will be unique to that `room`."
-  [room]  
+  [room]
   (str "attendance" (:id room)))
 
 (defn- student
@@ -22,6 +22,7 @@
   "The bottom sheet modal that shows a list of students."
   [room]
   (let [students (rm/get-students room)]
+    ^{:key (:id room)}
     [modal/bottom-sheet (get-id room)
      [:div.modal-content
       [:h4.purple-text.text-lighten-3 "Students"]
