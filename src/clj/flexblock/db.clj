@@ -2,7 +2,6 @@
   "Functions that interact with the database."
   (:require [korma.core :refer :all]
             [korma.db :refer :all]
-            [heroku-database-url-to-jdbc.core :as heroku]
             [honeysql.core :as sql]
             [buddy.hashers :as h]
             [clojure.string :as str]
@@ -36,34 +35,71 @@
                           (dissoc :password)
                           (assoc :passwordhash password-hash)))))))
 
-(mount/defstate db
-  :start (let [conn-or-url (or (get-in env [:database-url])
-                               (get-in env [:db :connection]))
-               connection  (if (string? conn-or-url)
-                             (assoc
-                              (heroku/korma-connection-map
-                               conn-or-url)
-                              :ssl true
-                              :sslfactory
-                              "org.postgresql.ssl.NonValidatingFactory")
-                             conn-or-url)
-               db-info     (merge connection
-                                  {:naming
-                                   {:keys
-                                    #(str/replace % #"_" "-")}})
-               seed-user   (get-in env [:db :seed-user])]
-           (if db-info
-             (do
-               ;; Set default connection for Korma.
-               (default-connection (create-db db-info))
-               ;; Create tables if they don't already exist.
-               (migrations/init-tables! db-info)
-               ;; Add in a seed user if provided in config.
-               (if seed-user
-                 (init-seed-user! seed-user))
-               db-info)
-             (throw (Exception. "Invalid DB info.")))))
+(defn start-db
+  "This function is responsible for starting the database.
+  Takes `env` as an argument. `env` is cannonically
+  `flexblock.config/env`, but can be swapped for any associative data
+  structure that contains the required keys.
 
+  First, `start-db` looks for a :jdbc-database-url key in `env`. This
+  beavior allows for zero configuration when run on Heroku, as Heroku
+  automatically sets this key in the environment variable. This key
+  should contain a valid JDBC url.
+
+  If a :jdbc-database-url key is not found in `env`, `start-db` looks
+  for the key :database in `env`. If the :database key is found, it
+  will look for a nested :spec key. This key should contain a full
+  JDBC database spec, which will be used to connect to the database.
+
+  If neither key exists, an in-memory database will be created for
+  development and testing. Note, the state of the in-memory db will be
+  discarded after `db` is stopped.
+
+  This function should create a connection pool using korma, set it as
+  the default connection for korma, and return it, potentially to be
+  used by non-korma consumers, such as in `flexblock.migrations`.
+
+  This function will also look for a seed user that will be added to
+  the database on startup. The seed user should be stored under the
+  key :seed-user, nested inside the :database key. If no seed user is
+  provided, it will create a default one, with the email
+  \"example@example.com\" and the password \"password\"."
+  [env]
+  (let [jdbc-url  (get-in env [:jdbc-database-url])
+        jdbc-spec (get-in env [:database :spec])
+        seed-user (or (get-in env [:database :seed-user])
+                      ;; Default seed user.
+                      {:name     "Example Admin"
+                       :email    "example@example.com"
+                       :password "password"
+                       :teacher  false
+                       :admin    true})
+        ;; Select the correct db-spec.
+        db        (merge
+                   (cond
+                     jdbc-url  {:connection-uri jdbc-url}
+                     jdbc-spec jdbc-spec
+                     :else     {:dbtype     "h2:mem"
+                                :dbname     "flexblockdb"
+                                :delimiters ""})
+                   ;; Clojure-ify db keys.
+                   {:naming
+                    {:keys
+                     #(str/lower-case (str/replace % #"_" "-"))}})]
+
+    ;; Set the default connection for Korma.
+    (default-connection (create-db db))
+    ;; Initialize tabes, if they aren't already set up.
+    (migrations/init-tables! db)
+    ;; Add the seed user, if they don't already exist.
+    (init-seed-user! seed-user)
+    db))
+
+(mount/defstate db
+  "Manages the state of the db. Calls `start-db` on startup. See the
+  docstrings of these functions for more details on how the database
+  works."
+  :start (start-db env))
 
 (defn get-advisor [id]
   (or (first (jdbc/query db (sql/format

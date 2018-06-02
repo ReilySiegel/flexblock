@@ -33,8 +33,9 @@
                  [secretary "1.2.3"]
                  [selmer "1.11.6"]
                  [korma "0.4.3"]
-                 [org.clojure/java.jdbc "0.7.5"]
+                 [org.clojure/java.jdbc "0.7.6"]
                  [org.postgresql/postgresql "42.1.3.jre7"]
+                 [com.h2database/h2 "1.4.197"]
                  [org.clojure/core.async "0.4.474"]
                  [log4j "1.2.15" :exclusions [javax.mail/mail
                                               javax.jms/jms
@@ -51,8 +52,7 @@
                  [metosin/spec-tools "0.5.1"]
                  [metosin/compojure-api "2.0.0-SNAPSHOT"]
                  [metosin/ring-swagger-ui "3.9.0"]
-                 [metosin/ring-swagger "0.26.0"]
-                 [heroku-database-url-to-jdbc "0.2.2"]]
+                 [metosin/ring-swagger "0.26.0"]]
 
   :min-lein-version "2.0.0"
 
