@@ -17,6 +17,9 @@ coverage:
   script:
   - lein with-profile +ci cloverage | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"
 
+code_lint:
+  script: lein with-profile +ci eastwood "{:config-files [\"eastwood.clj\"]}"
+
 code_quality:
   script: lein with-profile +ci kibit
 

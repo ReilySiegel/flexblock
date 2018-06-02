@@ -65,7 +65,7 @@
   :plugins [[lein-cljsbuild "1.1.5"]
             [lein-immutant "2.1.0"]
             [lein-cloverage "1.0.10"]
-            [jonase/eastwood "0.2.3"]
+            [jonase/eastwood "0.2.6"]
             [lein-kibit "0.1.6"]]
   :clean-targets ^{:protect false}
   [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
