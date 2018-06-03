@@ -1,15 +1,14 @@
-(ns flexblock.notifier
+(ns flexblock.notifier.core
   (:require [clojure.core.async :as a]
             [mount.core :as mount]
-            [flexblock.event :as event]
-            [flexblock.mailer :as mailer]
+            [flexblock.notifier.services.email :as email]
             [flexblock.config :refer [env]]))
 
 (defn do-notify [batch]
   (doall (->> batch
               distinct
-              (map event/create-mail)
-              (pmap mailer/send))))
+              (map email/create)
+              (map email/send))))
 
 (defn notify [in]
   (a/go-loop []

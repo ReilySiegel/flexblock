@@ -6,7 +6,7 @@
    [flexblock.db :as db]
    [flexblock.users :as users]
    [clojure.core.async :as async]
-   [flexblock.notifier :as notifier]
+   [flexblock.notifier.core :as notifier]
    [flexblock.validation]
    [phrase.alpha :as phrase]
    [flexblock.middleware :as m]

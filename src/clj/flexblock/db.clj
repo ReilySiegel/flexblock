@@ -8,7 +8,7 @@
             [clojure.core.async :as a]
             [flexblock.rooms :as r]
             [flexblock.users :as u]
-            [flexblock.notifier :as n]
+            [flexblock.notifier.core :as n]
             [flexblock.config :refer [env]]
             [flexblock.migrations :as migrations]
             [mount.core :as mount]
