@@ -1,6 +1,5 @@
-(ns flexblock.event
-  (:require [flexblock.rooms :as rooms]
-            [flexblock.mailer :as mailer]))
+(ns flexblock.notifier.events
+  (:require [flexblock.rooms :as rooms]))
 
 (defmulti message :event)
 
@@ -99,10 +98,3 @@
 (defmethod subject :user/unenrolled [event]
   (format "You have not enrolled in a Flexblock session on %s."
           (get event :date)))
-
-(defn create-mail [event]
-  {:from    (:from mailer/settings)
-   :to      (or (:send-to mailer/settings)
-                (get-in event [:recipient :email]))
-   :subject (subject event)
-   :body    (message event)})
