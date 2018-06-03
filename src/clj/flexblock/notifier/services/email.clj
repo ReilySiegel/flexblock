@@ -2,11 +2,12 @@
   (:require
    [mount.core :as mount]
    [flexblock.config :refer [env]]
+   [flexblock.notifier.services.core :refer [send-notification]]
    [flexblock.notifier.events :as events]
    [postal.core :as postal]))
 
 (mount/defstate email
-  :start (:email env))
+  :start (get-in env [:notifier :services :email]))
 
 (defn create [event]
   {:from    (:from email)
@@ -18,3 +19,8 @@
 
 (defn send [message]
   (postal/send-message (:smtp email) message))
+
+(defmethod send-notification :email [_ event]
+  (->> event
+       create
+       send))

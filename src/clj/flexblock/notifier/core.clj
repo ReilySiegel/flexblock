@@ -1,20 +1,16 @@
 (ns flexblock.notifier.core
   (:require [clojure.core.async :as a]
             [mount.core :as mount]
-            [flexblock.notifier.services.email :as email]
-            [flexblock.config :refer [env]]))
-
-(defn do-notify [batch]
-  (doall (->> batch
-              distinct
-              (map email/create)
-              (map email/send))))
+            [flexblock.config :refer [env]]
+            [flexblock.notifier.services.core :as services]
+            [flexblock.notifier.services.email]))
 
 (defn notify [in]
   (a/go-loop []
     (when-let [batch (a/<! in)]
-      (println "Processing batch of " (count (distinct batch)))
-      (do-notify batch)
+      (doseq [event   (distinct batch)
+              service services/enabled-services]
+        (services/send-notification service event))
       (recur))))
 
 (defn batch [in out max-time max-count]
