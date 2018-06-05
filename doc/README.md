@@ -4,12 +4,19 @@ Welcome to the Flexblock Documentation! This is the best place to
 learn about how Flexblock works! If you are looking for something
 specific, see the table of contents below. Otherwise, read on!
 
-## Note about Comments and Docstrings
+## Table of Contents
+
+- [Learn Clojure](clojure.md)
+
+## Getting Started With Flexblock's Documentation
+
+### Comments and Docstrings
 
 If you are looking for specific details about the implementation of a
 certain function, you probably won't find it here. You should look in
 the [source code](/src). Below is an example function, showing how
-documentation might be formatted in code.
+documentation might be formatted in code. For more information on
+clojure, see [Learn Clojure](clojure.md)
 
 ``` clojure
 (defn add-two-numbers
@@ -25,6 +32,4 @@ documentation might be formatted in code.
   (+ x y))
   ```
 
-  ----
-
-  ## Table of Contents
+----
