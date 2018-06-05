@@ -28,7 +28,7 @@ Clojure is written using prefix notation. Here is a comparison of C
 and Clojure.
 
 ``` C
-//In C
+// In C
 printf("Hello, world!");
 ```
 
@@ -80,16 +80,16 @@ if (x == 1) {
 ```
 
 Notice that in Clojure, if is (acts like) a simple functions. It takes
-three arguments: the predicate (in this case `(= x 1)`), the
-form to evaluate if the predicate returns true (`(printf "Hello,
-world!")`), and the form to evaluate if the predicate returns false
-(`(printf "Goodbye, world!")`). However, we can simplify this Clojure
-code a little bit. Because if returns the evaluated form, we can
-simply write:
+three arguments: the predicate (in this case `(= x 1)`), the form to
+evaluate if the predicate returns true, `(printf "Hello, world!")`,
+and the form to evaluate if the predicate returns false, `(printf
+"Goodbye, world!")`. However, we can simplify this Clojure code a
+little bit. Because if returns the evaluated form, we can simply
+write:
 
 ``` clojure
 ;; In Clojure
-(printf (if (= x 1) "Hello, world!" "Goodbye, world!))
+(printf (if (= x 1) "Hello, world!" "Goodbye, world!"))
 ```
 
 Let me walk you through the evaluation (assuming x does equal 1).
@@ -99,7 +99,7 @@ Let me walk you through the evaluation (assuming x does equal 1).
 First, `(= x 1)` is evaluated to `true`.
 
 ``` clojure
-(printf (if true "Hello, world!" "Goodbye, world!))
+(printf (if true "Hello, world!" "Goodbye, world!"))
 ```
 
 Then, because the predicate returned true, `if` evaluates and returns
