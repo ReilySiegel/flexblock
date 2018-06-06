@@ -4,6 +4,7 @@
 
 - [What is Clojure?](#what-is-clojure)
 - [Clojure Syntax](#clojure-syntax)
+- [Immutable Data Structures](#immutable-data-structures)
 
 ## What is Clojure?
 
@@ -12,8 +13,11 @@ it's syntax may be a bit foreign to someone who is new to programming,
 or used to programming in languages like C, Python, or Java. If you
 want to read a comprehensive, but humorous introduction to Clojure,
 see [Clojure for the Brave and
-True](https://www.braveclojure.com/introduction/). However, I will
-attempt to give you a crash course.
+True](https://www.braveclojure.com/introduction/). If you would prefer
+reference style docs, see the ClojureDocs
+[Quickref](https://clojuredocs.org/quickref). I will attempt to give
+you a crash course, but these resources are probably much better than
+what I could write.
 
 ## Clojure Syntax
 
@@ -110,3 +114,33 @@ the true branch, in this case `"Hello, world!"`
 ```
 
 And then `printf` is evaluated as normal, and prints "Hello, world!".
+
+## Immutable Data Structures
+
+Clojure uses immutable data structures. That means that things like
+lists, arrays, sets, and maps cannot me mutated (changed) in
+place. Clojure's functions for manipulating data structures return new
+copies, leaving the old copy unchanged.
+
+``` clojure
+(let [lista [1 2 3]
+	  listb (conj lista 4)]
+  (println "List A:" lista)
+  (println "List B:" lisb))
+
+;; => "List A: [1 2 3]"
+;; => "List B: [1 2 3 4]"
+```
+
+Notice that the value of `lista` has not changed. Calling `conj`
+(conjoin) on `lista` produces a brand new list, which is then bound to
+`listb`.
+
+Also notice that commas are not needed to separate elements. Commas
+are considered whitespace in Clojure. You can use them if you want,
+but don't need to.
+
+``` clojure
+(= [1 2 3] [1, 2, 3] [1,2,3])
+;; => true
+```
