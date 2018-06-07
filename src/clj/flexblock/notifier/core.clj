@@ -44,7 +44,9 @@
     in))
 
 (mount/defstate notifier
-  :start (let [{:keys [batch-time batch-size]}
+  :start (let [{:keys [batch-time batch-size]
+                :or   {batch-time (* 30 60 1000)
+                       batch-size 1}}
                (:notifier env)]
            (run-notifier! batch-time batch-size))
   :stop (a/close! notifier))
