@@ -7,6 +7,8 @@ specific, see the table of contents below. Otherwise, read on!
 ## Table of Contents
 
 - [Learn Clojure](clojure.md)
+- [Environment](environment.md)
+- [Database](database.md)
 
 ## Getting Started With Flexblock's Documentation
 
