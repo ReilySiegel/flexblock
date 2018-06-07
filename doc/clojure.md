@@ -83,7 +83,7 @@ if (x == 1) {
   (printf "Goodbye, world!"))
 ```
 
-Notice that in Clojure, if is (acts like) a simple functions. It takes
+Notice that in Clojure, if is (acts like) a simple function. It takes
 three arguments: the predicate (in this case `(= x 1)`), the form to
 evaluate if the predicate returns true, `(printf "Hello, world!")`,
 and the form to evaluate if the predicate returns false, `(printf
@@ -118,7 +118,7 @@ And then `printf` is evaluated as normal, and prints "Hello, world!".
 ## Immutable Data Structures
 
 Clojure uses immutable data structures. That means that things like
-lists, arrays, sets, and maps cannot me mutated (changed) in
+lists, arrays, sets, and maps cannot be mutated (changed) in
 place. Clojure's functions for manipulating data structures return new
 copies, leaving the old copy unchanged.
 
