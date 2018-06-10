@@ -20,7 +20,8 @@
             [buddy.auth.backends.token :refer [jwe-backend]]
             [buddy.sign.jwt :refer [encrypt]]
             [buddy.core.nonce :refer [random-bytes]]
-            [clj-time.core :refer [plus now days]])
+            [clj-time.core :refer [plus now days]]
+            [ring.middleware.gzip :as gzip])
   (:import [javax.servlet ServletContext]
            [org.joda.time ReadableInstant]))
 
@@ -126,4 +127,5 @@
            (assoc-in [:security :anti-forgery] false)
            (dissoc :session)))
       wrap-context
-      wrap-internal-error))
+      wrap-internal-error
+      gzip/wrap-gzip))
