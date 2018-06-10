@@ -89,11 +89,13 @@
                 {:output-dir    "target/cljsbuild/public/js"
                  :output-to     "target/cljsbuild/public/js/app.js"
                  :source-map    "target/cljsbuild/public/js/app.js.map"
-                 :optimizations :whitespace
+                 :optimizations :advanced
                  :pretty-print  false
                  :closure-warnings
                  {:externs-validation :off :non-standard-jsdoc :off}
-                 :externs       ["react/externs/react.js"]}}}}
+                 :externs       ["react/externs/react.js"
+                                 "resources/public/js/materialize.min.js"
+                                 "resources/public/js/masonry.pkgd.min.js"]}}}}
 
 
              :aot            :all
