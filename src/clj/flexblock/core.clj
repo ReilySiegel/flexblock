@@ -1,4 +1,12 @@
 (ns flexblock.core
+  "The core namespace for Flexblock.
+  This is the first namespace loaded by the Clojure compiler. After
+  this namespace, along with any `:require`d by it are loaded, the
+  function `-main` is called.
+
+  This namespace is responsible for starting and stopping the various
+  components of the Flexblock system. In addition, the `http-server`
+  and `repl-server` components are located here."
   (:require [flexblock.handler :as handler]
             [luminus.repl-server :as repl]
             [luminus.http-server :as http]
@@ -10,16 +18,18 @@
   (:gen-class))
 
 (def cli-options
+  "Describes the command line options that Flexblock can take."
   [["-p" "--port PORT" "Port number"
     :parse-fn #(Integer/parseInt %)]])
 
 (mount/defstate ^{:on-reload :noop} http-server
   :start
   (http/start
-    (-> env
-        (assoc  :handler #'handler/app)
-        (update :io-threads #(or % (* 2 (.availableProcessors (Runtime/getRuntime)))))
-        (update :port #(or (-> env :options :port) %))))
+   (-> env
+       (assoc  :handler #'handler/app)
+       (update :io-threads #(or % (* 2 (.availableProcessors
+                                        (Runtime/getRuntime)))))
+       (update :port #(or (-> env :options :port) %))))
   :stop
   (http/stop http-server))
 
@@ -32,18 +42,26 @@
     (repl/stop repl-server)))
 
 
-(defn stop-app []
+(defn stop-app
+  "Shut down all of the components.
+  Some components need to be explicitly shut down and cleaned up."
+  []
   (doseq [component (:stopped (mount/stop))]
     (log/info component "stopped"))
   (shutdown-agents))
 
-(defn start-app [args]
+(defn start-app
+  "Start all the components."
+  [args]
   (doseq [component (-> args
                         (parse-opts cli-options)
                         mount/start-with-args
                         :started)]
     (log/info component "started"))
+  ;; Run `stop-app` before Flexblock exits.
   (.addShutdownHook (Runtime/getRuntime) (Thread. stop-app)))
 
-(defn -main [& args]
+(defn -main
+  "Starts Flexblock."
+  [& args]
   (start-app args))
