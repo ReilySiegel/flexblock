@@ -1,6 +1,6 @@
 # Components
 
-## What are Compn
+## What are Components
 
 Flexblock uses [Mount](https://github.com/tolitius/mount) to manage
 application state. These states are used to manage external resources,
