@@ -7,6 +7,7 @@ specific, see the table of contents below. Otherwise, read on!
 ## Table of Contents
 
 - [Learn Clojure](clojure.md)
+- [Components](components.md)
 - [Environment](environment.md)
 - [Database](database.md)
 
