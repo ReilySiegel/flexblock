@@ -53,10 +53,13 @@
 (defn start-app
   "Start all the components."
   [args]
-  (doseq [component (-> args
-                        (parse-opts cli-options)
-                        mount/start-with-args
-                        :started)]
+  (doseq [component
+          ;; Passes arguments to each component, then starts it.
+          (-> args
+              (parse-opts cli-options)
+              mount/start-with-args
+              :started)]
+    ;; For each started component, log that the component has started.
     (log/info component "started"))
   ;; Run `stop-app` before Flexblock exits.
   (.addShutdownHook (Runtime/getRuntime) (Thread. stop-app)))
