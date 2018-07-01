@@ -3,12 +3,12 @@
             [re-frame.core :as rf]
             [secretary.core :as secretary]
             [goog.events :as events]
-            [goog.history.EventType :as HistoryEventType] 
+            [goog.history.EventType :as HistoryEventType]
             [ajax.core :refer [GET POST]]
             [flexblock.ajax :refer [load-interceptors!]]
             [flexblock.events]
             [flexblock.effects]
-            [flexblock.utils :as u] 
+            [flexblock.utils :as u]
             [flexblock.components.login :as login]
             [flexblock.components.navbar :as navbar]
             [flexblock.pages.rooms :as rooms]
@@ -51,7 +51,7 @@
   (r/render [#'page] (.getElementById js/document "app")))
 
 (defn init! []
-  (rf/dispatch-sync [:initialize-db]) 
-  (load-interceptors!) 
+  (rf/dispatch-sync [:initialize-db])
+  (load-interceptors!)
   (hook-browser-navigation!)
-  (mount-components))
+  (js/setTimeout mount-components 2000))

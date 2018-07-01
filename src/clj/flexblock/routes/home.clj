@@ -8,10 +8,11 @@
             [flexblock.routes.user :as user]
             [flexblock.rooms :as rooms]
             [flexblock.validation]
-            [phrase.alpha :as phrase]))
+            [phrase.alpha :as phrase]
+            [flexblock.views.home :refer [home]]))
 
 (defn home-page [request]
-  (layout/render "home.html"))
+  (layout/render (home)))
 
 (defroutes home-routes
   (GET "/" [] home-page))

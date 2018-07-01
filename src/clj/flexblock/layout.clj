@@ -4,25 +4,35 @@
             [markdown.core :refer [md-to-html-string]]
             [ring.util.http-response :refer [content-type ok]]
             [ring.util.anti-forgery :refer [anti-forgery-field]]
+            [hiccup.core :refer [html]]
             [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]))
 
 (declare ^:dynamic *app-context*)
 (parser/set-resource-path!  (clojure.java.io/resource "templates"))
 (parser/add-tag! :csrf-field (fn [_ _] (anti-forgery-field)))
-(filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content)]))
+(filters/add-filter! :markdown
+                     (fn [content] [:safe (md-to-html-string content)]))
 
-(defn render
+(defn render-selmer
   "renders the HTML template located relative to resources/templates"
   [template & [params]]
   (content-type
-    (ok
-      (parser/render-file
-        template
-        (assoc params
-          :page template
-          :csrf-token *anti-forgery-token*
-          :servlet-context *app-context*)))
-    "text/html; charset=utf-8"))
+   (ok
+    (parser/render-file
+     template
+     (assoc params
+            :page template
+            :csrf-token *anti-forgery-token*
+            :servlet-context *app-context*)))
+   "text/html; charset=utf-8"))
+
+(defn render
+  "renders the hiccup template provided."
+  [template]
+  (content-type
+   (ok
+    (html template))
+   "text/html; charset=utf-8"))
 
 (defn error-page
   "error-details should be a map containing the following keys:
