@@ -23,7 +23,7 @@
 (defn navbar []
   (let [loading (rf/subscribe [:loading])
         user    (rf/subscribe [:user])]
-    [:divs
+    [:div
      [password/modal @user {:id "reset-password-modal"}]
      [:nav
       [:div.nav-wrapper.purple
@@ -39,8 +39,9 @@
         (if (empty? @(rf/subscribe [:token]))
           [:li [:a.modal-trigger {:href "#login-modal"} "Login"]]
           [:div
-           [:li [:a.modal-trigger {:href "#reset-password-modal"}
-                 "Reset Password"]]
+           [:li.hide-on-small-only
+            [:a.modal-trigger {:href "#reset-password-modal"}
+             "Reset Password"]]
            [:li [:a {:on-click (fn [_]
                                  (rf/dispatch [:set-rooms []])
                                  (rf/dispatch [:set-user {}])
@@ -48,7 +49,6 @@
                                  (rf/dispatch [:add-user/reset])
                                  (rf/dispatch [:set-active-page :rooms]))}
                  "Logout"]]])]
-       [:ul.left.hide-on-med-and-down]
        (when (pos? @loading)
          [:div.progress.purple.lighten-3
           [:div.indeterminate.amber]])]]]))
