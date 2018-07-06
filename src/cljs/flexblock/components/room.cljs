@@ -34,14 +34,14 @@
           :class-name    "room-form"
           :dispatch-key  :add-room/set-title
           :subscribe-key :room/title}]]
-       [:div.col.l6.m12
+       [:div.col.m6.s12
         [input/text
          {:placeholder   "Room Number"
           :class-name    "room-form"
           :type          :number
           :dispatch-key  :add-room/set-room-number
           :subscribe-key :room/number}]]
-       [:div.col.l6.m12
+       [:div.col.m6.s12
         [input/text
          {:placeholder   "Max Capacity"
           :class-name    "room-form"
@@ -61,7 +61,7 @@
          ;; defined above.
          [input/datepicker {:dispatch-key :add-room/set-date}]]]
 
-       [:div.input-field.col.l6.m12
+       [:div.input-field.col.m6.s12
         [:select
          {:on-change     #(rf/dispatch [:add-room/set-time (-> % .-target .-value)])
           :default-value ""
