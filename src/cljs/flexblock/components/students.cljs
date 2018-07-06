@@ -81,7 +81,7 @@
           :class-name    "user-form"
           :dispatch-key  :add-user/set-email
           :subscribe-key :add-user/email}]]
-       [:div.col.l6.m12
+       [:div.col.m6.s12
         [input/text
          {:placeholder   "Name"
           :class-name    "user-form"
@@ -90,7 +90,7 @@
 
        (if (:admin @(rf/subscribe [:user]))
          [:div
-          [:div.input-field.col.l3.m6
+          [:div.input-field.col.m3.s6
            [:label
             [:input {:type      :checkbox
                      :on-change #(rf/dispatch [:add-user/set-teacher
@@ -98,7 +98,7 @@
                                                    .-target
                                                    .-checked)])}]
             [:span "Teacher"]]]
-          [:div.input-field.col.l3.m6
+          [:div.input-field.col.m3.s6
            [:label
             [:input {:type      :checkbox
                      :on-change #(rf/dispatch [:add-user/set-admin
@@ -106,7 +106,7 @@
                                                    .-target
                                                    .-checked)])}]
             [:span "Admin"]]]]
-         [:div.input-field.col.l6.m12
+         [:div.input-field.col.m6.s12
           (into [:select
                  {:on-change     #(rf/dispatch
                                    [:add-user/set-class
@@ -138,7 +138,8 @@
   (when (and
          (some #(% @(rf/subscribe [:user])) [:teacher :admin])
          (not (str/blank? @(rf/subscribe [:token]))))
-    [:div {:style {:position :fixed
+    [:div {:style {:z-index  1
+                   :position :fixed
                    :right    24
                    :bottom   24}}
      [:a.btn-floating.btn-large.amber.hoverable.modal-trigger
