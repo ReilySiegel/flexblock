@@ -144,7 +144,8 @@
   (when (and
          (:teacher @(rf/subscribe [:user]))
          (not (str/blank? @(rf/subscribe [:token]))))
-    [:div {:style {:position :fixed
+    [:div {:style {:z-index  1
+                   :position :fixed
                    :right    24
                    :bottom   24}}
      [:a.btn-floating.btn-large.amber.hoverable.modal-trigger
