@@ -16,6 +16,8 @@ about the problem. We also set aside issues that are [good for new
 contributors](/../issues?label_name[]=good+first+issue). If you are
 looking for something to contribute, check out these issues.
 
+We also keep a list of [witty loading messages](/doc/loading.md) that make a great first contribution.
+
 ## Forking the Project
 
 Forking a project makes a copy of the project on your own GitLab
