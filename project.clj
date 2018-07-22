@@ -73,7 +73,7 @@
    :nrepl-port       7002
    :css-dirs         ["resources/public/css"]
    :nrepl-middleware
-   [cemerick.piggieback/wrap-cljs-repl cider.nrepl/cider-middleware]}
+   [cider.piggieback/wrap-cljs-repl cider.nrepl/cider-middleware]}
 
 
   :profiles
@@ -108,7 +108,7 @@
 
    :project/dev {:jvm-opts     ["-server" "-Dconf=dev-config.edn"]
                  :dependencies [[binaryage/devtools "0.9.10"]
-                                [com.cemerick/piggieback "0.2.2"]
+                                [cider/piggieback "0.3.6"]
                                 [doo "0.1.10"]
                                 [figwheel-sidecar "0.5.16"]
                                 [pjstadig/humane-test-output "0.8.3"]
