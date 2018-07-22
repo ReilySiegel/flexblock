@@ -130,7 +130,7 @@
      (if (:admin @(rf/subscribe [:user])) "Add Teacher" "Add Student")]
     [add-user-form]]
    [:div.modal-footer
-    [:a.btn-flat.amber-text.darken-1.waves-effect.waves-purple
+    [:button.btn-flat.amber-text.darken-1.waves-effect.waves-purple
      {:on-click #(rf/dispatch [:user/post-user])}
      "Submit"]]])
 

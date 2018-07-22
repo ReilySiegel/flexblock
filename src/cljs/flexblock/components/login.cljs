@@ -21,7 +21,7 @@
                             (u/get-users)))
          :error-handler u/default-error-handler}))
 
-(defn modal [] 
+(defn modal []
   [modal/standard "login-modal"
    [:div.modal-content
     [:h4.center.purple-text.text-lighten-3 "Login"]
@@ -29,6 +29,7 @@
      [:div.col.l6.m12
       [input/text
        {:placeholder   "Username"
+        :id            "login-username-input"
         :type          :email
         :class-name    "login-form"
         :dispatch-key  :login/set-username
@@ -39,9 +40,8 @@
         :class-name    "login-form"
         :type          :password
         :dispatch-key  :login/set-password
-        :subscribe-key :login/password}]]]] 
-   [:div.modal-footer 
-    [:a.btn-flat.amber-text.darken-1.waves-effect.waves-purple
+        :subscribe-key :login/password}]]]]
+   [:div.modal-footer
+    [:button.btn-flat.amber-text.darken-1.waves-effect.waves-purple
      {:on-click submit-login}
      "Submit"]]])
-

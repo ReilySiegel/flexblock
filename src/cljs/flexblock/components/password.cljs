@@ -10,7 +10,7 @@
   (let [{:keys [id]
          :or   {id (str "passwordmodal" (:id user))}}
         opts]
-    ^{:key (:id user)} 
+    ^{:key (:id user)}
     [modal/standard id
      [:div.modal-content
       [:h4.center.purple-text.text-lighten-3
@@ -18,10 +18,10 @@
       [:div.row [:div.col.l6.offset-l3.m12
                  [input/text
                   {:type          :password
-                   :placeholder   "New Password" 
+                   :placeholder   "New Password"
                    :dispatch-key  :set-reset-password
                    :subscribe-key :reset-password}]]]]
      [:div.modal-footer
-      [:a.btn-flat.amber-text.waves-effect.waves-purple
+      [:button.btn-flat.amber-text.waves-effect.waves-purple
        {:on-click #(u/set-password (:id user))}
        "Reset Password"]]]))

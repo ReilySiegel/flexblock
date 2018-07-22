@@ -80,7 +80,7 @@
     [:h4.center.purple-text.text-lighten-3 "Add Session"]
     [form]]
    [:div.modal-footer
-    [:a.btn-flat.amber-text.darken-1.waves-effect.waves-purple
+    [:button.btn-flat.amber-text.darken-1.waves-effect.waves-purple
      {:on-click u/post-room}
      "Submit"]]])
 

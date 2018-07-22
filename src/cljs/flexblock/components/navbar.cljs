@@ -1,6 +1,7 @@
 (ns flexblock.components.navbar
   (:require [re-frame.core :as rf]
             [flexblock.utils :as u]
+            [flexblock.components.input :as input]
             [flexblock.components.password :as password]))
 
 (defn nav-link [uri title page]
@@ -37,7 +38,9 @@
           [page-button])]
        [:ul.right
         (if (empty? @(rf/subscribe [:token]))
-          [:li [:a.modal-trigger {:href "#login-modal"} "Login"]]
+          [:li [:a.modal-trigger
+                {:on-click #(input/focus "login-username-input")
+                 :href     "#login-modal"} "Login"]]
           [:div
            [:li.hide-on-small-only
             [:a.modal-trigger {:href "#reset-password-modal"}

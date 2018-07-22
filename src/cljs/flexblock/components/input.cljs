@@ -1,4 +1,3 @@
-
 (ns flexblock.components.input
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
@@ -7,6 +6,11 @@
             [goog.string :as gstring]
             [goog.string.format]
             [phrase.alpha :as phrase]))
+
+(defn focus
+  "Sets focus to the input with the provided id."
+  [id]
+  (.focus (.getElementById js/document id)))
 
 (defn text
   [{:keys [id placeholder class-name type
@@ -56,17 +60,17 @@
       (fn [opts]
         [:input.datepicker
          (-> {:id          id
-              :placeholder placeholder} 
+              :placeholder placeholder}
              (merge
               (when subscribe-key
                 (when-let [date @(rf/subscribe [subscribe-key])]
                   (when-not (nil? date)
                     (println date)
                     {:default-value (->> (str/split (.toDateString date) #" ")
-                                         rest 
+                                         rest
                                          (apply gstring/format
                                                 "%s %s, %s"))})))))])})))
 
 (defn clear-selector [selector]
-  (when-let [e (array-seq (.querySelectorAll js/document selector))] 
+  (when-let [e (array-seq (.querySelectorAll js/document selector))]
     (doall (map #(set! (.-value %) "") e))))
