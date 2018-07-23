@@ -45,13 +45,23 @@
         (apply hash-set))
    user-id))
 
-(defn search [search room]
-  (let [search   (str/trim (str/lower-case search))
-        searches (str/split search #"\s+")]
-    (reduce + (for [search searches]
-                (+ (search/search-string search
-                                         (:description room))
-                   (search/search-string search
-                                         (:title room))
-                   (search/search-string search
-                                         (:name (get-teacher room))))))))
+(defn room->str
+  "Converts a room map into a string, for searching purposes."
+  [room]
+  (str/join " " [(:title room)
+                 (:description room)
+                 (:name (get-teacher room))]))
+
+(defn make-search
+  "Returns a function that takes one arg, a room, and returns its search score."
+  [rooms search]
+  (let [corpus        (map (comp set search/tokenize room->str) rooms)
+        search        (search/tokenize search)
+        search-tf-idf (search/tf-idf search corpus)]
+    (fn [room]
+      (search/cosine-similarity
+       search-tf-idf
+       (-> room
+           room->str
+           search/tokenize
+           (search/tf-idf corpus))))))
