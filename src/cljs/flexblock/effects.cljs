@@ -1,10 +1,21 @@
 (ns flexblock.effects
-  (:require [re-frame.fx :refer [reg-fx]]))
+  (:require [re-frame.fx :refer [reg-fx]]
+            [flexblock.db :as db]))
 
 (reg-fx
  :notification
  (fn [message]
    (.toast js/M (clj->js {:html message}))))
+
+(reg-fx
+ :overwrite-localstorage
+ (fn [m]
+   (db/set-localstorage! m)))
+
+(reg-fx
+ :localstorage
+ (fn [m]
+   (db/set-localstorage! (merge (db/get-localstorage) m))))
 
 (reg-fx
  :close-modal

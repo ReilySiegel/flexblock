@@ -45,12 +45,7 @@
            [:li.hide-on-small-only
             [:a.modal-trigger {:href "#reset-password-modal"}
              "Reset Password"]]
-           [:li [:a {:on-click (fn [_]
-                                 (rf/dispatch [:set-rooms []])
-                                 (rf/dispatch [:set-user {}])
-                                 (rf/dispatch [:set-token ""])
-                                 (rf/dispatch [:add-user/reset])
-                                 (rf/dispatch [:set-active-page :rooms]))}
+           [:li [:a {:on-click #(rf/dispatch [:logout])}
                  "Logout"]]])]
        (when (pos? @loading)
          [:div.progress.purple.lighten-3

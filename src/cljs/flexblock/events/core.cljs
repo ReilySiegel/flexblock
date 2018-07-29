@@ -4,6 +4,7 @@
             [ajax.core :as ajax]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-sub]]
             [flexblock.events.http]
+            [flexblock.events.login]
             [flexblock.events.mailer]
             [flexblock.events.students]))
 
@@ -15,14 +16,9 @@
    db/default-db))
 
 (reg-event-db
-  :set-active-page
-  (fn [db [_ page]]
-    (assoc db :page page)))
-
-(reg-event-db
- :set-token
- (fn [db [_ token]]
-   (assoc db :token token)))
+ :set-active-page
+ (fn [db [_ page]]
+   (assoc db :page page)))
 
 (reg-event-db
  :login/set-username
@@ -85,18 +81,13 @@
 
 (reg-event-db
  :add-room/set-time
- (fn [db [_ time]] 
+ (fn [db [_ time]]
    (assoc-in db [:add-room :time] time)))
 
 (reg-event-db
  :add-room/reset-room
  (fn [db _]
    (assoc db :add-room db/room-db)))
-
-(reg-event-db
- :set-user
- (fn [db [_ user]]
-   (assoc db :user user)))
 
 (reg-event-db
  :set-search
@@ -131,17 +122,17 @@
    (:page db)))
 
 (reg-sub
- :token 
+ :token
  (fn [db _]
    (:token db)))
 
 (reg-sub
- :login/username 
+ :login/username
  (fn [db _]
    (get-in db [:login :username])))
 
 (reg-sub
- :login/password 
+ :login/password
  (fn [db _]
    (get-in db [:login :password])))
 
