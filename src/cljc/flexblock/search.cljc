@@ -13,8 +13,9 @@
     "who" "will" "with"})
 
 (defn- tokenize [s]
-  (->> (str/split (str/lower-case s) #"[^a-zäöüáéíóúãâêîôûàèìòùçñ]+")
-       (remove stopwords)))
+  (remove
+   stopwords
+   (str/split (str/lower-case s) #"[^a-zäöüáéíóúãâêîôûàèìòùçñ]+")))
 
 (defn- term-frequencies [tokens]
   (let [freqs      (frequencies tokens)
@@ -26,7 +27,7 @@
 
 (defn- idf [term corpus]
   (let [documents-matching-term (count (filter #(% term) corpus))]
-    (if (> documents-matching-term 0)
+    (if (pos? documents-matching-term)
       (-> (count corpus)
           (/ documents-matching-term)
           Math/log
