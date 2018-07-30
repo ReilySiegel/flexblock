@@ -53,15 +53,8 @@
                  (:name (get-teacher room))]))
 
 (defn make-search
-  "Returns a function that takes one arg, a room, and returns its search score."
+  "Room-specific version of `flexblock.search/make-search`. Uses
+  `room->str` as the processing-fn. See `flexblock.search/make-search`
+  for more details."
   [rooms search]
-  (let [corpus        (map (comp set search/tokenize room->str) rooms)
-        search        (search/tokenize search)
-        search-tf-idf (search/tf-idf search corpus)]
-    (fn [room]
-      (search/cosine-similarity
-       search-tf-idf
-       (-> room
-           room->str
-           search/tokenize
-           (search/tf-idf corpus))))))
+  (search/make-search rooms search room->str))

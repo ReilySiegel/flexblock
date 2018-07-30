@@ -12,11 +12,11 @@
     "it" "of" "on" "or" "that" "the" "this" "to" "was" "what" "when" "where"
     "who" "will" "with"})
 
-(defn tokenize [s]
+(defn- tokenize [s]
   (->> (str/split (str/lower-case s) #"[^a-zäöüáéíóúãâêîôûàèìòùçñ]+")
        (remove stopwords)))
 
-(defn term-frequencies [tokens]
+(defn- term-frequencies [tokens]
   (let [freqs      (frequencies tokens)
         term-count (count tokens)]
     (->> freqs
@@ -24,7 +24,7 @@
                 [term (/ frequency term-count)]))
          (into {}))))
 
-(defn idf [term corpus]
+(defn- idf [term corpus]
   (let [documents-matching-term (count (filter #(% term) corpus))]
     (if (> documents-matching-term 0)
       (-> (count corpus)
@@ -33,26 +33,27 @@
           (+ 1))
       1.0)))
 
-(defn tf-idf [document corpus]
+(defn- tf-idf [document corpus]
   (->> (term-frequencies document)
        (map (fn [[term freq]]
               [term (* freq (idf term corpus))]))
        (into {})))
 
-(defn dot-product [document another-document]
+(defn- dot-product [document another-document]
   (->> document
        (map (fn [[term tf-idf]]
               (* tf-idf (get another-document term 0.0))))
        (reduce +)))
 
-(defn magnitude [document]
+(defn- magnitude [document]
   (->> document
        (map (fn [[_ tf-idf]]
               (* tf-idf tf-idf)))
        (reduce +)
        Math/sqrt))
 
-(defn cosine-similarity [document another-document]
+(defn- cosine-similarity
+  [document another-document]
   (let [dot-p                      (dot-product document another-document)
         document-magnitude         (magnitude document)
         another-document-magnitude (magnitude (select-keys another-document
@@ -64,12 +65,40 @@
       (/ dot-p magnitude-product))))
 
 (defn search
-  "Returns a the cosine-similarity between two strings, given a corpus
-  of strings."
+  "Returns a the cosine-similarity between two strings, given a
+  corpus (seq) of strings."
   [search string corpus]
   (let [tokenized-corpus (map (comp set tokenize) corpus)]
     (cosine-similarity (tf-idf (tokenize search) tokenized-corpus)
                        (tf-idf (tokenize string) tokenized-corpus))))
+
+(defn make-search
+  "Curried version of `search`, with extra goodies. Takes a seq
+  `documents`, and a `search` term. The `search` term should be a
+  string. The `documents` should either be a seq of strings, or a
+  processing function must be provided to transform the `documents`
+  into strings.
+
+  Returns a function which takes one `document` as an argument, and
+  returns the cosine similarity between the `search` term and the
+  `document`. The `document` must also either be a string, or become a
+  string after processing-fn is applied.
+
+  processing-fn defaults to `identity`."
+  ([documents search] (make-search documents search identity))
+  ([documents search processing-fn]
+   (let [corpus        (map (comp set tokenize processing-fn)
+                            documents)
+         search        (tokenize search)
+         search-tf-idf (tf-idf search corpus)]
+     (fn [document]
+       (cosine-similarity
+        search-tf-idf
+        (-> document
+            processing-fn
+            tokenize
+            (tf-idf corpus)))))))
+
 
 (defn search-string
   "Fuzzy searches for search in string.
