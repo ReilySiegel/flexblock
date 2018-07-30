@@ -1,3 +1,5 @@
+# Environment
+
 ## Overview
 
 Flexblock uses [cprop](https://github.com/tolitius/cprop) to manage
@@ -13,13 +15,15 @@ This is an example `config.edn` file that shows how database
 connection info might be stored.
 
 ```edn
-{:db
+{:database
  {:connection
   {:classname   "org.postgresql.Driver"
    :subprotocol "postgresql"
    :subname     "//localhost:5432/my_db"
    :user        "user"
-   :password    "password"}}}
+   :password    "password"}}
+ :notifier
+ {:batch-size 1000}}}
 ```
 
 As you can see, configuration is stored in a nested associative data
@@ -32,11 +36,11 @@ variables, using double underscore `__` as a nesting character. For
 example, the above data structure might look like this in bash.
 
 ```bash
-export DB__CONNECTION__CLASSNAME="org.postgresql.Driver"
-export DB__CONNECTION__SUBPROTOCOL="postgresql"
-export DB__CONNECTION__SUBNAME="//localhost:5432/my_db"
-export DB__CONNECTION__USER="user"
-export DB__CONNECTION__PASSWORD="password"
+export DATABASE__CONNECTION__CLASSNAME="org.postgresql.Driver"
+export DATABASE__CONNECTION__SUBPROTOCOL="postgresql"
+export DATABASE__CONNECTION__SUBNAME="//localhost:5432/my_db"
+export DATABASE__CONNECTION__USER="user"
+export DATABASE__CONNECTION__PASSWORD="password"
 ```
 
 ## Development
