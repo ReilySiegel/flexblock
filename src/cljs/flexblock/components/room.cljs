@@ -165,6 +165,8 @@
             (sort-by :date)
             (sort-by #(not= (:name @(rf/subscribe [:user]))
                             (:name (rm/get-teacher %))))
-            (sort-by search)
+            ;; Search gives higher numbers for better matches, so we
+            ;; need to sort in descending order.
+            (sort-by search #(compare %2 %1))
             (map card)))]
      (doall (map attendance/modal @rooms))]))
