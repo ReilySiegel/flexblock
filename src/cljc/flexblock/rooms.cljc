@@ -45,13 +45,16 @@
         (apply hash-set))
    user-id))
 
-(defn search [search room]
-  (let [search   (str/trim (str/lower-case search))
-        searches (str/split search #"\s+")]
-    (reduce + (for [search searches]
-                (+ (search/search-string search
-                                         (:description room))
-                   (search/search-string search
-                                         (:title room))
-                   (search/search-string search
-                                         (:name (get-teacher room))))))))
+(defn room->str
+  "Converts a room map into a string, for searching purposes."
+  [room]
+  (str/join " " [(:title room)
+                 (:description room)
+                 (:name (get-teacher room))]))
+
+(defn make-search
+  "Room-specific version of `flexblock.search/make-search`. Uses
+  `room->str` as the processing-fn. See `flexblock.search/make-search`
+  for more details."
+  [rooms search]
+  (search/make-search rooms search room->str))

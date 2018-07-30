@@ -155,7 +155,8 @@
 (defn grid
   "Returns a grid of rooms."
   []
-  (let [rooms (rf/subscribe [:rooms])]
+  (let [rooms  (rf/subscribe [:rooms])
+        search (rm/make-search @rooms @(rf/subscribe [:search]))]
     [:div.container
      [search/search-bar]
      [grid/grid
@@ -164,6 +165,8 @@
             (sort-by :date)
             (sort-by #(not= (:name @(rf/subscribe [:user]))
                             (:name (rm/get-teacher %))))
-            (sort-by #(rm/search @(rf/subscribe [:search]) %))
+            ;; Search gives higher numbers for better matches, so we
+            ;; need to sort in descending order.
+            (sort-by search #(compare %2 %1))
             (map card)))]
      (doall (map attendance/modal @rooms))]))

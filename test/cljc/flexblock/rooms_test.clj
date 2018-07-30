@@ -50,17 +50,27 @@
       (is (not (in-room? room 3))))))
 
 (deftest search-test
-  (let [rooma {:title       "Test"
-               :description "A Test Room"
-               :users       [{:name "A Teacher" :teacher true}]}
-        roomb {:title       "Example"
-               :description "An Example Room"
-               :users       [{:name "Another Teacher" :teacher true}]}]
+  (let [rooma             {:title       "Test"
+                           :description "A Test Room"
+                           :users       [{:name    "A Teacher"
+                                          :teacher true}]}
+        roomb             {:title       "Example "
+                           :description "An Example Room"
+                           :users       [{:name    "Another Teacher"
+                                          :teacher true}]}
+        rooms             [rooma roomb]
+        search-example    (make-search rooms "Example")
+        search-example-up (make-search rooms "EXAMPLE")
+        search-another    (make-search rooms "Another")]
     (testing "Correctly searches by title."
-      (is (> (search "Example" rooma) (search "Example" roomb)))
-      (is (= (search "example" rooma) (search "example" rooma))
+      (is (< (search-example rooma)
+             (search-example roomb)))
+      (is (= (search-example rooma)
+             (search-example-up rooma))
           "Search is case insensitive."))
     (testing "Correctly searches by description."
-      (is (> (search "Example" rooma) (search "Example" roomb))))
-    (testing "Correctly searched by teacher."
-      (is (> (search "Another" rooma) (search "Another" roomb))))))
+      (is (< (search-example rooma)
+             (search-example roomb))))
+    (testing "Correctly searches by teacher."
+      (is (< (search-another rooma)
+             (search-another roomb))))))
