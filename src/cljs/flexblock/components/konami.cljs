@@ -19,10 +19,10 @@
      {:component-did-mount
       (fn []
         (.addEventListener js/document
-                           "keypress"
+                           "keydown"
                            listener))
       :component-will-unmount
-      #(.removeEventListener js/document "keypress" listener)
+      #(.removeEventListener js/document "keydown" listener)
       :reagent-render
       (fn []
         (when (= @keys konami-code)
