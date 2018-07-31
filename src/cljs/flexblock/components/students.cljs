@@ -5,7 +5,6 @@
    [re-frame.core :as rf]
    [flexblock.rooms :as rooms]
    [flexblock.users :as user]
-   [flexblock.utils :as u]
    [flexblock.components.emailer :as emailer]
    [flexblock.components.grid :as grid]
    [flexblock.components.search :as search]
@@ -42,7 +41,7 @@
   [user]
   (let [sessions (:rooms user)]
     ^{:key (:id user)}
-    [modal/bottom-sheet (str "sessionmodal" (:id user))
+    [modal/bottom-sheet {:id (str "sessionmodal" (:id user))}
      [:div.modal-content
       [:h4.purple-text.text-lighten-3 "Sessions"]
       [:div.row
@@ -62,77 +61,53 @@
       (range (inc year) (+ 5 year))
       (range year (+ 4 year)))))
 
-(defn add-user-form
+(defn add
   "The form for creating a new user."
   []
-  (r/create-class
-   {:component-did-mount
+  (let [name     (r/atom "")
+        email    (r/atom "")
+        teacher? (r/atom false)
+        admin?   (r/atom false)
+        class    (r/atom nil)]
     (fn []
-      (.init js/M.CharacterCounter
-             (.querySelectorAll js/document ".charcount"))
-      (.init js/M.Select
-             (.querySelectorAll js/document "select")))
-    :reagent-render
-    (fn []
-      [:div.row
-       [:div.col.s12
-        [input/text
-         {:placeholder   "Email"
-          :class-name    "user-form"
-          :dispatch-key  :add-user/set-email
-          :subscribe-key :add-user/email}]]
-       [:div.col.m6.s12
-        [input/text
-         {:placeholder   "Name"
-          :class-name    "user-form"
-          :dispatch-key  :add-user/set-name
-          :subscribe-key :add-user/name}]]
+      [modal/standard {:id "add-user-modal"}
+       [:div.modal-content
+        [:h4.center.purple-text.text-lighten-3
+         (if (:admin @(rf/subscribe [:user])) "Add Teacher" "Add Student")]
+        [:div.row
+         [:div.col.s12
+          [input/text
+           {:placeholder "Email"
+            :atom        email}]]
+         [:div.col.m6.s12
+          [input/text
+           {:placeholder "Name"
+            :atom        name}]]
 
-       (if (:admin @(rf/subscribe [:user]))
-         [:div
-          [:div.input-field.col.m3.s6
-           [:label
-            [:input {:type      :checkbox
-                     :on-change #(rf/dispatch [:add-user/set-teacher
-                                               (-> %
-                                                   .-target
-                                                   .-checked)])}]
-            [:span "Teacher"]]]
-          [:div.input-field.col.m3.s6
-           [:label
-            [:input {:type      :checkbox
-                     :on-change #(rf/dispatch [:add-user/set-admin
-                                               (-> %
-                                                   .-target
-                                                   .-checked)])}]
-            [:span "Admin"]]]]
-         [:div.input-field.col.m6.s12
-          (into [:select
-                 {:on-change     #(rf/dispatch
-                                   [:add-user/set-class
-                                    (-> %
-                                        .-target
-                                        .-value
-                                        js/parseInt)])
-                  :default-value ""
-                  :class-name    "user-form"}]
-                (conj (for [year (get-years (js/Date.))]
-                        ^{:key year} [:option {:value year} (str year)])
-                      [:option {:value    ""
-                                :disabled true} "Class"]))])])}))
-
-(defn add
-  "The modal that contains `flexblock.components.room/form`."
-  []
-  [modal/standard "add-user-modal"
-   [:div.modal-content
-    [:h4.center.purple-text.text-lighten-3
-     (if (:admin @(rf/subscribe [:user])) "Add Teacher" "Add Student")]
-    [add-user-form]]
-   [:div.modal-footer
-    [:button.btn-flat.amber-text.darken-1.waves-effect.waves-purple
-     {:on-click #(rf/dispatch [:user/post-user])}
-     "Submit"]]])
+         (if (:admin @(rf/subscribe [:user]))
+           [:div
+            [:div.input-field.col.m3.s6
+             [input/checkbox
+              {:label "Teacher"
+               :atom  teacher?}]]
+            [:div.input-field.col.m3.s6
+             [input/checkbox
+              {:label "Admin"
+               :atom  admin?}]]]
+           [:div.input-field.col.m6.s12
+            [input/select
+             {:placeholder "Class"
+              :options     (get-years (js/Date.))
+              :atom        class}]])]]
+       [:div.modal-footer
+        [:button.btn-flat.amber-text.darken-1.waves-effect.waves-purple
+         {:on-click (fn []
+                      (rf/dispatch [:user/post-user {:name    @name
+                                                     :email   @email
+                                                     :teacher @teacher?
+                                                     :admin   @admin?
+                                                     :class   @class}]))}
+         "Submit"]]])))
 
 (defn fab []
   (when (and
@@ -164,30 +139,32 @@
 (defn grid
   "Returns a grid of students."
   []
-  (let [users (rf/subscribe [:users])]
-    (if (seq @users)
-      (let [date        @(rf/subscribe [:date])
-            students-uf (->> @users
-                             (sort-by :name)
-                             (sort-by #(user/search
-                                        @(rf/subscribe [:search]) %)))
-            students    (if (:admin @(rf/subscribe [:user]))
-                          students-uf
-                          (->> students-uf
-                               (remove :teacher)
-                               (remove :admin)))]
-        [:div.container
-         [search/search-bar]
-         [search/date-bar]
-         [:div.row
-          [grid/grid
-           (doall
-            (if (nil? date)
-              (map card students)
-              (map card
-                   (->> students
-                        (remove #(user/flexblock-on-date? % date))
-                        (remove :admin)))))]
-          (doall (map modal students))
-          (doall (map password/modal students))]])
-      [:div.grid-user])))
+  (rf/dispatch [:user/get])
+  (fn []
+    (let [users (rf/subscribe [:users])]
+      (if (seq @users)
+        (let [date        @(rf/subscribe [:date])
+              students-uf (->> @users
+                               (sort-by :name)
+                               (sort-by #(user/search
+                                          @(rf/subscribe [:search]) %)))
+              students    (if (:admin @(rf/subscribe [:user]))
+                            students-uf
+                            (->> students-uf
+                                 (remove :teacher)
+                                 (remove :admin)))]
+          [:div.container
+           [search/search-bar]
+           [search/date-bar]
+           [:div.row
+            [grid/grid
+             (doall
+              (if (nil? date)
+                (map card students)
+                (map card
+                     (->> students
+                          (remove #(user/flexblock-on-date? % date))
+                          (remove :admin)))))]
+            (doall (map modal students))
+            (doall (map password/modal students))]])
+        [:div.grid-user]))))

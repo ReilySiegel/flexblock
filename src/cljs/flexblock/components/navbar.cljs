@@ -1,6 +1,5 @@
 (ns flexblock.components.navbar
   (:require [re-frame.core :as rf]
-            [flexblock.utils :as u]
             [flexblock.components.input :as input]
             [flexblock.components.password :as password]))
 
@@ -22,15 +21,15 @@
                  [:a "Sessions"]])))
 
 (defn navbar []
-  (let [loading (rf/subscribe [:loading])
-        user    (rf/subscribe [:user])]
+  (let [user (rf/subscribe [:user])]
     [:div
      [password/modal @user {:id "reset-password-modal"}]
      [:nav
       [:div.nav-wrapper.purple
        [:a.brand-logo.center
-        {:on-click #(do (u/get-rooms)
-                        (u/get-users))
+        {:on-click (fn []
+                     (rf/dispatch [:room/get])
+                     (rf/dispatch [:user/get]))
          :style    {:cursor :pointer}}
         "FlexBlock"]
        [:ul.left
@@ -46,7 +45,4 @@
             [:a.modal-trigger {:href "#reset-password-modal"}
              "Reset Password"]]
            [:li [:a {:on-click #(rf/dispatch [:logout])}
-                 "Logout"]]])]
-       (when (pos? @loading)
-         [:div.progress.purple.lighten-3
-          [:div.indeterminate.amber]])]]]))
+                 "Logout"]]])]]]]))

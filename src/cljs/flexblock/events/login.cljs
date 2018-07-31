@@ -10,16 +10,18 @@
                       (assoc :token token)
                       (assoc :user user))
     :notification "Logged In"
+    :dispatch-n   [[:room/get] [:user/get]]
     :localstorage {:token token
                    :user  user}
     :close-modal  "#login-modal"}))
 
 (rf/reg-event-fx
  :logout
- (fn [_ _]
-   {:db                     db/default-db
-    :overwrite-localstorage {}
-    :notification           "Logged Out"}))
+ (fn [{:keys [db]} _]
+   {:overwrite-localstorage {}
+    :notification           "Logged Out"
+    ;; Wait for localstorage to be overwritten.
+    :dispatch-later [{:ms 250 :dispatch [:initialize-db]}]}))
 
 (rf/reg-event-fx
  :login

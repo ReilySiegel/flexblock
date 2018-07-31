@@ -1,4 +1,3 @@
-
 (ns flexblock.components.room
   "Render functions for elements related to showing rooms."
   (:require
@@ -6,7 +5,6 @@
    [re-frame.core :as rf]
    [clojure.string :as str]
    [flexblock.rooms :as room]
-   [flexblock.utils :as u]
    [flexblock.rooms :as rm]
    [flexblock.components.input :as input]
    [flexblock.components.attendance :as attendance]
@@ -15,74 +13,61 @@
    [flexblock.components.search :as search])
   (:import goog.date.Date))
 
-(defn form
+(defn add
   "The form for creating a new room."
   []
-  (r/create-class
-   {:component-did-mount
+  (let [title       (r/atom "")
+        number      (r/atom "")
+        capacity    (r/atom "")
+        description (r/atom "")
+        date        (r/atom nil)
+        time        (r/atom nil)]
     (fn []
-      (.init js/M.CharacterCounter
-             (.querySelectorAll js/document ".charcount"))
-      (.init js/M.Select
-             (.querySelectorAll js/document "select")))
-    :reagent-render
-    (fn []
-      [:div.row
-       [:div.col.s12
-        [input/text
-         {:placeholder   "Title"
-          :class-name    "room-form"
-          :dispatch-key  :add-room/set-title
-          :subscribe-key :room/title}]]
-       [:div.col.m6.s12
-        [input/text
-         {:placeholder   "Room Number"
-          :class-name    "room-form"
-          :type          :number
-          :dispatch-key  :add-room/set-room-number
-          :subscribe-key :room/number}]]
-       [:div.col.m6.s12
-        [input/text
-         {:placeholder   "Max Capacity"
-          :class-name    "room-form"
-          :type          :number
-          :dispatch-key  :add-room/set-max-capacity
-          :subscribe-key :room/max-capacity}]]
-       [:div.col.s12
-        [input/text
-         {:placeholder   "Description"
-          :class-name    "charcount room-form"
-          :dispatch-key  :add-room/set-description
-          :subscribe-key :room/description}]]
-
-       [:div.col.m6.s12
-        [:div.input-field
-         ;; Styles defined in resources/public/css/styles.css, options
-         ;; defined above.
-         [input/datepicker {:dispatch-key :add-room/set-date}]]]
-
-       [:div.input-field.col.m6.s12
-        [:select
-         {:on-change     #(rf/dispatch [:add-room/set-time (-> % .-target .-value)])
-          :default-value ""
-          :class-name    "room-form"}
-         [:option {:value    ""
-                   :disabled true} "Choose a time"]
-         [:option {:value :after} "After School"]
-         [:option {:value :before} "Before School"]
-         [:option {:value :flex} "Flex Block"]]]])}))
-
-(defn add
-  "The modal that contains `flexblock.components.room/form`."
-  []
-  [modal/fixed-footer "add-room-modal"
-   [:div.modal-content
-    [:h4.center.purple-text.text-lighten-3 "Add Session"]
-    [form]]
-   [:div.modal-footer
-    [:button.btn-flat.amber-text.darken-1.waves-effect.waves-purple
-     {:on-click u/post-room}
-     "Submit"]]])
+      [modal/fixed-footer
+       {:id       "add-room-modal"
+        :on-close (fn []
+                    (reset! title "")
+                    (reset! capacity "")
+                    (reset! number "")
+                    (reset! description "")
+                    (reset! date nil)
+                    (reset! time nil))}
+       [:div.modal-content
+        [:h4.center.purple-text.text-lighten-3 "Add Session"]
+        [:div.row
+         [:div.col.s12
+          [input/text {:placeholder "Title" :atom title}]]
+         [:div.col.m6.s12
+          [input/text {:placeholder "Room Number"
+                       :atom        number
+                       :type        :number}]]
+         [:div.col.m6.s12
+          [input/text {:placeholder "Max Capacity"
+                       :atom        capacity
+                       :type        :number}]]
+         [:div.col.s12
+          [input/text {:placeholder "Description" :atom description}]]
+         [:div.col.m6.s12
+          [:div.input-field
+           ;; Styles defined in resources/public/css/styles.css
+           [input/datepicker {:atom date}]]]
+         [:div.input-field.col.m6.s12
+          [input/select
+           {:atom        time
+            :placeholder "Choose a Time"
+            :options     [{:value "after" :label "After School"}
+                          {:value "before" :label "Before School"}
+                          {:value "flex" :label "Flex Block"}]}]]]]
+       [:div.modal-footer
+        [:button.btn-flat.amber-text.darken-1.waves-effect.waves-purple
+         {:on-click (fn []
+                      (rf/dispatch [:room/post {:title        @title
+                                                :max-capacity @capacity
+                                                :room-number  @number
+                                                :description  @description
+                                                :date         @date
+                                                :time         @time}]))}
+         "Submit"]]])))
 
 (defn- buttons
   "Returns the appropriate actions that a user can take on a `room`."
@@ -96,17 +81,17 @@
        (and (not (:teacher user))
             (not user-in-room?))
        [:a.btn-flat.amber-text.waves-effect.waves-purple
-        {:on-click #(u/join-room id)} "Join"]
+        {:on-click #(rf/dispatch [:room/join id])} "Join"]
 
        (and (not (:teacher user))
             user-in-room?)
        [:a.btn-flat.amber-text.waves-effect.waves-purple
-        {:on-click #(u/leave-room id)} "Leave"]
+        {:on-click #(rf/dispatch [:room/leave id])} "Leave"]
 
        (and (:teacher user)
             user-in-room?)
        [:a.btn-flat.amber-text.waves-effect.waves-purple
-        {:on-click #(u/delete-room id)} "Delete"]
+        {:on-click #(rf/dispatch [:room/delete id])} "Delete"]
 
        :else
        [:div])
@@ -155,18 +140,20 @@
 (defn grid
   "Returns a grid of rooms."
   []
-  (let [rooms  (rf/subscribe [:rooms])
-        search (rm/make-search @rooms @(rf/subscribe [:search]))]
-    [:div.container
-     [search/search-bar]
-     [grid/grid
-      (doall
-       (->> @rooms
-            (sort-by :date)
-            (sort-by #(not= (:name @(rf/subscribe [:user]))
-                            (:name (rm/get-teacher %))))
-            ;; Search gives higher numbers for better matches, so we
-            ;; need to sort in descending order.
-            (sort-by search #(compare %2 %1))
-            (map card)))]
-     (doall (map attendance/modal @rooms))]))
+  (rf/dispatch [:room/get])
+  (fn []
+    (let [rooms  (rf/subscribe [:rooms])
+          search (rm/make-search @rooms @(rf/subscribe [:search]))]
+      [:div.container
+       [search/search-bar]
+       [grid/grid
+        (doall
+         (->> @rooms
+              (sort-by :date)
+              (sort-by #(not= (:name @(rf/subscribe [:user]))
+                              (:name (rm/get-teacher %))))
+              ;; Search gives higher numbers for better matches, so we
+              ;; need to sort in descending order.
+              (sort-by search #(compare %2 %1))
+              (map card)))]
+       (doall (map attendance/modal @rooms))])))

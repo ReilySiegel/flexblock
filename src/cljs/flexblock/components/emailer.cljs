@@ -24,7 +24,7 @@
                       (remove :admin)
                       (remove #(users/flexblock-on-date? % @date))
                       (sort-by :name))]
-    [modal/fixed-footer "emailermodal"
+    [modal/fixed-footer {:id "emailermodal"}
      [:div.modal-content
       [:h4.center.purple-text.text-lighten-3 "Emailer"]
       (if (str/blank? @date)

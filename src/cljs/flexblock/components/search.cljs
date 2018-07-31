@@ -10,7 +10,7 @@
     [input/text
      {:placeholder   "Search"
       :dispatch-key  :set-search
-      :sunscribe-key :search
+      :subscribe-key :search
       :on-change?    true}]]])
 
 

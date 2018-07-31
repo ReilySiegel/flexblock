@@ -23,7 +23,7 @@
   [room]
   (let [students (rm/get-students room)]
     ^{:key (:id room)}
-    [modal/bottom-sheet (get-id room)
+    [modal/bottom-sheet {:id (get-id room)}
      [:div.modal-content
       [:h4.purple-text.text-lighten-3 "Students"]
       [:div.row

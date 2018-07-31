@@ -8,7 +8,6 @@
             [flexblock.ajax :refer [load-interceptors!]]
             [flexblock.events]
             [flexblock.effects]
-            [flexblock.utils :as u]
             [flexblock.components.login :as login]
             [flexblock.components.navbar :as navbar]
             [flexblock.pages.rooms :as rooms]
