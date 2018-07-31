@@ -10,6 +10,8 @@
             [flexblock.effects]
             [flexblock.components.login :as login]
             [flexblock.components.navbar :as navbar]
+            ;; Konami Code Easter Egg
+            [flexblock.components.konami :as konami]
             [flexblock.pages.rooms :as rooms]
             [flexblock.pages.students :as students])
   (:import goog.History))
@@ -22,6 +24,8 @@
   [:div
    [navbar/navbar]
    [login/modal]
+   ;; Konami Code Easter Egg
+   [konami/egg]
    [(pages @(rf/subscribe [:page]))]])
 
 ;; -------------------------
