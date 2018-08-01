@@ -7,7 +7,8 @@
             [flexblock.events.login]
             [flexblock.events.mailer]
             [flexblock.events.room]
-            [flexblock.events.students]))
+            [flexblock.events.students]
+            [clojure.string :as str]))
 
 ;;dispatchers
 
@@ -21,10 +22,13 @@
  (fn [db [_ page]]
    (assoc db :page page)))
 
-(reg-event-db
+(reg-event-fx
  :set-search
- (fn [db [_ search]]
-   (assoc db :search search)))
+ (fn [{:keys [db]} [_ search]]
+   (merge {:db (assoc db :search search)}
+          ;; Easter egg referencing RFC-1149.
+          (when (= (str/lower-case search) "ipoac")
+            {:notification "A pigeon will deliver your packet shortly."}))))
 
 (reg-event-db
  :set-users

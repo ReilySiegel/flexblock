@@ -94,3 +94,17 @@
 	height: 5em;
     }
 }
+
+.askew {
+    transform: rotate(2deg);
+}
+
+.barrel-roll {
+    animation: barrel-roll 2.5s;
+    animation-timing-function: cubic-bezier(.68,-0.55,.27,1.55);
+}
+
+@keyframes barrel-roll {
+    0% {transform: rotate(0deg)}
+    100% {transform: rotate(360deg)}
+}

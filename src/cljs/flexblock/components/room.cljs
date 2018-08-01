@@ -107,23 +107,31 @@
   "Creates a card with information about a `room`."
   [room]
   (when-let [{:keys [id title users description date time room-number max-capacity]} room]
-    [:div.col.s12.m6.l4.grid-item
-     {:key id}
-     [:div.card.hoverable
-      [:div.card-content
-       [:span.card-title.truncate title]
-       [:h6.truncate (or (->> users (filter :teacher) first :name) "")]
-       [:span (.toDateString date)]
-       [:p ((keyword time) {:before "Before School"
-                            :after  "After School"
-                            :flex   "FlexBlock"} "")]
-       [:p (str "Room: " room-number)]
-       [:p (str (->> users (remove :teacher) count) "/" max-capacity)]]
-      [:div.divider]
-      [:div.card-content
-       {:style {:overflow :hidden}}
-       [:p description]]
-      [buttons room]]]))
+    (let [search @(rf/subscribe [:search])]
+      [:div.col.s12.m6.l4.grid-item
+       {:key   id
+        ;; Used for easter eggs. Styles are defined in styles.css
+        :class (condp = (str/lower-case search)
+                 ;; Rotate the card by 2 degrees.
+                 "askew"            "askew"
+                 ;; Does a barrel roll.
+                 "do a barrel roll" "barrel-roll"
+                 nil)}
+       [:div.card.hoverable
+        [:div.card-content
+         [:span.card-title.truncate title]
+         [:h6.truncate (or (->> users (filter :teacher) first :name) "")]
+         [:span (.toDateString date)]
+         [:p ((keyword time) {:before "Before School"
+                              :after  "After School"
+                              :flex   "FlexBlock"} "")]
+         [:p (str "Room: " room-number)]
+         [:p (str (->> users (remove :teacher) count) "/" max-capacity)]]
+        [:div.divider]
+        [:div.card-content
+         {:style {:overflow :hidden}}
+         [:p description]]
+        [buttons room]]])))
 
 (defn fab []
   (when (and
