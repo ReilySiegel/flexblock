@@ -3,6 +3,16 @@
             [flexblock.db :as db]))
 
 (reg-fx
+ :reload
+ (fn reload
+   ([] (reload 0))
+   ([delay]
+    (.setTimeout
+     js/window
+     #(.reload js/location true)
+     delay))))
+
+(reg-fx
  :notification
  (fn [message]
    (.toast js/M (clj->js {:html message}))))
