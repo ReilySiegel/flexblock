@@ -139,32 +139,32 @@
 (defn grid
   "Returns a grid of students."
   []
-  (rf/dispatch [:user/get])
-  (fn []
-    (let [users (rf/subscribe [:users])]
-      (if (seq @users)
-        (let [date        @(rf/subscribe [:date])
-              students-uf (->> @users
-                               (sort-by :name)
-                               (sort-by #(user/search
-                                          @(rf/subscribe [:search]) %)))
-              students    (if (:admin @(rf/subscribe [:user]))
-                            students-uf
-                            (->> students-uf
-                                 (remove :teacher)
-                                 (remove :admin)))]
-          [:div.container
-           [search/search-bar]
-           [search/date-bar]
-           [:div.row
-            [grid/grid
-             (doall
-              (if (nil? date)
-                (map card students)
-                (map card
-                     (->> students
-                          (remove #(user/flexblock-on-date? % date))
-                          (remove :admin)))))]
-            (doall (map modal students))
-            (doall (map password/modal students))]])
-        [:div.grid-user]))))
+  (let [token       (rf/subscribe [:token])
+        users       (rf/subscribe [:users])
+        date        @(rf/subscribe [:date])
+        students-uf (->> @users
+                         (sort-by :name)
+                         (sort-by #(user/search
+                                    @(rf/subscribe [:search]) %)))
+        students    (if (:admin @(rf/subscribe [:user]))
+                      students-uf
+                      (->> students-uf
+                           (remove :teacher)
+                           (remove :admin)))]
+    [:div.container
+     [search/search-bar]
+     [search/date-bar]
+     (if-not (seq @users)
+       ;; Get users if empty.
+       (rf/dispatch [:user/get])
+       [:div.row
+        [grid/grid
+         (doall
+          (if (nil? date)
+            (map card students)
+            (map card
+                 (->> students
+                      (remove #(user/flexblock-on-date? % date))
+                      (remove :admin)))))]
+        (doall (map modal students))
+        (doall (map password/modal students))])]))
