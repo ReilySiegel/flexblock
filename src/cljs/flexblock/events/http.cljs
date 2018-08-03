@@ -8,9 +8,17 @@
 
 (rf/reg-event-fx
  :http/failure
- (fn [_ [_ response]]
+ (fn [{:keys [db]} [_ response]]
    (condp = (:status response)
-     403 {;; Reload the page after 1000ms.
+     401 {;; Delete the expired token from the app-db, so that the
+          ;; user can reopen the log-in modal if they accidentally
+          ;; close it.
+          :db           (assoc db :token "")
+          ;; Open the login modal.
+          :open-modal   "#login-modal"
+          ;; Prompt the user to log back in.
+          :notification "Your session has expired. Please log in again."}
+     403 {;; Reload the page after 2000ms.
           :reload 2000
           ;; Show a notification, so the user isn't confused by the reload.
           :notification

@@ -32,3 +32,9 @@
  (fn [query-selector]
    (if-let [e (.querySelector js/document query-selector)]
      (.close (.getInstance js/M.Modal e)))))
+
+(reg-fx
+ :open-modal
+ (fn [query-selector]
+   (if-let [e (.querySelector js/document query-selector)]
+     (.open (.getInstance js/M.Modal e)))))
