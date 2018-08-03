@@ -148,20 +148,24 @@
 (defn grid
   "Returns a grid of rooms."
   []
-  (rf/dispatch [:room/get])
-  (fn []
-    (let [rooms  (rf/subscribe [:rooms])
-          search (rm/make-search @rooms @(rf/subscribe [:search]))]
+  (let [token  (rf/subscribe [:token])
+        rooms  (rf/subscribe [:rooms])
+        search (rm/make-search @rooms @(rf/subscribe [:search]))]
+    (when-not (empty? @token)
       [:div.container
        [search/search-bar]
-       [grid/grid
-        (doall
-         (->> @rooms
-              (sort-by :date)
-              (sort-by #(not= (:name @(rf/subscribe [:user]))
-                              (:name (rm/get-teacher %))))
-              ;; Search gives higher numbers for better matches, so we
-              ;; need to sort in descending order.
-              (sort-by search #(compare %2 %1))
-              (map card)))]
+       (if-not (seq @rooms)
+         ;; Get rooms if rooms are empty.
+         (rf/dispatch [:room/get])
+         ;; Otherwise show the rooms
+         [grid/grid
+          (doall
+           (->> @rooms
+                (sort-by :date)
+                (sort-by #(not= (:name @(rf/subscribe [:user]))
+                                (:name (rm/get-teacher %))))
+                ;; Search gives higher numbers for better matches, so we
+                ;; need to sort in descending order.
+                (sort-by search #(compare %2 %1))
+                (map card)))])
        (doall (map attendance/modal @rooms))])))

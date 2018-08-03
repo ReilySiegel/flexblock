@@ -21,7 +21,8 @@
                  [:a "Sessions"]])))
 
 (defn navbar []
-  (let [user (rf/subscribe [:user])]
+  (let [user  (rf/subscribe [:user])
+        token (rf/subscribe [:token])]
     [:div
      [password/modal @user {:id "reset-password-modal"}]
      [:nav
@@ -33,10 +34,11 @@
          :style    {:cursor :pointer}}
         "FlexBlock"]
        [:ul.left
-        (if (some #(% @user) [:teacher :admin])
+        (if (and (some #(% @user) [:teacher :admin])
+                 (not (empty? @token)))
           [page-button])]
        [:ul.right
-        (if (empty? @(rf/subscribe [:token]))
+        (if (empty? @token)
           [:li [:a.modal-trigger
                 {:on-click #(input/focus "login-username-input")
                  :href     "#login-modal"} "Login"]]
