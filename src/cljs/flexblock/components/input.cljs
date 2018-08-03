@@ -14,8 +14,24 @@
   (.focus (.getElementById js/document id)))
 
 (defn text
-  [{:keys [id placeholder class-name type atom
-           dispatch-key subscribe-key textarea?]
+  "A text input. Tales a map of options. All options are optional.
+
+  Options:
+
+  :id            Sets the id of the <input> element.
+  :placeholder   Sets a placeholder for the <input>.
+  :type          Sets the type of the <input>.
+  :atom          Must be a reagent atom. All changes to the atom are applied to
+                 the <input>, and all changes to the <input> are applied to the
+                 atom.
+  :subscribe-key A re-frame subscription key, to which the value of the <input>
+                 will be set on render. Takes precedent over :atom, as only one
+                 can be used.
+  :dispatch-key  A re-frame event key, to which the value of the <input> will be
+                 sent on-change. Takes precedent over :atom, as only one can
+                 be used.
+  :textarea?     If true, uses a <textarea> instead of an <input>."
+  [{:keys [id placeholder type atom dispatch-key subscribe-key textarea?]
     :or   {id   (str (gensym "formid"))
            atom (r/atom "")}}]
   (fn [_]
@@ -32,6 +48,13 @@
                          #(reset! atom (-> % .-target .-value)))}]]))
 
 (defn checkbox
+  "A checkbox input. Tales a map of options. All options are optional.
+
+  Options:
+
+  :label Sets a label for the checkbox.
+  :atom  Must be a reagent atom. All changes to the atom are applied to the
+         checkbox, and all changes to the checkbox are applied to the atom."
   [{:keys [atom label]
     :or   {atom (r/atom false)}}]
   (fn
@@ -45,6 +68,22 @@
      (when label [:span label])]))
 
 (defn select
+  "A select input. Takes a map of options. All options are technically
+  optional, but you probably want to include :options.
+
+  Options:
+
+  :id          The id for the <select> element.
+  :atom        Must be an reagent atom. All changes to the value of <select>
+               are reflected in the atom, and all external changes to the atom
+               are reflected in the value of the <select> element.
+  :placeholder A disabled option that is shown by default.
+  :options     A sequence (list vector seq...) of options to display in the
+               <select> element. An option may either be a value x, in which
+               case the value of the <option> will be x, and the string
+               displayed will be (str x), or a map of the form
+               {:value x, :label y},  where the value of the <option> will be
+               x, and the string displayed will be (str y)."
   [{:keys [id atom placeholder options]
     :or   {atom (r/atom nil)
            id   (name (gensym "select"))}}]
@@ -67,7 +106,10 @@
                     ^{:key option}
 
                     (if (map? option)
-                      ;; If the option is a map, use :value and :label vals.
+                      ;; If the option is a map, use :value and :label
+                      ;; vals. prn-str is used to retain the exact
+                      ;; Clojure value, even though it would otherwise
+                      ;; be converted to a string.
                       [:option {:value (prn-str (:value option))}
                        (str (:label option))]
                       ;; If not, use the option itself as val and label.
@@ -77,10 +119,21 @@
                               :disabled true} placeholder]))))}))
 
 (defn datepicker
-  "Returns a datepicker object.
-  Can take an optional argument `id`. `id` will be constructed from a
-  gensym if excluded (a safe default). If you need to refer to the
-  datepicker by #id, you must provide a UNIQUE identifier."
+  "A datepicker input. Tales a map of options. All options are optional.
+
+  Options:
+
+  :id            Sets the id of the <input> element.
+  :placeholder   Sets a placeholder for the <input>.
+  :atom          Must be a reagent atom. All changes to the atom are applied to
+                 the <input>, and all changes to the <input> are applied to the
+                 atom.
+  :subscribe-key A re-frame subscription key, to which the value of the <input>
+                 will be set on render. Takes precedent over :atom, as only one
+                 can be used.
+  :dispatch-key  A re-frame event key, to which the value of the <input> will be
+                 sent on-change. Takes precedent over :atom, as only one can
+                 be used."
   [opts]
   (let [{:keys [id atom placeholder subscribe-key dispatch-key]
          :or   {id          (str (gensym "datepicker"))
@@ -103,7 +156,7 @@
                          #(let [unsafe-date
                                 (.-date @datepicker-el)
                                 ;; Remove any time data that slips
-                                ;; though.  This can be caused by
+                                ;; though. This can be caused by
                                 ;; clicking the 'today' button on the
                                 ;; datepicker.
                                 date (when unsafe-date
