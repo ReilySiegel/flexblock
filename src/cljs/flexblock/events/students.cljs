@@ -58,3 +58,22 @@
                  :response-format (ajax/detect-response-format)
                  :on-success      [:user/post-user-success]
                  :on-failure      [:http/failure]}}))
+
+(rf/reg-event-fx
+ :user/delete-success
+ (fn [_ [_ response]]
+   {:notification "User removed."
+    :dispatch     [:user/get]}))
+
+(rf/reg-event-fx
+ :user/delete
+ (fn [{:keys [db]} [_ user-id]]
+   {:http-xhrio {:method          :delete
+                 :uri             "/user"
+                 :headers         {"Authorization" (str "Token "
+                                                        (:token db))}
+                 :params          {:user-id user-id}
+                 :format          (ajax/json-request-format)
+                 :response-format (ajax/detect-response-format)
+                 :on-success      [:user/delete-success]
+                 :on-failure      [:http/failure]}}))

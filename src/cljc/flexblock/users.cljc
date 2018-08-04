@@ -3,6 +3,7 @@
             [flexblock.search :as search]
             [clojure.spec.alpha :as s]))
 
+(s/def ::id pos-int?)
 (s/def ::name (s/and string?
                      #(not (str/blank? %))
                      #(>= 50 (count %))))
@@ -10,7 +11,7 @@
                       #(not (str/blank? %))
                       #(>= 50 (count %))))
 (s/def ::class pos-int?)
-(s/def ::advisor-id pos-int?)
+(s/def ::advisor-id ::id)
 (s/def ::password string?)
 
 (defmulti user-type #(boolean (or (:teacher %)
@@ -97,3 +98,11 @@
     ;; `editee`?
     :else (> (roles (highest-role editor))
              (roles (highest-role editee)))))
+
+(defn can-delete?
+  "Returns true if `deleter` is allowed to edit `deletee`.
+  `deletor` and `deletee` must each have at least one unique field, such
+  as an ID or email."
+  [deleter deletee]
+  (and (not= (:id deleter) (:id deletee))
+       (can-edit? deleter deletee)))
