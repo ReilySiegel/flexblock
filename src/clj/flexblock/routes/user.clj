@@ -56,7 +56,9 @@
                   admin    false
                   password (users/gen-password 16)}}
           (merge (:params request)
-                 {:advisor-id (get-in request [:identity :id])})]
+                 {:advisor-id (when (= :student
+                                       (users/highest-role (:params request)))
+                                (get-in request [:identity :id]))})]
       (if-let [error (phrase/phrase-first {} ::users/user user)]
         (response/unprocessable-entity {:message error})
         (try
