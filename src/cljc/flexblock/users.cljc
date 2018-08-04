@@ -3,6 +3,7 @@
             [flexblock.search :as search]
             [clojure.spec.alpha :as s]))
 
+(s/def ::id pos-int?)
 (s/def ::name (s/and string?
                      #(not (str/blank? %))
                      #(>= 50 (count %))))
@@ -10,7 +11,7 @@
                       #(not (str/blank? %))
                       #(>= 50 (count %))))
 (s/def ::class pos-int?)
-(s/def ::advisor-id pos-int?)
+(s/def ::advisor-id ::id)
 (s/def ::password string?)
 
 (defmulti user-type #(boolean (or (:teacher %)

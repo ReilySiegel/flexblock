@@ -10,7 +10,8 @@
    [flexblock.validation]
    [phrase.alpha :as phrase]
    [flexblock.middleware :as m]
-   [clojure.spec.alpha :as spec]))
+   [clojure.spec.alpha :as spec]
+   [clojure.spec.alpha :as s]))
 
 (defn get-users [request]
   (if (authenticated? request)
@@ -84,6 +85,16 @@
       (response/bad-request {:message "Login Failed"}))
     (response/bad-request "Invalid Request")))
 
+(defn delete-user [request]
+  (if-not (authenticated? request)
+    (response/unauthorized)
+    (try
+      (db/delete-user! (get-in request [:params :user-id])
+                       (get-in request [:identity :id]))
+      (response/ok)
+      (catch Exception e
+        (response/unprocessable-entity (ex-data e))))))
+
 (defroutes routes
   (GET "/user" []
     :swagger {:summary "Get all users."
@@ -105,6 +116,13 @@
     parameter. compojure-api does not currently support multi-specs,
     so please see `:flexblock.users/user` spec for details."}
     post-users)
+  (DELETE "/user" []
+    :swagger {:summary     "Remove a user."
+              :tags        ["User"]
+              ;; compojure-api does not currently handle multi-specs
+              :parameters  {:body (s/keys :req-un [::users/id])}
+              :description "Takes a user-id as a body parameter."}
+    delete-user)
   (POST "/user/flexblock" []
     :swagger {:summary     "Send FlexBlock reminder."
               :tags        ["User"]
