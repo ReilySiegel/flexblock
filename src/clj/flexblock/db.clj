@@ -166,7 +166,7 @@
        (ex-info nil
                 {:message "User does not exist!"}))
 
-      (not (u/can-edit? deleter user))
+      (not (u/can-delete? deleter user))
       (throw
        (ex-info nil
                 {:message

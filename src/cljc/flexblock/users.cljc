@@ -97,3 +97,11 @@
     ;; `editee`?
     :else (> (roles (highest-role editor))
              (roles (highest-role editee)))))
+
+(defn can-delete?
+  "Returns true if `deleter` is allowed to edit `deletee`.
+  `deletor` and `deletee` must each have at least one unique field, such
+  as an ID or email."
+  [deleter deletee]
+  (and (not= (:id deleter) (:id deletee))
+       (can-edit? deleter deletee)))
