@@ -153,6 +153,30 @@
                             :recipient new-user
                             :password  password})))))
 
+(defn delete-user!
+  "Removes a user from the database.
+  Takes `user-id`, the ID of the user to be removed, and `deleter-id`,
+  the ID of the user performing the delete operation."
+  [user-id deleter-id]
+  (let [user    (get-user user-id)
+        deleter (get-user deleter-id)]
+    (cond
+      (not (and user deleter))
+      (throw
+       (ex-info nil
+                {:message "User does not exist!"}))
+
+      (not (u/can-edit? deleter user))
+      (throw
+       (ex-info nil
+                {:message
+                 (format
+                  "You don't have permission to delete %s's account."
+                  (:name user))}))
+
+      :else (delete users
+                    (where {:id user-id})))))
+
 (defn get-rooms
   "Get all rooms saved in the database."
   []
