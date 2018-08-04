@@ -130,13 +130,14 @@
 (defn card
   "Creates a card with information about a `room`."
   [user]
-  (when-let [{:keys [id name rooms]} user]
+  (when-let [{:keys [id email name rooms]} user]
     [:div.col.s12.m6.l4.grid-item
      {:key id}
      [:div.card.hoverable
       [:div.card-content
        [:span.card-title.truncate name]
-       [:p (:advisor user)]]
+       [:span.truncate email]
+       [:p.truncate (:advisor user)]]
       [:div.divider]
       [buttons user]]]))
 
