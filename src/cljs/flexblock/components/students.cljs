@@ -15,13 +15,18 @@
 (defn- buttons
   "Returns the appropriate actions that a user can take on a `room`."
   [user]
-  (let [{:keys [id name rooms]}
+  (let [self (rf/subscribe [:user])
+        {:keys [id name rooms]}
         user]
     [:div.card-action
      [:a.btn-flat.amber-text.waves-effect.waves-purple.modal-trigger
       {:href (str "#sessionmodal" (:id user))} "Sessions"]
      [:a.btn-flat.amber-text.waves-effect.waves-purple.modal-trigger
-      {:href (str "#passwordmodal" (:id user))} "Reset Password"]]))
+      {:href (str "#passwordmodal" (:id user))} "Reset Password"]
+     (when (user/can-delete? @self user)
+       [:a.btn-flat.amber-text.waves-effect.waves-purple
+        {:on-click #(rf/dispatch [:user/delete id])}
+        "Delete"])]))
 
 (defn- session
   "One session in :rooms list."
