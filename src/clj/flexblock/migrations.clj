@@ -9,7 +9,8 @@
                  [:email "varchar(50)" :unique :not :null]
                  [:teacher :boolean :not :null]
                  [:admin :boolean :not :null]
-                 [:advisor_id :integer :references "users(id)"]
+                 [:advisor_id :integer
+                  :references "users(id)" :on :delete :set :null]
                  [:class :integer]]
    :rooms       [[:id :bigserial :primary :key]
                  [:description "varchar(250)" :not :null]
