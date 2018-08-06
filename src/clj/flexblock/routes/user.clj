@@ -95,7 +95,13 @@
                        (get-in request [:identity :id]))
       (response/ok)
       (catch Exception e
-        (response/unprocessable-entity (ex-data e))))))
+        (response/unprocessable-entity
+         (or
+          ;; Application Error
+          (ex-data e)
+          ;; User still owns rooms.
+          {:message
+           "Please delete all rooms owned by this user before deleting them."}))))))
 
 (defroutes routes
   (GET "/user" []
