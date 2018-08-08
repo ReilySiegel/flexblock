@@ -8,7 +8,11 @@
 (defn modal []
   (let [username (r/atom "")
         password (r/atom "")]
-    [modal/standard {:id "login-modal"}
+    [modal/standard
+     {:id       "login-modal"
+      :on-close (fn []
+                  (reset! username "")
+                  (reset! password ""))}
      [:div.modal-content
       [:h4.center.purple-text.text-lighten-3 "Login"]
       [:div.row
