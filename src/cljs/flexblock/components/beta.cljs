@@ -5,10 +5,6 @@
   (:require
    [reagent.core :as r]))
 
-(def disclaimer-text
-  "The text of the disclaimer."
-  (.-betaDisclaimer js/window))
-
 (defn disclaimer []
   (r/create-class
    {:component-did-mount
@@ -18,11 +14,11 @@
           (.open (.init js/M.Modal e)))))
     :reagent-render
     (fn []
-      (when-not (empty? disclaimer-text)
+      (when-not (empty? js/betaDisclaimer)
         [:div.modal.modal-fixed-footer
          {:id :beta-disclaimer}
          [:div.modal-content
-          [:p.flow-text disclaimer-text]]
+          [:p.flow-text js/betaDisclaimer]]
          [:div.modal-footer
           [:a.btn-flat.amber-text.waves-effect.waves-red.modal-close
            {:on-click #(-> js/window
