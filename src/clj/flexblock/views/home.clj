@@ -1,6 +1,7 @@
 (ns flexblock.views.home
   "Contains the Hiccup structures for the home page."
   (:require
+   [flexblock.config :refer [env]]
    [flexblock.views.loading :as loading]
    [hiccup.element :refer [javascript-tag]]
    [hiccup.page :refer [include-js include-css]]
@@ -49,4 +50,5 @@
       [:noscript "Please enable JavaScript."]]]
     (js-string "csrfToken" (or *anti-forgery-token* ""))
     (js-string "context" (or *app-context* ""))
+    (js-string "betaDisclaimer" (or (:beta-disclaimer env) ""))
     (apply include-js scripts)]])
