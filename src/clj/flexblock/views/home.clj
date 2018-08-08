@@ -1,10 +1,13 @@
 (ns flexblock.views.home
   "Contains the Hiccup structures for the home page."
   (:require
+   [flexblock.config :refer [env]]
    [flexblock.views.loading :as loading]
    [hiccup.element :refer [javascript-tag]]
    [hiccup.page :refer [include-js include-css]]
    [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]))
+
+(declare ^:dynamic *app-context*)
 
 (def css
   "A list of sylesheets to include in the home page.
@@ -20,20 +23,13 @@
    "js/masonry.pkgd.min.js"
    "js/app.js"])
 
-(defn csrf
-  "Creates a script tag which sets a `csrfToken` JS variable."
-  []
+(defn js-string
+  "Defines variable `v` as equal to string `s` in JavaScript included
+  in the home page. "
+  [v s]
   (javascript-tag
-   (format "var csrfToken = \"%s\""
-           (or *anti-forgery-token* ""))))
-
-(declare ^:dynamic *app-context*)
-(defn context
-  "Creates a script tag which sets a `context` JS variable."
-  []
-  (javascript-tag
-   (format "var context = \"%s\""
-           (or *app-context* ""))))
+   (format "var %s = \"%s\""
+           v s)))
 
 (defn home
   "The Home template."
@@ -52,6 +48,7 @@
      [:div.center
       [:p (rand-nth loading/messages)]
       [:noscript "Please enable JavaScript."]]]
-    (csrf)
-    (context)
+    (js-string "csrfToken" (or *anti-forgery-token* ""))
+    (js-string "context" (or *app-context* ""))
+    (js-string "betaDisclaimer" (or (:beta-disclaimer env) ""))
     (apply include-js scripts)]])
