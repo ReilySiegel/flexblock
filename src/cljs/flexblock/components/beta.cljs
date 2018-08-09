@@ -11,7 +11,7 @@
     (fn []
       (let [e (.getElementById js/document "beta-disclaimer")]
         (when e
-          (.open (.init js/M.Modal e)))))
+          (.open (.init js/M.Modal e (clj->js {:dismissible false}))))))
     :reagent-render
     (fn []
       (when-not (empty? js/betaDisclaimer)
