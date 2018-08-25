@@ -1,16 +1,15 @@
-(ns flexblock.events.mailer
-  (:require
-   [ajax.core :as ajax]
-   [re-frame.core :as rf]))
+(ns flexblock.reminder.events
+  (:require [ajax.core :as ajax]
+            [re-frame.core :as rf]))
 
 (rf/reg-event-fx
- :mailer/post-date-success
+ :reminder/post-date-success
  (fn [_ [_ response]]
    {:notification "Mail sent."
     :close-modal  "#emailermodal"}))
 
 (rf/reg-event-fx
- :mailer/post-date
+ :reminder/post-date
  (fn [{:keys [db]}]
    {:http-xhrio {:method          :post
                  :uri             "/user/flexblock"
@@ -18,5 +17,5 @@
                  :params          {:date (:date db)}
                  :format          (ajax/json-request-format)
                  :response-format (ajax/detect-response-format)
-                 :on-success      [:mailer/post-date-success]
+                 :on-success      [:reminder/post-date-success]
                  :on-failure      [:http/failure]}}))

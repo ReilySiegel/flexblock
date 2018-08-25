@@ -1,9 +1,8 @@
-(ns flexblock.components.login
-  (:require [reagent.core :as r]
-            [re-frame.core :as rf]
-            [ajax.core :refer [POST]]
-            [flexblock.components.input :as input]
-            [flexblock.components.modal :as modal]))
+(ns flexblock.login.views
+  (:require [flexblock.components.input :as input]
+            [flexblock.components.modal :as modal]
+            [reagent.core :as r]
+            [re-frame.core :as rf]))
 
 (defn modal []
   (let [username (r/atom "")
