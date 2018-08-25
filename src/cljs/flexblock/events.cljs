@@ -6,6 +6,7 @@
             [flexblock.db :as db]
             [flexblock.login.events]
             [flexblock.navbar.events]
+            [flexblock.reminder.events]
             [flexblock.rooms.events]
             [flexblock.users.events]
             [re-frame.core :as rf]))
