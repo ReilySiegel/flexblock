@@ -1,7 +1,7 @@
-(ns flexblock.components.navbar
+(ns flexblock.navbar.views
   (:require [re-frame.core :as rf]
             [flexblock.components.input :as input]
-            [flexblock.components.password :as password]))
+            [flexblock.users.views :as users]))
 
 (defn nav-link [uri title page]
   [:li.nav-item
@@ -13,7 +13,7 @@
     (condp = page
       :rooms    [:li
                  {:on-click #(rf/dispatch [:set-active-page :students])}
-                 [:a (if (:admin @(rf/subscribe [:user]))
+                 [:a (if (:admin @(rf/subscribe [:login/user]))
                        "Users"
                        "Students")]]
       :students [:li
@@ -21,16 +21,16 @@
                  [:a "Sessions"]])))
 
 (defn navbar []
-  (let [user  (rf/subscribe [:user])
-        token (rf/subscribe [:token])]
+  (let [user  (rf/subscribe [:login/user])
+        token (rf/subscribe [:login/token])]
     [:div
-     [password/modal @user {:id "reset-password-modal"}]
+     [users/password-modal @user {:id "reset-password-modal"}]
      [:nav
       [:div.nav-wrapper.purple
        [:a.brand-logo.center
         {:on-click (fn []
-                     (rf/dispatch [:room/get])
-                     (rf/dispatch [:user/get]))
+                     (rf/dispatch [:rooms/get])
+                     (rf/dispatch [:users/get]))
          :style    {:cursor :pointer}}
         "FlexBlock"]
        [:ul.left

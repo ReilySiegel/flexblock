@@ -36,6 +36,13 @@
        :users
        (remove :teacher)))
 
+(defn time-str [room]
+  ;; Make sure time is a keyword.
+  (case (keyword (:time room))
+    :before "Before School"
+    :after  "After School"
+    :flex   "FlexBlock"))
+
 (defn in-room?
   "Given a `room` and a `user-id`, checks if the user is in `room`."
   [room user-id]

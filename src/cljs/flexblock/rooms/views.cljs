@@ -1,16 +1,14 @@
-(ns flexblock.components.room
+(ns flexblock.rooms.views
   "Render functions for elements related to showing rooms."
   (:require
    [reagent.core :as r]
    [re-frame.core :as rf]
    [clojure.string :as str]
-   [flexblock.rooms :as room]
-   [flexblock.rooms :as rm]
+   [flexblock.rooms :as rooms]
    [flexblock.components.input :as input]
-   [flexblock.components.attendance :as attendance]
    [flexblock.components.grid :as grid]
    [flexblock.components.modal :as modal]
-   [flexblock.components.search :as search])
+   [flexblock.search.views :as search])
   (:import goog.date.Date))
 
 (defn add
@@ -25,6 +23,7 @@
     (fn []
       [modal/fixed-footer
        {:id       "add-room-modal"
+        ;; Reset all inputs when when the modal is closed.
         :on-close (fn []
                     (reset! title "")
                     (reset! capacity "")
@@ -69,12 +68,36 @@
                                                 :time         @time}]))}
          "Submit"]]])))
 
-(defn- buttons
+
+(defn student
+  "One student in the attendance list."
+  [user]
+  [:li.collection-item
+   {:key (:id user)}
+   [:div (:name user)]])
+
+(defn attendance
+  "The bottom sheet modal that shows a list of students."
+  [room]
+  (let [students (rooms/get-students room)]
+    ^{:key (:id room)}
+    [modal/bottom-sheet {:id (str "attendance" (:id room))}
+     [:div.modal-content
+      [:h4.purple-text.text-lighten-3 "Students"]
+      [:div.row
+       [:div.col.l8.offset-l2.s12
+        (if (seq students)
+          [:ul.collection
+           (map student students)]
+          [:h6.amber-text.center "No students have joined yet."])]]]]))
+
+
+(defn buttons
   "Returns the appropriate actions that a user can take on a `room`."
   [room]
   (let [{:keys [id title users description date room-number max-capacity]}
         room
-        user          @(rf/subscribe [:user])
+        user          @(rf/subscribe [:login/user])
         user-in-room? ((->> users (map :id) (apply hash-set)) (:id user))]
     [:div.card-action
      (cond ; Actions
@@ -98,10 +121,11 @@
      (cond ;Information
        (and (:teacher user))
        [:a.btn-flat.amber-text.waves-effect.waves-purple.modal-trigger
-        {:href (str "#" (attendance/get-id room))} "Students"]
+        {:href (str "#attendance" (:id room))} "Students"]
 
        :else
        [:div])]))
+
 
 (defn card
   "Creates a card with information about a `room`."
@@ -131,12 +155,13 @@
         [:div.card-content
          {:style {:overflow :hidden}}
          [:p description]]
-        [buttons room]]])))
+        [buttons room]]
+       [attendance room]])))
 
 (defn fab []
   (when (and
-         (:teacher @(rf/subscribe [:user]))
-         (not (str/blank? @(rf/subscribe [:token]))))
+         (:teacher @(rf/subscribe [:login/user]))
+         (not (str/blank? @(rf/subscribe [:login/token]))))
     [:div {:style {:z-index  1
                    :position :fixed
                    :right    24
@@ -148,24 +173,23 @@
 (defn grid
   "Returns a grid of rooms."
   []
-  (let [token  (rf/subscribe [:token])
-        rooms  (rf/subscribe [:rooms])
-        search (rm/make-search @rooms @(rf/subscribe [:search]))]
+  (let [token (rf/subscribe [:login/token])
+        rooms (rf/subscribe [:rooms/sorted])]
     (when-not (empty? @token)
-      [:div.container
-       [search/search-bar]
+      [:div.row
        (if-not (seq @rooms)
          ;; Get rooms if rooms are empty.
-         (rf/dispatch [:room/get])
+         (rf/dispatch [:rooms/get])
          ;; Otherwise show the rooms
-         [grid/grid
-          (doall
-           (->> @rooms
-                (sort-by :date)
-                (sort-by #(not= (:name @(rf/subscribe [:user]))
-                                (:name (rm/get-teacher %))))
-                ;; Search gives higher numbers for better matches, so we
-                ;; need to sort in descending order.
-                (sort-by search #(compare %2 %1))
-                (map card)))])
-       (doall (map attendance/modal @rooms))])))
+         [grid/grid (map card @rooms)])])))
+
+(defn page
+  "Root component for the rooms page.
+  Consists of a search bar, a grid of rooms, and a FAB that can be
+  used to open a form for adding rooms."
+  []
+  [:div.container
+   [search/search-bar]
+   [fab]
+   [add]
+   [grid]])

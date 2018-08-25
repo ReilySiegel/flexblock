@@ -26,7 +26,6 @@
                  [reagent-utils "0.3.1"]
                  [ring/ring-core "1.6.3"]
                  [ring/ring-defaults "0.3.2"]
-                 [secretary "1.2.3"]
                  [selmer "1.11.8"]
                  [korma "0.4.3"]
                  [org.clojure/java.jdbc "0.7.7"]

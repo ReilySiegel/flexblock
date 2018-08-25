@@ -1,79 +1,71 @@
-(ns flexblock.events.students
+(ns flexblock.users.events
   (:require [re-frame.core :as rf]
             [ajax.core :as ajax]
             [flexblock.db :as db]))
 
 (rf/reg-event-fx
- :user/set
- (fn [{:keys [db]} [_ rooms]]
-   {:db (assoc db :users rooms)}))
+ :users/set
+ (fn [{:keys [db]} [_ users]]
+   {:db (assoc db :users users)}))
 
 (rf/reg-event-fx
- :user/get
+ :users/get
  (fn [{:keys [db]} _]
    {:http-xhrio {:method          :get
                  :uri             "/user"
-                 :headers         {"Authorization" (str "Token "
-                                                        (:token db))}
                  :format          (ajax/transit-request-format)
                  :response-format (ajax/detect-response-format)
-                 :on-success      [:user/set]
+                 :on-success      [:users/set]
                  :on-failure      [:http/failure]}}))
 
 
 (rf/reg-event-fx
- :user/reset-password-success
+ :users/reset-password-success
  (fn [_ [_ response]]
    {:notification "Password reset."}))
 
 (rf/reg-event-fx
- :user/reset-password
+ :users/reset-password
  (fn [{:keys [db]} [_ user-id password]]
    {:http-xhrio {:method          :patch
                  :uri             "/user/password"
-                 :headers         {"Authorization" (str "Token "
-                                                        (:token db))}
                  :params          {:user-id user-id :password password}
                  :format          (ajax/json-request-format)
                  :response-format (ajax/detect-response-format)
-                 :on-success      [:user/reset-password-success]
+                 :on-success      [:users/reset-password-success]
                  :on-failure      [:http/failure]}}))
 
 (rf/reg-event-fx
- :user/post-user-success
+ :users/post-user-success
  (fn [_ [_ response]]
    {:notification "User added."
-    :dispatch     [:user/get]
-    :close-modal "#add-user-modal"}))
+    :dispatch     [:users/get]
+    :close-modal  "#add-user-modal"}))
 
 (rf/reg-event-fx
- :user/post-user
+ :users/post-user
  (fn [{:keys [db]} [_ user]]
    {:http-xhrio {:method          :post
                  :uri             "/user"
-                 :headers         {"Authorization" (str "Token "
-                                                        (:token db))}
                  :params          user
                  :format          (ajax/json-request-format)
                  :response-format (ajax/detect-response-format)
-                 :on-success      [:user/post-user-success]
+                 :on-success      [:users/post-user-success]
                  :on-failure      [:http/failure]}}))
 
 (rf/reg-event-fx
- :user/delete-success
+ :users/delete-success
  (fn [_ [_ response]]
    {:notification "User removed."
-    :dispatch     [:user/get]}))
+    :dispatch     [:users/get]}))
 
 (rf/reg-event-fx
- :user/delete
+ :users/delete
  (fn [{:keys [db]} [_ user-id]]
    {:http-xhrio {:method          :delete
                  :uri             "/user"
-                 :headers         {"Authorization" (str "Token "
-                                                        (:token db))}
                  :params          {:user-id user-id}
                  :format          (ajax/json-request-format)
                  :response-format (ajax/detect-response-format)
-                 :on-success      [:user/delete-success]
+                 :on-success      [:users/delete-success]
                  :on-failure      [:http/failure]}}))
