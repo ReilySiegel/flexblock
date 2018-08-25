@@ -18,9 +18,11 @@
 
 
 (defn send [message]
-  (postal/send-message (:smtp email) message))
+  (try (postal/send-message (:smtp email) message)
+       (catch Exception e (println e))))
 
 (defmethod send-notification :email [_ event]
-  (->> event
-       create
-       send))
+  (->>
+   event
+   create
+   send))

@@ -43,7 +43,7 @@
 
           (== (count buf) lim-1)
           (do
-            (a/> out (conj buf val))
+            (a/>! out (conj buf val))
             (recur [] (a/timeout max-time)))
 
           :else

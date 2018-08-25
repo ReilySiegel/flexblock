@@ -150,7 +150,7 @@
                            "You don't have permission to do that."}))
       (let [new-user (insert users (values user))]
         (a/put! n/notifier {:event     :user/create
-                            :recipient new-user
+                            :recipient user
                             :password  password})))))
 
 (defn delete-user!
