@@ -68,8 +68,7 @@
        (remove :teacher)))
 
 (defn time-str [room]
-  ;; Make sure time is a keyword.
-  (println (keyword (:time room)))
+  ;; Make sure time is a keyword
   (get times (keyword (:time room)) "Unknown Time"))
 
 (time-str {:time :a})

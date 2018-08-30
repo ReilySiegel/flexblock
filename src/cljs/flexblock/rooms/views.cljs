@@ -54,7 +54,7 @@
           [input/select
            {:atom        time
             :placeholder "Choose a Time"
-            :options     (map (fn [[val larbel]]
+            :options     (map (fn [[val label]]
                                 {:value (name val)
                                  :label label})
                               rooms/sorted-times)}]]]]
