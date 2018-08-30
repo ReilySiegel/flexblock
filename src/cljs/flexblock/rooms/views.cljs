@@ -180,7 +180,7 @@
          ;; Get rooms if rooms are empty.
          (rf/dispatch [:rooms/get])
          ;; Otherwise show the rooms
-         [grid/grid (map card @rooms)])])))
+         [grid/grid (doall (map card @rooms))])])))
 
 (defn page
   "Root component for the rooms page.

@@ -196,7 +196,7 @@
       (rf/dispatch [:users/get])
       [:div.row
        [grid/grid
-        (map card @users)]])))
+        (doall (map card @users))]])))
 
 
 (defn page
