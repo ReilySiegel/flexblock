@@ -32,7 +32,7 @@
   "A sorted version of times.
   Note, is stored as a vector of vectors, rather than a map."
   (->> times
-       (sort-by #(second %))
+       (sort-by second)
        (sort-by #(count (second %)))))
 
 (s/def ::title (s/and string?
