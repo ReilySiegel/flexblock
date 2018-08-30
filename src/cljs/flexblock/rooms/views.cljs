@@ -54,9 +54,10 @@
           [input/select
            {:atom        time
             :placeholder "Choose a Time"
-            :options     [{:value "after" :label "After School"}
-                          {:value "before" :label "Before School"}
-                          {:value "flex" :label "Flex Block"}]}]]]]
+            :options     (map (fn [[val larbel]]
+                                {:value (name val)
+                                 :label label})
+                              rooms/sorted-times)}]]]]
        [:div.modal-footer
         [:button.btn-flat.amber-text.darken-1.waves-effect.waves-purple
          {:on-click (fn []
@@ -131,24 +132,22 @@
   "Creates a card with information about a `room`."
   [room]
   (when-let [{:keys [id title users description date time room-number max-capacity]} room]
-    (let [search @(rf/subscribe [:search])]
+    (let [search (rf/subscribe [:search])]
       [:div.col.s12.m6.l4.grid-item
        {:key   id
         ;; Used for easter eggs. Styles are defined in styles.css
-        :class (condp = (str/lower-case search)
+        :class (condp = (str/lower-case @search)
                  ;; Rotate the card by 2 degrees.
                  "askew"            "askew"
                  ;; Does a barrel roll.
                  "do a barrel roll" "barrel-roll"
-                 nil)}
+                 "")}
        [:div.card.hoverable
         [:div.card-content
          [:span.card-title.truncate title]
          [:h6.truncate (or (->> users (filter :teacher) first :name) "")]
          [:span (.toDateString date)]
-         [:p ((keyword time) {:before "Before School"
-                              :after  "After School"
-                              :flex   "FlexBlock"} "")]
+         [:p (rooms/time-str room)]
          [:p (str "Room: " room-number)]
          [:p (str (->> users (remove :teacher) count) "/" max-capacity)]]
         [:div.divider]

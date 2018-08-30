@@ -1,8 +1,39 @@
+
 (ns flexblock.rooms
   "Contains functions for operating on rooms."
   (:require [flexblock.search :as search]
             [clojure.string :as str]
             [clojure.spec.alpha :as s]))
+
+(def during-schedule
+  "Session times that fall within a regular school schedule, excluding
+  Flexblock."
+  {:a "A Block"
+   :b "B Block"
+   :c "C Block"
+   :d "D Block"
+   :e "E Block"
+   :f "F Block"
+   :g "G Block"
+   :h "H Block"})
+
+(def outside-shedule
+  "Session times that fall outside a regular school schedule."
+  {:before "Before School"
+   :after  "After School"
+   :flex   "FlexBlock"})
+
+(def times
+  "All times a Session could be scheduled for."
+  (merge during-schedule outside-shedule))
+
+
+(def sorted-times
+  "A sorted version of times.
+  Note, is stored as a vector of vectors, rather than a map."
+  (->> times
+       (sort-by #(second %))
+       (sort-by #(count (second %)))))
 
 (s/def ::title (s/and string?
                       #(not (str/blank? %))
@@ -11,7 +42,7 @@
                             #(not (str/blank? %))
                             #(>= 250 (count %))))
 (s/def ::date inst?)
-(s/def ::time #(contains? (hash-set "after" "before" "flex") %))
+(s/def ::time #(contains? (set (keys times)) (keyword %)))
 (s/def ::room-number pos-int?)
 (s/def ::max-capacity pos-int?)
 (s/def ::room (s/keys :req-un [::title
@@ -38,10 +69,10 @@
 
 (defn time-str [room]
   ;; Make sure time is a keyword.
-  (case (keyword (:time room))
-    :before "Before School"
-    :after  "After School"
-    :flex   "FlexBlock"))
+  (println (keyword (:time room)))
+  (get times (keyword (:time room)) "Unknown Time"))
+
+(time-str {:time :a})
 
 (defn in-room?
   "Given a `room` and a `user-id`, checks if the user is in `room`."
