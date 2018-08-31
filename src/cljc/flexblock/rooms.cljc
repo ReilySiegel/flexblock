@@ -44,7 +44,9 @@
                             #(>= 250 (count %))))
 (s/def ::date inst?)
 (s/def ::time #(contains? (set (keys times)) (keyword %)))
-(s/def ::room-number pos-int?)
+(s/def ::room-number (s/and string?
+                            #(not (str/blank? %))
+                            #(>= 25 (count %))))
 (s/def ::max-capacity pos-int?)
 (s/def ::room (s/keys :req-un [::title
                                ::description
@@ -82,6 +84,16 @@
         (map :id)
         (apply hash-set))
    user-id))
+
+(defn room-number-str
+  [room]
+  "Checks the room-number of a room to see if it is a simple integer,
+  and returns an appropriate string."
+  (let [;; Remove whitespace for comparison.
+        room-number (str/replace (:room-number room) #"\s+" "")]
+    (if (re-matches #"\d+" room-number)
+      (str "Room " (:room-number room))
+      (:room-number room))))
 
 (defn room->str
   "Converts a room map into a string, for searching purposes."

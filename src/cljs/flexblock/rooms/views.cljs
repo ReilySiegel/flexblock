@@ -38,8 +38,7 @@
           [input/text {:placeholder "Title" :atom title}]]
          [:div.col.m6.s12
           [input/text {:placeholder "Room Number"
-                       :atom        number
-                       :type        :number}]]
+                       :atom        number}]]
          [:div.col.m6.s12
           [input/text {:placeholder "Max Capacity"
                        :atom        capacity
@@ -148,7 +147,7 @@
          [:h6.truncate (or (->> users (filter :teacher) first :name) "")]
          [:span (.toDateString date)]
          [:p (rooms/time-str room)]
-         [:p (str "Room: " room-number)]
+         [:p (rooms/room-number-str room)]
          [:p (str (->> users (remove :teacher) count) "/" max-capacity)]]
         [:div.divider]
         [:div.card-content

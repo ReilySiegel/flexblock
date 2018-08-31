@@ -44,7 +44,6 @@
    {:http-xhrio {:method          :post
                  :uri             "/room"
                  :params          (-> room
-                                      (update :room-number js/parseInt)
                                       (update :max-capacity js/parseInt))
                  :format          (ajax/transit-request-format)
                  :response-format (ajax/detect-response-format)
