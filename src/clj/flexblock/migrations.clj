@@ -20,6 +20,10 @@
                  [:max_capacity :integer :not :null]
                  [:time "varchar(10)" :not :null]]
    :users_rooms [[:id :bigserial :primary :key]
+                 ;; -1 Absent
+                 ;; 0 Undefined
+                 ;; 1 Present
+                 [:attendance :int :not :null]
                  [:users_id :bigint :not :null :references "users(id)"]
                  [:rooms_id :bigint :not :null :references "rooms(id)"]]})
 

@@ -253,8 +253,9 @@
        :else
        (do
          (insert users-rooms
-                 (values {:users_id user-id
-                          :rooms_id room-id}))
+                 (values {:attendance 0
+                          :users_id   user-id
+                          :rooms_id   room-id}))
          (doseq [recipient [user (r/get-teacher room)]]
            (a/put! n/notifier {:event     :room/join
                                :recipient recipient
