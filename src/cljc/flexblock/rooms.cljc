@@ -1,8 +1,40 @@
+
 (ns flexblock.rooms
   "Contains functions for operating on rooms."
   (:require [flexblock.search :as search]
             [clojure.string :as str]
             [clojure.spec.alpha :as s]))
+
+(def during-schedule
+  "Session times that fall within a regular school schedule, excluding
+  Flexblock."
+  {:a "A Block"
+   :b "B Block"
+   :c "C Block"
+   :d "D Block"
+   :e "E Block"
+   :f "F Block"
+   :g "G Block"
+   :h "H Block"})
+
+(def outside-shedule
+  "Session times that fall outside a regular school schedule."
+  {:before   "Before School"
+   :after    "After School"
+   :flex     "FlexBlock"
+   :advisory "Advisory"})
+
+(def times
+  "All times a Session could be scheduled for."
+  (merge during-schedule outside-shedule))
+
+
+(def sorted-times
+  "A sorted version of times.
+  Note, is stored as a vector of vectors, rather than a map."
+  (->> times
+       (sort-by second)
+       (sort-by #(count (second %)))))
 
 (s/def ::title (s/and string?
                       #(not (str/blank? %))
@@ -11,8 +43,10 @@
                             #(not (str/blank? %))
                             #(>= 250 (count %))))
 (s/def ::date inst?)
-(s/def ::time #(contains? (hash-set "after" "before" "flex") %))
-(s/def ::room-number pos-int?)
+(s/def ::time #(contains? (set (keys times)) (keyword %)))
+(s/def ::room-number (s/and string?
+                            #(not (str/blank? %))
+                            #(>= 25 (count %))))
 (s/def ::max-capacity pos-int?)
 (s/def ::room (s/keys :req-un [::title
                                ::description
@@ -37,11 +71,10 @@
        (remove :teacher)))
 
 (defn time-str [room]
-  ;; Make sure time is a keyword.
-  (case (keyword (:time room))
-    :before "Before School"
-    :after  "After School"
-    :flex   "FlexBlock"))
+  ;; Make sure time is a keyword
+  (get times (keyword (:time room)) "Unknown Time"))
+
+(time-str {:time :a})
 
 (defn in-room?
   "Given a `room` and a `user-id`, checks if the user is in `room`."
@@ -51,6 +84,16 @@
         (map :id)
         (apply hash-set))
    user-id))
+
+(defn room-number-str
+  "Checks the room-number of a room to see if it is a simple integer,
+  and returns an appropriate string."
+  [room]
+  (let [;; Remove whitespace for comparison.
+        room-number (str/replace (:room-number room) #"\s+" "")]
+    (if (re-matches #"\d+" room-number)
+      (str "Room " (:room-number room))
+      (:room-number room))))
 
 (defn room->str
   "Converts a room map into a string, for searching purposes."

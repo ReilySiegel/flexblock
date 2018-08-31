@@ -16,9 +16,9 @@
                  [:description "varchar(250)" :not :null]
                  [:title "varchar(50)" :not :null]
                  [:date :date :not :null]
-                 [:room_number :integer :not :null]
+                 [:room_number "varchar(25)" :not :null]
                  [:max_capacity :integer :not :null]
-                 [:time "varchar(6)" :not :null]]
+                 [:time "varchar(10)" :not :null]]
    :users_rooms [[:id :bigserial :primary :key]
                  [:users_id :bigint :not :null :references "users(id)"]
                  [:rooms_id :bigint :not :null :references "rooms(id)"]]})

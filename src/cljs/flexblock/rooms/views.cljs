@@ -38,8 +38,7 @@
           [input/text {:placeholder "Title" :atom title}]]
          [:div.col.m6.s12
           [input/text {:placeholder "Room Number"
-                       :atom        number
-                       :type        :number}]]
+                       :atom        number}]]
          [:div.col.m6.s12
           [input/text {:placeholder "Max Capacity"
                        :atom        capacity
@@ -54,9 +53,10 @@
           [input/select
            {:atom        time
             :placeholder "Choose a Time"
-            :options     [{:value "after" :label "After School"}
-                          {:value "before" :label "Before School"}
-                          {:value "flex" :label "Flex Block"}]}]]]]
+            :options     (map (fn [[val label]]
+                                {:value (name val)
+                                 :label label})
+                              rooms/sorted-times)}]]]]
        [:div.modal-footer
         [:button.btn-flat.amber-text.darken-1.waves-effect.waves-purple
          {:on-click (fn []
@@ -131,25 +131,23 @@
   "Creates a card with information about a `room`."
   [room]
   (when-let [{:keys [id title users description date time room-number max-capacity]} room]
-    (let [search @(rf/subscribe [:search])]
+    (let [search (rf/subscribe [:search])]
       [:div.col.s12.m6.l4.grid-item
        {:key   id
         ;; Used for easter eggs. Styles are defined in styles.css
-        :class (condp = (str/lower-case search)
+        :class (condp = (str/lower-case @search)
                  ;; Rotate the card by 2 degrees.
                  "askew"            "askew"
                  ;; Does a barrel roll.
                  "do a barrel roll" "barrel-roll"
-                 nil)}
+                 "")}
        [:div.card.hoverable
         [:div.card-content
          [:span.card-title.truncate title]
          [:h6.truncate (or (->> users (filter :teacher) first :name) "")]
          [:span (.toDateString date)]
-         [:p ((keyword time) {:before "Before School"
-                              :after  "After School"
-                              :flex   "FlexBlock"} "")]
-         [:p (str "Room: " room-number)]
+         [:p (rooms/time-str room)]
+         [:p (rooms/room-number-str room)]
          [:p (str (->> users (remove :teacher) count) "/" max-capacity)]]
         [:div.divider]
         [:div.card-content
@@ -181,7 +179,34 @@
          ;; Get rooms if rooms are empty.
          (rf/dispatch [:rooms/get])
          ;; Otherwise show the rooms
-         [grid/grid (map card @rooms)])])))
+         [grid/grid (doall (map card @rooms))])])))
+
+
+(defn filters []
+  (let [filters @(rf/subscribe [:rooms/time-filter])
+        show?   @(rf/subscribe [:rooms/filter])]
+    [:div.row
+     (when show?
+       (for [[k s] rooms/sorted-times]
+         [:div.col.s6.m3
+          {:key k}
+          [:label
+           [:input
+            {:type      :checkbox
+             :value     (filters k)
+             :on-change #(rf/dispatch [:rooms/update-time-filter
+                                       k
+                                       (-> %
+                                           .-target
+                                           .-checked)])}]
+           [:span s]]]))
+     [:div.col.s12.center
+      {:style {:padding-top (if show? "2vh" "0px")}}
+      [:a
+       {:style    {:cursor :pointer}
+        :on-click #(rf/dispatch [:rooms/toggle-filter])}
+       (if show? "Hide Filters" "Show Filters")]]]))
+
 
 (defn page
   "Root component for the rooms page.
@@ -189,7 +214,10 @@
   used to open a form for adding rooms."
   []
   [:div.container
-   [search/search-bar]
-   [fab]
-   [add]
-   [grid]])
+   (when-not (str/blank? @(rf/subscribe [:login/token]))
+     [:div
+      [search/search-bar]
+      [fab]
+      [add]
+      [filters]
+      [grid]])])

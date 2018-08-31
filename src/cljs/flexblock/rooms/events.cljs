@@ -8,6 +8,19 @@
  (fn [{:keys [db]} [_ rooms]]
    {:db (assoc db :rooms rooms)}))
 
+(rf/reg-event-db
+ :rooms/toggle-filter
+ (fn [db _]
+   (update db :rooms/filter not)))
+
+(rf/reg-event-db
+ :rooms/update-time-filter
+ (fn [db [_ key filter?]]
+   (if filter?
+     (update db :rooms/time-filter conj key)
+     (update db :rooms/time-filter disj key))))
+
+
 (rf/reg-event-fx
  :rooms/get
  (fn [{:keys [db]} _]
@@ -31,7 +44,6 @@
    {:http-xhrio {:method          :post
                  :uri             "/room"
                  :params          (-> room
-                                      (update :room-number js/parseInt)
                                       (update :max-capacity js/parseInt))
                  :format          (ajax/transit-request-format)
                  :response-format (ajax/detect-response-format)
