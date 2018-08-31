@@ -12,7 +12,7 @@
                              (time/now))
               :time         "flex"
               :max-capacity 12
-              :room-number  404}]
+              :room-number  "404"}]
     (is (s/valid? ::r/room room))))
 
 (deftest get-teacher-test
