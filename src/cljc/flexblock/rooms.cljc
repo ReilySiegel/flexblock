@@ -19,9 +19,10 @@
 
 (def outside-shedule
   "Session times that fall outside a regular school schedule."
-  {:before "Before School"
-   :after  "After School"
-   :flex   "FlexBlock"})
+  {:before   "Before School"
+   :after    "After School"
+   :flex     "FlexBlock"
+   :advisory "Advisory"})
 
 (def times
   "All times a Session could be scheduled for."
