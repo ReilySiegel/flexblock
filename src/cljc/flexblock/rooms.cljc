@@ -86,9 +86,9 @@
    user-id))
 
 (defn room-number-str
-  [room]
   "Checks the room-number of a room to see if it is a simple integer,
   and returns an appropriate string."
+  [room]
   (let [;; Remove whitespace for comparison.
         room-number (str/replace (:room-number room) #"\s+" "")]
     (if (re-matches #"\d+" room-number)
