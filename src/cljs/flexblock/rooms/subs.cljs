@@ -8,10 +8,29 @@
  (fn [db _]
    (:rooms db)))
 
+(rf/reg-sub
+ :rooms/filter
+ (fn [db _]
+   (:rooms/filter db)))
+
+(rf/reg-sub
+ :rooms/time-filter
+ (fn [db _]
+   (:rooms/time-filter db)))
+
+(rf/reg-sub
+ :rooms/filtered
+ :<- [:rooms/all]
+ :<- [:rooms/time-filter]
+ (fn [[rooms filters]]
+   (if (empty? filters)
+     rooms
+     (->> rooms
+          (filter #(filters (keyword (:time %))))))))
 
 (rf/reg-sub
  :rooms/sorted
- :<- [:rooms/all]
+ :<- [:rooms/filtered]
  :<- [:search]
  :<- [:login/user]
  (fn [[rooms search user]]

@@ -8,6 +8,19 @@
  (fn [{:keys [db]} [_ rooms]]
    {:db (assoc db :rooms rooms)}))
 
+(rf/reg-event-db
+ :rooms/toggle-filter
+ (fn [db _]
+   (update db :rooms/filter not)))
+
+(rf/reg-event-db
+ :rooms/update-time-filter
+ (fn [db [_ key filter?]]
+   (if filter?
+     (update db :rooms/time-filter conj key)
+     (update db :rooms/time-filter disj key))))
+
+
 (rf/reg-event-fx
  :rooms/get
  (fn [{:keys [db]} _]

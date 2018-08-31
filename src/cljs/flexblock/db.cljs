@@ -17,11 +17,12 @@
       (reader/read-string)))
 
 (defn default-db []
-  (merge {:page   :rooms
-          :token  ""
-          :user   {}
-          :rooms  []
-          :users  []
-          :search ""
-          :date   nil}
+  (merge {:page              :rooms
+          :token             ""
+          :user              {}
+          :rooms             []
+          :rooms/time-filter #{}
+          :users             []
+          :search            ""
+          :date              nil}
          (get-localstorage)))

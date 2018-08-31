@@ -182,13 +182,43 @@
          ;; Otherwise show the rooms
          [grid/grid (doall (map card @rooms))])])))
 
+
+(defn filters []
+  (let [filters @(rf/subscribe [:rooms/time-filter])
+        show?   @(rf/subscribe [:rooms/filter])]
+    [:div.row
+     (when show?
+       (for [[k s] rooms/sorted-times]
+         [:div.col.s6.m3
+          {:key k}
+          [:label
+           [:input
+            {:type      :checkbox
+             :value     (filters k)
+             :on-change #(rf/dispatch [:rooms/update-time-filter
+                                       k
+                                       (-> %
+                                           .-target
+                                           .-checked)])}]
+           [:span s]]]))
+     [:div.col.s12.center
+      {:style {:padding-top (if show? "2vh" "0px")}}
+      [:a
+       {:style    {:cursor :pointer}
+        :on-click #(rf/dispatch [:rooms/toggle-filter])}
+       (if show? "Hide Filters" "Show Filters")]]]))
+
+
 (defn page
   "Root component for the rooms page.
   Consists of a search bar, a grid of rooms, and a FAB that can be
   used to open a form for adding rooms."
   []
   [:div.container
-   [search/search-bar]
-   [fab]
-   [add]
-   [grid]])
+   (when-not (str/blank? @(rf/subscribe [:login/token]))
+     [:div
+      [search/search-bar]
+      [fab]
+      [add]
+      [filters]
+      [grid]])])
