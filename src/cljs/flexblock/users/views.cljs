@@ -41,14 +41,20 @@
 
 (defn session
   "One session in :rooms list."
-  [room]
+  [user room]
   [:li.collection-item
    {:key (:id room)}
    [:div
-    (gstring/format "Room %s: %s - %s - %s %s "
-                    (:room-number room)
+    {:style {:color (case @(rf/subscribe [:user/get-attendance
+                                          (:id room)
+                                          (:id user)])
+                      -1 :red
+                      1  :green
+                      nil)}}
+    (gstring/format "%s: %s - %s - %s %s "
                     (:title room)
                     (:name (rooms/get-teacher room))
+                    (rooms/room-number-str room)
                     (rooms/time-str room)
                     (.toDateString (:date room)))]])
 
@@ -65,9 +71,10 @@
        [:div.col.l8.offset-l2.s12
         (if (seq sessions)
           [:ul.collection
-           (map session (->> sessions
-                             (sort-by :date)
-                             reverse))]
+           (doall (map (partial session user)
+                       (->> sessions
+                            (sort-by :date)
+                            reverse)))]
           [:h6.amber-text.center
            "This Student is not enrolled in any Sessions."])]]]]))
 
