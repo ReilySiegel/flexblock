@@ -147,7 +147,8 @@
        :else
        [:div])
      (cond ;Information
-       (and (:teacher user))
+       (or (:teacher user)
+           (:admin user))
        [:a.btn-flat.amber-text.waves-effect.waves-purple.modal-trigger
         {:href (str "#attendance" (:id room))} "Students"]
 
