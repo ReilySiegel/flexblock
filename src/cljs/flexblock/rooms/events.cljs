@@ -100,3 +100,21 @@
                  :response-format (ajax/detect-response-format)
                  :on-success      [:room/delete-success]
                  :on-failure      [:http/failure]}}))
+
+(rf/reg-event-fx
+ :room/attendance-success
+ (fn [_ [_ response]]
+   {:dispatch [:rooms/get]}))
+
+(rf/reg-event-fx
+ :room/attendance
+ (fn [{:keys [db]} [_ room-id user-id attendance]]
+   {:http-xhrio {:method          :post
+                 :uri             "/room/attendance"
+                 :params          {:room-id    room-id
+                                   :user-id    user-id
+                                   :attendance attendance}
+                 :format          (ajax/transit-request-format)
+                 :response-format (ajax/detect-response-format)
+                 :on-success      [:room/attendance-success]
+                 :on-failure      [:http/failure]}}))

@@ -71,15 +71,43 @@
 
 (defn student
   "One student in the attendance list."
-  [user]
+  [room user]
   [:li.collection-item
    {:key (:id user)}
-   [:div (:name user)]])
+   [:div.row.valign-wrapper
+    {:style {:margin-bottom "0px"}}
+    [:div.col.s6
+     [:span.left
+      {:style {:color (case (:attendance user)
+                        -1 :red
+                        1  :green
+                        nil)}}
+      (:name user)]]
+    [:div.col.s6
+     [:div.right-align
+      [:a.btn-flat.green-text.waves-effect.waves-green
+       {:on-click #(rf/dispatch [:room/attendance
+                                 (:id room)
+                                 (:id user)
+                                 1])}
+       "Present"]
+      [:a.btn-flat.red-text.waves-effect.waves-red
+       {:on-click #(rf/dispatch [:room/attendance
+                                 (:id room)
+                                 (:id user)
+                                 -1])}
+       "Absent"]]]]])
 
 (defn attendance
   "The bottom sheet modal that shows a list of students."
   [room]
-  (let [students (rooms/get-students room)]
+  (let [students        (rooms/get-students room)
+        students-sorted (->> students
+                             (sort-by :name)
+                             (sort-by :attendance)
+                             (sort-by (fn [student]
+                                        (not (zero?
+                                              (:attendance student))))))]
     ^{:key (:id room)}
     [modal/bottom-sheet {:id (str "attendance" (:id room))}
      [:div.modal-content
@@ -88,7 +116,7 @@
        [:div.col.l8.offset-l2.s12
         (if (seq students)
           [:ul.collection
-           (map student students)]
+           (map (partial student room) students-sorted)]
           [:h6.amber-text.center "No students have joined yet."])]]]]))
 
 

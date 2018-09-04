@@ -61,6 +61,19 @@
            (catch Exception e
              (response/unprocessable-entity (ex-data e)))))))
 
+(defn set-attendance [request]
+  (if-not (authenticated? request)
+    (response/unauthorized)
+    (let [room-id    (get-in request [:params :room-id])
+          user-id    (get-in request [:params :user-id])
+          setter-id  (get-in request [:identity :id])
+          attendance (get-in request [:params :attendance])]
+      (try
+        (db/set-attendance room-id user-id setter-id attendance)
+        (response/ok)
+        (catch Exception e
+          (response/unprocessable-entity (ex-data e)))))))
+
 (defroutes routes
   (GET "/room" []
     :swagger {:summary "Get all Rooms."
@@ -89,4 +102,11 @@
     :swagger {:summary    "Leave a room."
               :tags       ["Room"]
               :parameters {:body {:room-id int?}}}
-    leave-rooms))
+    leave-rooms)
+  (POST "/room/attendance" []
+    :swagger {:summary    "Set a student's attendance."
+              :tags       ["Room"]
+              :parameters {:body {:room-id    int?
+                                  :user-id    int?
+                                  :attendance int?}}}
+    set-attendance))

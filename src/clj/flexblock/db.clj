@@ -177,11 +177,26 @@
       :else (delete users
                     (where {:id user-id})))))
 
+(defn get-attendance
+  [user-id room-id]
+  (:attendance (first
+                (select users-rooms
+                        (where {:users_id user-id
+                                :rooms_id room-id})))))
+
+
 (defn get-rooms
   "Get all rooms saved in the database."
   []
-  (select rooms
-          (with users)))
+  (let [rooms (select rooms (with users))]
+    (map (fn [room]
+           (assoc room :users
+                  (map #(assoc %
+                               :attendance
+                               (get-attendance (:id %) (:id room)))
+                       (:users room))))
+         rooms)))
+
 
 (defn get-room
   "Get one room by `id`."
@@ -189,6 +204,37 @@
   (first (select rooms
                  (where {:id id})
                  (with users))))
+
+(defn set-attendance
+  "Sets the attendance of a user for room.
+  Attendance should be an integer:
+  -1 Absent
+   0 Undefined
+   1 Present"
+  [room-id user-id setter-id attendance]
+  (let [room   (get-room room-id)
+        user   (get-user user-id)
+        setter (get-user setter-id)]
+    (cond
+      (not (and user setter))
+      (throw (ex-info nil {:message "User does not exist!"}))
+
+      (not room)
+      (throw (ex-info nil {:message "Room does not exist!"}))
+
+      (not (u/can-edit? setter user))
+      (throw
+       (ex-info nil
+                {:message
+                 (format
+                  "You don't have permission to set %s's attendance."
+                  (:name user))}))
+
+      :else
+      (update users-rooms
+              (set-fields {:attendance attendance})
+              (where {:rooms_id room-id
+                      :users_id user-id})))))
 
 (defn insert-room!
   "Inserts a room into the database.
@@ -205,8 +251,9 @@
                                          :room_number  room-number
                                          :max_capacity max-capacity})))]
        (insert users-rooms
-               (values {:users_id creator-id
-                        :rooms_id room-id})))
+               (values {:attendance 0
+                        :users_id   creator-id
+                        :rooms_id   room-id})))
      (throw (ex-info nil {:message "Only teachers can create rooms"})))))
 
 (defn delete-room!
