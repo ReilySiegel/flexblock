@@ -13,7 +13,9 @@
             [flexblock.migrations :as migrations]
             [mount.core :as mount]
             [clojure.java.jdbc :as jdbc]
-            [clj-time.core :as time]))
+            [clj-time.core :as time]
+            [clj-time.coerce :as timec]
+            [clj-time.local :as timel]))
 
 (declare rooms)
 
@@ -126,6 +128,10 @@
                (where (or {:class [= nil]}
                           {:class [>= (school-year)]}))
                (with rooms
+                     (where {:date [>= (timec/to-sql-date
+                                        (time/minus
+                                         (time/today)
+                                         (time/weeks 1)))]})
                      (with users
                            (where {:teacher true}))))))
 
@@ -188,7 +194,10 @@
 (defn get-rooms
   "Get all rooms saved in the database."
   []
-  (let [rooms (select rooms (with users))]
+  (let [rooms (select rooms
+                      (with users)
+                      (where {:date [>= (timec/to-sql-date
+                                         (time/today))]}))]
     (map (fn [room]
            (assoc room :users
                   (map #(assoc %
@@ -242,14 +251,21 @@
   [creator-id title description date time room-number max-capacity]
   (transaction
    (if (:teacher (get-user creator-id))
-     (let [room-id (:id (insert rooms
-                                (values {:title        title
-                                         :description  description
-                                         :date         (java.sql.Date.
-                                                        (inst-ms date))
-                                         :time         time
-                                         :room_number  room-number
-                                         :max_capacity max-capacity})))]
+     (let [clj-time-date (timec/from-date date)
+           date-no-time  (time/local-date
+                          (time/year clj-time-date)
+                          (time/month clj-time-date)
+                          (time/day clj-time-date))
+           room-id       (:id (insert rooms
+                                      (values
+                                       {:title        title
+                                        :description  description
+                                        :date
+                                        (timec/to-sql-date
+                                         date-no-time)
+                                        :time         time
+                                        :room_number  room-number
+                                        :max_capacity max-capacity})))]
        (insert users-rooms
                (values {:attendance 0
                         :users_id   creator-id
