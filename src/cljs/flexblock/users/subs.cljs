@@ -42,3 +42,15 @@
    (->> users
         (sort-by :name)
         (sort-by (partial users/search search)))))
+
+(rf/reg-sub
+ :user/get-attendance
+ :<- [:rooms/all]
+ (fn [rooms [_ room-id user-id]]
+   (->> rooms
+        (filter #(= room-id (:id %)))
+        first
+        :users
+        (filter #(= user-id (:id %)))
+        first
+        :attendance)))
