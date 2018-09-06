@@ -208,7 +208,7 @@
          ;; Get rooms if rooms are empty.
          (rf/dispatch [:rooms/get])
          ;; Otherwise show the rooms
-         [grid/grid (doall (map card @rooms))])])))
+         [grid/grid (doall (map card (take 50 @rooms)))])])))
 
 
 (defn filters []
