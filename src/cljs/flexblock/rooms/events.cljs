@@ -118,3 +118,8 @@
                  :response-format (ajax/detect-response-format)
                  :on-success      [:room/attendance-success]
                  :on-failure      [:http/failure]}}))
+(rf/reg-event-fx
+ :rooms/set-attendance-modal
+ (fn [{:keys [db]} [_ room]]
+   {:db         (assoc db :password-modal room)
+    :open-modal "#attendance-modal"}))

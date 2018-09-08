@@ -98,27 +98,29 @@
                                  -1])}
        "Absent"]]]]])
 
-(defn attendance
-  "The bottom sheet modal that shows a list of students."
-  [room]
-  (let [students        (rooms/get-students room)
+(defn attendance []
+  (let [room            @(rf/subscribe [:rooms/attendance-modal])
+        students        (rooms/get-students room)
         students-sorted (->> students
                              (sort-by :name)
                              (sort-by :attendance)
                              (sort-by (fn [student]
                                         (not (zero?
                                               (:attendance student))))))]
-    ^{:key (:id room)}
-    [modal/bottom-sheet {:id (str "attendance" (:id room))}
-     [:div.modal-content
-      [:h4.purple-text.text-lighten-3 "Students"]
-      [:div.row
-       [:div.col.l8.offset-l2.s12
-        (if (seq students)
-          [:ul.collection
-           (map (partial student room) students-sorted)]
-          [:h6.amber-text.center "No students have joined yet."])]]]]))
+    [:div.modal-content
+     [:h4.purple-text.text-lighten-3 "Students"]
+     [:div.row
+      [:div.col.l8.offset-l2.s12
+       (if (seq students)
+         [:ul.collection
+          (map (partial student room) students-sorted)]
+         [:h6.amber-text.center "No students have joined yet."])]]]))
 
+(defn attendance-modal
+  "The bottom sheet modal that shows a list of students."
+  []
+  [modal/bottom-sheet {:id "attendance-modal"}
+   [attendance]])
 
 (defn buttons
   "Returns the appropriate actions that a user can take on a `room`."
@@ -149,8 +151,9 @@
      (cond ;Information
        (or (:teacher user)
            (:admin user))
-       [:a.btn-flat.amber-text.waves-effect.waves-purple.modal-trigger
-        {:href (str "#attendance" (:id room))} "Students"]
+       [:a.btn-flat.amber-text.waves-effect.waves-purple
+        {:on-click #(rf/dispatch [:rooms/set-attendance-modal room])}
+        "Students"]
 
        :else
        [:div])]))
@@ -182,8 +185,7 @@
         [:div.card-content
          {:style {:overflow :hidden}}
          [:p description]]
-        [buttons room]]
-       [attendance room]])))
+        [buttons room]]])))
 
 (defn fab []
   (when (and
@@ -249,4 +251,5 @@
       [fab]
       [add]
       [filters]
-      [grid]])])
+      [grid]
+      [attendance-modal]])])

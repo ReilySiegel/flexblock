@@ -44,7 +44,9 @@
                  :href     "#login-modal"} "Login"]]
           [:div
            [:li.hide-on-small-only
-            [:a.modal-trigger {:href "#reset-password-modal"}
+            [:a
+             {:on-click #(rf/dispatch [:users/set-password-modal
+                                       @(rf/subscribe [:login/user])])}
              "Reset Password"]]
            [:li [:a {:on-click #(rf/dispatch [:logout])}
                  "Logout"]]])]]]]))

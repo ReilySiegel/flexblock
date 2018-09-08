@@ -55,3 +55,18 @@
         (filter #(= user-id (:id %)))
         first
         :attendance)))
+
+(rf/reg-sub
+ :users/session-modal
+ (fn [db _]
+   (:session-modal db)))
+
+(rf/reg-sub
+ :users/password-modal
+ (fn [db _]
+   (:password-modal db)))
+
+(rf/reg-sub
+ :users/password
+ (fn [db _]
+   (:password db)))

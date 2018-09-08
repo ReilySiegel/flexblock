@@ -43,3 +43,8 @@
           ;; Search gives higher numbers for better matches, so we
           ;; need to sort in descending order.
           (sort-by search #(compare %2 %1))))))
+
+(rf/reg-sub
+ :rooms/attendance-modal
+ (fn [db _]
+   (:attendance-modal db)))

@@ -22,14 +22,16 @@
 (rf/reg-event-fx
  :users/reset-password-success
  (fn [_ [_ response]]
-   {:notification "Password reset."}))
+   {:notification "Password reset."
+    :close-modal  "#password-modal"}))
 
 (rf/reg-event-fx
  :users/reset-password
- (fn [{:keys [db]} [_ user-id password]]
+ (fn [{:keys [db]} [_ user-id]]
    {:http-xhrio {:method          :patch
                  :uri             "/user/password"
-                 :params          {:user-id user-id :password password}
+                 :params          {:user-id  user-id
+                                   :password (:password db)}
                  :format          (ajax/json-request-format)
                  :response-format (ajax/detect-response-format)
                  :on-success      [:users/reset-password-success]
@@ -69,3 +71,20 @@
                  :response-format (ajax/detect-response-format)
                  :on-success      [:users/delete-success]
                  :on-failure      [:http/failure]}}))
+
+(rf/reg-event-fx
+ :users/set-session-modal
+ (fn [{:keys [db]} [_ user]]
+   {:db         (assoc db :session-modal user)
+    :open-modal "#session-modal"}))
+
+(rf/reg-event-fx
+ :users/set-password-modal
+ (fn [{:keys [db]} [_ user]]
+   {:db         (assoc db :password-modal user)
+    :open-modal "#password-modal"}))
+
+(rf/reg-event-fx
+ :users/set-password
+ (fn [{:keys [db]} [_ password]]
+   {:db (assoc db :password password)}))
