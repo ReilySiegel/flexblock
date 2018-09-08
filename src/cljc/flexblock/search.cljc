@@ -1,10 +1,9 @@
 (ns flexblock.search
-  "The implementation below is *heavily* inspired from this blog post:
-  https://thoughts.codegram.com/building-a-content-based-recommender-system-in-clojure/
-  Credit for this code, and for the idea of using a TF-IDF system, to Txus."
   (:require
    [clojure.string :as str]
-   [clj-fuzzy.metrics :as search]))
+   [clj-fuzzy.metrics :as search]
+   [clj-fuzzy.phonetics :as phonetics]
+   [clj-fuzzy.stemmers :as stemmers]))
 
 (def stopwords
   "A set of common words that have no relevance to any particular topic."
@@ -12,110 +11,78 @@
     "it" "of" "on" "or" "that" "the" "this" "to" "was" "what" "when" "where"
     "who" "will" "with"})
 
-(defn- tokenize [s]
+(defn tokenize [s]
   (remove
    stopwords
    (str/split (str/lower-case s) #"[^a-zäöüáéíóúãâêîôûàèìòùçñ]+")))
 
-(defn- term-frequencies [tokens]
-  (let [freqs      (frequencies tokens)
-        term-count (count tokens)]
-    (->> freqs
-         (map (fn [[term frequency]]
-                [term (/ frequency term-count)]))
-         (into {}))))
+(def exact-score
+  "The number of points given for an exact match."
+  10)
+(def metaphone-match-score
+  "The number of points given for an exact metapone match"
+  7)
+(def patial-metaphone-score
+  "The number of points given for a partial metaphone match."
+  3)
 
-(defn- idf [term corpus]
-  (let [documents-matching-term (count (filter #(% term) corpus))]
-    (if (pos? documents-matching-term)
-      (-> (count corpus)
-          (/ documents-matching-term)
-          Math/log
-          (+ 1))
-      1.0)))
+;; Make it possible to use and discard a memoized version of the
+;; metaphone function and stem function.
+(def ^:dynamic *metaphone-fn* (memoize phonetics/double-metaphone))
+(def ^:dynamic *stem-fn* (memoize stemmers/lancaster))
 
-(defn- tf-idf [document corpus]
-  (->> (term-frequencies document)
-       (map (fn [[term freq]]
-              [term (* freq (idf term corpus))]))
-       (into {})))
 
-(defn- dot-product [document another-document]
-  (->> document
-       (map (fn [[term tf-idf]]
-              (* tf-idf (get another-document term 0.0))))
-       (reduce +)))
+(defn- double-metaphone-score [search word]
+  (let [word-m   (*metaphone-fn* word)
+        search-m (*metaphone-fn* search)]
+    (cond
+      ;; Exact match.
+      (= word search)
+      exact-score
 
-(defn- magnitude [document]
-  (->> document
-       (map (fn [[_ tf-idf]]
-              (* tf-idf tf-idf)))
-       (reduce +)
-       Math/sqrt))
+      ;; Exact metaphone match.
+      (= word-m search-m)
+      metaphone-match-score
+      #_#_
+      ;; Partial metaphone match.
+      (some true?
+            (for [word-m-p   word-m
+                  search-m-p search-m]
+              (= word-m-p search-m-p)))
+      patial-metaphone-score
 
-(defn- cosine-similarity
-  [document another-document]
-  (let [dot-p                      (dot-product document another-document)
-        document-magnitude         (magnitude document)
-        another-document-magnitude (magnitude (select-keys another-document
-                                                           (keys document)))
-        magnitude-product          (* document-magnitude
-                                      another-document-magnitude)]
-    (if (zero? magnitude-product)
-      0.0
-      (/ dot-p magnitude-product))))
+      ;; No match.
+      :else 0)))
 
-(defn search
-  "Returns a the cosine-similarity between two strings, given a
-  corpus (seq) of strings."
-  [search string corpus]
-  (let [tokenized-corpus (map (comp set tokenize) corpus)]
-    (cosine-similarity (tf-idf (tokenize search) tokenized-corpus)
-                       (tf-idf (tokenize string) tokenized-corpus))))
+(defn- score-document
+  [tokenized-search tokenized-document]
+  (reduce +
+          (for [term tokenized-search]
+            (reduce +
+                    (for [word tokenized-document]
+                      (double-metaphone-score term word))))))
+
+(defn- make-document-str
+  "Returns a string given a string `s` and a weight `n`."
+  [weight-map document]
+  (str/join " "
+            (for [[key weight] weight-map]
+              (str/join " " (repeat weight (get document key ""))))))
 
 (defn make-search
-  "Curried version of `search`, with extra goodies. Takes a seq
-  `documents`, and a `search` term. The `search` term should be a
-  string. The `documents` should either be a seq of strings, or a
-  processing function must be provided to transform the `documents`
-  into strings.
+  "Takes a `weight-map`, a `search` term, and optionally a `tokenize-fn`.
+  The `search` term should be a string.
 
   Returns a function which takes one `document` as an argument, and
-  returns the cosine similarity between the `search` term and the
-  `document`. The `document` must also either be a string, or become a
-  string after processing-fn is applied.
+  returns the search score between the `search` term and the
+  `document`. The `document` must be a map.
 
-  processing-fn defaults to `identity`."
-  ([documents search] (make-search documents search identity))
-  ([documents search processing-fn]
-   (let [corpus        (map (comp set tokenize processing-fn)
-                            documents)
-         search        (tokenize search)
-         search-tf-idf (tf-idf search corpus)]
-     (fn [document]
-       (cosine-similarity
-        search-tf-idf
-        (-> document
-            processing-fn
-            tokenize
-            (tf-idf corpus)))))))
-
-
-(defn search-string
-  "Fuzzy searches for search in string.
-  Splits string into words and computes the distance for each
-  word. Does not split search into words."
-  [search string]
-  (let [search    (str/trim (str/lower-case search))
-        string    (str/trim (str/lower-case string))
-        inverted? (or (str/starts-with? search "-")
-                      (str/starts-with? search "!"))
-        search    (if-not inverted? search (subs search 1))
-        strings   (str/split string #"\s+")
-        num-best  (inc (int (/ (count strings) 5)))
-        results   (sort (for [string strings]
-                          (search/levenshtein search string)))]
-    (when-not (str/blank? search)
-      (if inverted?
-        (- 10 (/ (reduce + (take num-best results)) num-best))
-        (/ (reduce + (take num-best results)) num-best)))))
+  `tokenize-fn` defaults to `flexblock.search/tokenize`."
+  ([weight-map search] (make-search weight-map search tokenize))
+  ([weight-map search tokenize-fn]
+   (let [tokenized-search (tokenize-fn search)]
+     (fn search [document]
+       (score-document tokenized-search
+                       (tokenize-fn (make-document-str
+                                     weight-map
+                                     document)))))))

@@ -27,13 +27,6 @@
 
 (s/def ::user (s/multi-spec user-type ::type))
 
-(defn search [search user]
-  (let [search   (str/trim (str/lower-case search))
-        searches (str/split search #"\s+")]
-    (reduce + (for [search searches]
-                (+ (search/search-string search (:name user))
-                   (search/search-string search (:advisor user "")))))))
-
 (defn flexblock-on-date?
   "Returns true if user is enrolled in a flexblock on a date."
   [user date]
@@ -106,3 +99,12 @@
   [deleter deletee]
   (and (not= (:id deleter) (:id deletee))
        (can-edit? deleter deletee)))
+
+(def search-weights
+  {:name    3
+   :email   2
+   :advisor 1})
+
+(defn make-search
+  [search]
+  (search/make-search search-weights search))

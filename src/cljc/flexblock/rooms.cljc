@@ -95,16 +95,22 @@
       (str "Room " (:room-number room))
       (:room-number room))))
 
-(defn room->str
-  "Converts a room map into a string, for searching purposes."
-  [room]
-  (str/join " " [(:title room)
-                 (:description room)
-                 (:name (get-teacher room))]))
+(def room-weights
+  {:title       2
+   :description 1
+   :teacher     2})
 
 (defn make-search
-  "Room-specific version of `flexblock.search/make-search`. Uses
-  `room->str` as the processing-fn. See `flexblock.search/make-search`
-  for more details."
-  [rooms search]
-  (search/make-search rooms search room->str))
+  "Room-specific version of `flexblock.search/make-search`.
+  Stems the tokenized words.
+  See `flexblock.search/make-search` for more details."
+  [search]
+  (fn [room]
+    ((search/make-search room-weights
+                         search
+                         (fn [s]
+                           (map search/*stem-fn*
+                                (search/tokenize s))))
+     ;; Add the teacher's name to the room map, so that it can be
+     ;; searched.
+     (assoc room :teacher (:name (get-teacher room))))))

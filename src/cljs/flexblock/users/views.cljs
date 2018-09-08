@@ -203,7 +203,7 @@
       (rf/dispatch [:users/get])
       [:div.row
        [grid/grid
-        (doall (map card (take 50 @users)))]])))
+        (doall (map card (take 36 @users)))]])))
 
 
 (defn page

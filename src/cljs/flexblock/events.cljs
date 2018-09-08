@@ -8,33 +8,16 @@
             [flexblock.navbar.events]
             [flexblock.reminder.events]
             [flexblock.rooms.events]
+            [flexblock.search.events]
             [flexblock.users.events]
-            [re-frame.core :as rf]))
+            [re-frame.core :as rf]
+            [re-frame-fx.dispatch]))
 
 
 (rf/reg-event-db
  :initialize-db
  (fn [_ _]
    (db/default-db)))
-
-
-(rf/reg-event-fx
- :set-search
- (fn [{:keys [db]} [_ search]]
-   (merge {:db (assoc db :search search)}
-          ;; Easter egg referencing RFC-1149.
-          (when (= (str/lower-case search) "ipoac")
-            {:notification "A pigeon will deliver your packet shortly."})
-          ;; Reference CS:GO
-          (when (= search "7355608")
-            {:notification
-             "The bomb has been defused. COUNTER-TERRORISTS win."}))))
-
-
-(rf/reg-event-db
- :set-date
- (fn [db [_ date]]
-   (assoc db :date date)))
 
 
 (rf/reg-event-fx

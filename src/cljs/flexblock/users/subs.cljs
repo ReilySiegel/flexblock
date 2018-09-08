@@ -39,9 +39,10 @@
 
  ;; Sort the users.
  (fn [[users search] _]
-   (->> users
-        (sort-by :name)
-        (sort-by (partial users/search search)))))
+   (let [search (users/make-search search)]
+     (->> users
+          (sort-by :name)
+          (sort-by search #(compare %2 %1))))))
 
 (rf/reg-sub
  :user/get-attendance

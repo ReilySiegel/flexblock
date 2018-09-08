@@ -1,5 +1,6 @@
 (ns flexblock.search.views
   (:require
+   [re-com.core :as rc]
    [re-frame.core :as rf]
    [flexblock.components.input :as input]
    [flexblock.reminder.views :as reminder]))
@@ -7,11 +8,12 @@
 (defn search-bar []
   [:div.row
    [:div.col.l6.s12.offset-l3
-    [input/text
-     {:placeholder   "Search"
-      :dispatch-key  :set-search
-      :subscribe-key :search
-      :on-change?    true}]]])
+    [rc/input-text
+     :width "100%"
+     :placeholder "Search"
+     :on-change   #(rf/dispatch [:set-search-debounce %])
+     :model       @(rf/subscribe [:search])
+     :change-on-blur? false]]])
 
 
 (defn date-bar []

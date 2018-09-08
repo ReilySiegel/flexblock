@@ -34,7 +34,7 @@
  :<- [:search]
  :<- [:login/user]
  (fn [[rooms search user]]
-   (let [search (rooms/make-search rooms search)]
+   (let [search (rooms/make-search search)]
      (->> rooms
           (sort-by :date)
           ;; Show rooms created by the logged-in user first.
