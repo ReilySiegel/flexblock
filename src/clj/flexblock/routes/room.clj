@@ -1,6 +1,7 @@
 (ns flexblock.routes.room
   (:require [buddy.auth :refer [authenticated?]]
             [clojure.spec.alpha :as spec]
+            [compojure.api.sweet :refer :all :exclude [routes]]
             [flexblock.db :as db]
             [flexblock.rooms :as rooms]
             [flexblock.routes.helpers :refer [api-try]]
