@@ -35,8 +35,9 @@
     users-rooms))
 
 (defn post-insert [users-rooms]
-  (let [room    (-> (db/select-one Room :id (:rooms-id users-rooms))
-                    (hydrate/hydrate :users))
+  (let [room    (hydrate/hydrate
+                 (db/select-one Room :id (:rooms-id users-rooms))
+                 :users)
         user    (db/select-one User :id (:users-id users-rooms))
         teacher (rooms/get-teacher room)]
     (doseq [recipient [user teacher]]
@@ -66,8 +67,9 @@
                     "Teachers cannot leave rooms.")))
 
 (defn post-delete [users-rooms]
-  (let [room    (-> (db/select-one Room :id (:rooms-id users-rooms))
-                    (hydrate/hydrate :users))
+  (let [room    (hydrate/hydrate
+                 (db/select-one Room :id (:rooms-id users-rooms))
+                 :users)
         user    (db/select-one User :id (:users-id users-rooms))
         teacher (rooms/get-teacher room)]
     (doseq [recipient [user teacher]]

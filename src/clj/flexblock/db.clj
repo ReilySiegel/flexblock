@@ -58,13 +58,12 @@
                        :teacher  false
                        :admin    true})
         ;; Select the correct db-spec.
-        db        (merge
-                   (cond
-                     jdbc-url  {:connection-uri jdbc-url}
-                     jdbc-spec jdbc-spec
-                     :else     {:dbtype     "h2:mem"
-                                :dbname     "flexblockdb"
-                                :delimiters :mysql}))]
+        db        (cond
+                    jdbc-url  {:connection-uri jdbc-url}
+                    jdbc-spec jdbc-spec
+                    :else     {:dbtype     "h2:mem"
+                               :dbname     "flexblockdb"
+                               :delimiters :mysql})]
 
     ;; Set the default connection for Toucan.
     (db/set-default-db-connection! db)
@@ -78,10 +77,10 @@
     ;; Add the seed user, if they don't already exist.
     (when-not (db/exists? User :email (:email seed-user))
       (db/simple-insert! User
-                         (-> seed-user
-                             (assoc :passwordhash
-                                    (h/derive (:password seed-user)))
-                             (dissoc :password))))
+        (-> seed-user
+            (assoc :passwordhash
+                   (h/derive (:password seed-user)))
+            (dissoc :password))))
     db))
 
 (mount/defstate db
@@ -97,13 +96,15 @@
 ;;;; `flexblock.models.room`.
 
 (defn get-room [id]
-  (-> (db/select-one Room :id id)
-      (hydrate/hydrate :users)))
+  (hydrate/hydrate
+   (db/select-one Room :id id)
+   :users))
 
 (defn get-rooms []
-  (-> (db/select Room :date [:>= (timec/to-sql-date
-                                  (time/today))])
-      (hydrate/hydrate :users)))
+  (hydrate/hydrate
+   (db/select Room :date [:>= (timec/to-sql-date
+                               (time/today))])
+   :users))
 
 (defn insert-room! [room master-id]
   (binding [*master* (db/select-one User :id master-id)]

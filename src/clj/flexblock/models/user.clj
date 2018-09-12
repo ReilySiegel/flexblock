@@ -49,11 +49,11 @@
   ;; Assert that a password is provided.
   (ex-info-assert (:password user)
                   "User does not contain password.")
-  ;; Run all pre-update checks.
-  (-> (pre-update user)
-      ;; set advisor if new user is a student.
-      (merge (if (= :student (users/highest-role user))
-               {:advisor-id (:id *master*)}))))
+  (merge
+   ;; Run all pre-update checks.
+   (pre-update user)
+   (if (= :student (users/highest-role user))
+     {:advisor-id (:id *master*)})))
 
 (defn post-insert [user]
   (a/put! n/notifier {:event     :user/create
