@@ -82,7 +82,7 @@
   ((->> room
         :users
         (map :id)
-        (apply hash-set))
+        set)
    user-id))
 
 (defn room-number-str

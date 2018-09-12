@@ -48,16 +48,15 @@
   [:li.collection-item
    {:key (:id room)}
    [:div
-    {:style {:color (case @(rf/subscribe [:user/get-attendance
+    {:style {:color (case @(rf/subscribe [:room/get-attendance
                                           (:id room)
                                           (:id user)])
                       -1 :red
                       1  :green
                       nil)}}
-    (gstring/format "%s: %s - %s - %s %s "
-                    (:title room)
-                    (:name (rooms/get-teacher room))
+    (gstring/format "%s: %s - %s %s"
                     (rooms/room-number-str room)
+                    (:title room)
                     (rooms/time-str room)
                     (.toDateString (:date room)))]])
 
@@ -187,15 +186,15 @@
 (defn card
   "Creates a card with information about a `user`."
   [user]
-  (when-let [{:keys [id email name advisor rooms]} user]
+  (when-let [{:keys [id email name advisor-name rooms]} user]
     [:div.col.s12.m6.l4.grid-item
      {:key id}
      [:div.card.hoverable
       [:div.card-content
        [:span.card-title.truncate name]
        [:span.truncate email]
-       (when advisor
-         [:p.truncate advisor])]
+       (when advisor-name
+         [:p.truncate advisor-name])]
       [:div.divider]
       [card-buttons user]]]))
 

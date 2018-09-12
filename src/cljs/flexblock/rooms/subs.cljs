@@ -48,3 +48,8 @@
  :rooms/attendance-modal
  (fn [db _]
    (:attendance-modal db)))
+
+(rf/reg-sub
+ :room/get-attendance
+ (fn [db [_ room-id user-id]]
+   (get-in db [:attendance [room-id user-id]])))

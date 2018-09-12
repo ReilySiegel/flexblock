@@ -33,7 +33,7 @@
   (->> user
        :rooms
        (filter #(and
-                 (= "flex" (:time %))
+                 (=  :flex (:time %))
                  (= date (:date %))))
        empty?
        not))

@@ -27,7 +27,9 @@
      (if (nil? date)
        users
        (->> users
-            (remove #(users/flexblock-on-date? % date))
+            (remove #(users/flexblock-on-date? % (js/Date.
+                                                  (.setUTCHours date
+                                                                0 0 0 0))))
             (remove :admin))))))
 
 
@@ -43,18 +45,6 @@
      (->> users
           (sort-by :name)
           (sort-by search #(compare %2 %1))))))
-
-(rf/reg-sub
- :user/get-attendance
- :<- [:rooms/all]
- (fn [rooms [_ room-id user-id]]
-   (->> rooms
-        (filter #(= room-id (:id %)))
-        first
-        :users
-        (filter #(= user-id (:id %)))
-        first
-        :attendance)))
 
 (rf/reg-sub
  :users/session-modal

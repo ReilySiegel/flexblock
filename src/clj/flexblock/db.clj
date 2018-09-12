@@ -1,41 +1,22 @@
 (ns flexblock.db
-  "Functions that interact with the database."
-  (:require [korma.core :refer :all]
-            [korma.db :refer :all]
-            [honeysql.core :as sql]
-            [buddy.hashers :as h]
-            [clojure.string :as str]
-            [clojure.core.async :as a]
-            [flexblock.rooms :as r]
-            [flexblock.users :as u]
-            [flexblock.notifier.core :as n]
+  (:require [buddy.hashers :as h]
+            [clj-time.coerce :as timec]
+            [clj-time.core :as time]
             [flexblock.config :refer [env]]
             [flexblock.migrations :as migrations]
+            [flexblock.models.helpers :refer [*master*]]
+            [flexblock.models.room :refer [Room]]
+            [flexblock.models.user :refer [*password* User]]
+            [flexblock.models.users-rooms :refer [UsersRooms]]
+            [flexblock.users :as users]
             [mount.core :as mount]
-            [clojure.java.jdbc :as jdbc]
-            [clj-time.core :as time]
-            [clj-time.coerce :as timec]
-            [clj-time.local :as timel]))
+            [toucan.db :as db]
+            [toucan.hydrate :as hydrate]
+            [toucan.models :as models]))
 
-(declare rooms)
-
-(defentity users-rooms
-  (table :users_rooms))
-
-(defentity users
-  (entity-fields :id :name :email :teacher :advisor_id :admin)
-  (many-to-many rooms :users_rooms))
-
-(defentity rooms
-  (many-to-many users :users_rooms))
-
-(defn init-seed-user! [user]
-  (if (empty? (select users (where {:email (:email user)})))
-    (let [password-hash (h/derive (:password user))]
-      (insert users
-              (values (-> user
-                          (dissoc :password)
-                          (assoc :passwordhash password-hash)))))))
+;;;; This section is responsible for setting up a database connection.
+;;;; Things like database settings, delimiters, and connections are
+;;;; managed in this section.
 
 (defn start-db
   "This function is responsible for starting the database.
@@ -83,18 +64,24 @@
                      jdbc-spec jdbc-spec
                      :else     {:dbtype     "h2:mem"
                                 :dbname     "flexblockdb"
-                                :delimiters ""})
-                   ;; Clojure-ify db keys.
-                   {:naming
-                    {:keys
-                     #(str/lower-case (str/replace % #"_" "-"))}})]
+                                :delimiters :mysql}))]
 
-    ;; Set the default connection for Korma.
-    (default-connection (create-db db))
+    ;; Set the default connection for Toucan.
+    (db/set-default-db-connection! db)
+    (db/set-default-automatically-convert-dashes-and-underscores! true)
+    (db/set-default-quoting-style! (:delimiters db :ansi))
+    (models/set-root-namespace! 'flexblock.models)
+    ;; Set the default timezone.
+    (java.util.TimeZone/setDefault (java.util.TimeZone/getTimeZone "UTC"))
     ;; Initialize tabes, if they aren't already set up.
     (migrations/init-tables! db)
     ;; Add the seed user, if they don't already exist.
-    (init-seed-user! seed-user)
+    (when-not (db/exists? User :email (:email seed-user))
+      (db/simple-insert! User
+                         (-> seed-user
+                             (assoc :passwordhash
+                                    (h/derive (:password seed-user)))
+                             (dissoc :password))))
     db))
 
 (mount/defstate db
@@ -103,16 +90,45 @@
   works."
   :start (start-db env))
 
-(defn get-advisor [id]
-  (or (first (jdbc/query db (sql/format
-                             {:select [[:a.name :advisor]]
-                              :from   [[:users :u]]
-                              :join   [[:users :a]
-                                       [:= :a.id :u.advisor_id]]
-                              :where  [:= :u.id id]})))
-      ""))
+;;;; The following section relates to users.
+;;;;
+;;;; Details such as hydration, error checking, permission validation,
+;;;; password hashing and notification delivery are implemented in
+;;;; `flexblock.models.room`.
 
-(defn school-year []
+(defn get-room [id]
+  (-> (db/select-one Room :id id)
+      (hydrate/hydrate :users)))
+
+(defn get-rooms []
+  (-> (db/select Room :date [:>= (timec/to-sql-date
+                                  (time/today))])
+      (hydrate/hydrate :users)))
+
+(defn insert-room! [room master-id]
+  (binding [*master* (db/select-one User :id master-id)]
+    (db/insert! Room room)))
+
+(defn delete-room! [room-id master-id]
+  (binding [*master* (db/select-one User :id master-id)]
+    (db/delete! Room :id room-id)))
+
+;;;; The following section relates to users.
+;;;;
+;;;; Details such as hydration, error checking, permission validation,
+;;;; password hashing and notification delivery are implemented in
+;;;; `flexblock.models.user`.
+
+(defn school-year
+  "Returns the current school year, defined July to July.
+
+  Example:
+  Current date: 2018-03-01
+  School year: 2018
+
+  Current date: 2018-09-01
+  School year: 2019"
+  []
   (let [time  (time/now)
         year  (time/year time)
         month (time/month time)]
@@ -121,270 +137,89 @@
       year)))
 
 (defn get-users
-  "Get all users saved in the database."
+  "Wrapper to get all users, which hydrates related data.
+  Does not select users whose :class is less than `school-year`"
   []
-  (map #(merge % (get-advisor (:id %)))
-       (select users
-               (where (or {:class [= nil]}
-                          {:class [>= (school-year)]}))
-               (with rooms
-                     (where {:date [>= (timec/to-sql-date
-                                        (time/minus
-                                         (time/today)
-                                         (time/weeks 1)))]})
-                     (with users
-                           (where {:teacher true}))))))
+  (hydrate/hydrate
+   (db/select User {:where [:or
+                            [:= :class nil]
+                            [:>= :class (school-year)]]})
+   :advisor-name :rooms))
 
 (defn get-user
-  "Get one user by `id`."
+  "Wrapper to get user by :id, hydrating related fields."
   [id]
-  (first (select users
-                 (where {:id id}))))
+  (hydrate/hydrate (User :id id) :advisor-name :rooms))
 
 (defn insert-user!
-  [user-id email password name teacher? admin? class advisor-id]
-  (let [creator (get-user user-id)
-        user    {:email        email
-                 :passwordhash (h/derive password)
-                 :name         name
-                 :teacher      teacher?
-                 :admin        admin?
-                 :class        class
-                 :advisor_id   advisor-id}]
-    (if-not (u/can-edit? creator user)
-      (throw (ex-info nil {:message
-                           "You don't have permission to do that."}))
-      (let [new-user (insert users (values user))]
-        (a/put! n/notifier {:event     :user/create
-                            :recipient user
-                            :password  password})))))
+  "Simple wrapper to insert user.
+  Takes a `user` to insert, and a `master-id` responsible for the
+  insertion."
+  [user master-id]
+  (binding [*password* (:password user (users/gen-password 16))
+            *master*   (db/select-one User :id master-id)]
+    (db/insert! User (assoc user :password *password*))))
 
 (defn delete-user!
-  "Removes a user from the database.
-  Takes `user-id`, the ID of the user to be removed, and `deleter-id`,
-  the ID of the user performing the delete operation."
-  [user-id deleter-id]
-  (let [user    (get-user user-id)
-        deleter (get-user deleter-id)]
-    (cond
-      (not (and user deleter))
-      (throw
-       (ex-info nil
-                {:message "User does not exist!"}))
-
-      (not (u/can-delete? deleter user))
-      (throw
-       (ex-info nil
-                {:message
-                 (format
-                  "You don't have permission to delete %s's account."
-                  (:name user))}))
-
-      :else (delete users
-                    (where {:id user-id})))))
-
-(defn get-attendance
-  [user-id room-id]
-  (:attendance (first
-                (select users-rooms
-                        (where {:users_id user-id
-                                :rooms_id room-id})))))
-
-
-(defn get-rooms
-  "Get all rooms saved in the database."
-  []
-  (let [rooms (select rooms
-                      (with users)
-                      (where {:date [>= (timec/to-sql-date
-                                         (time/today))]}))]
-    (map (fn [room]
-           (assoc room :users
-                  (map #(assoc %
-                               :attendance
-                               (get-attendance (:id %) (:id room)))
-                       (:users room))))
-         rooms)))
-
-
-(defn get-room
-  "Get one room by `id`."
-  [id]
-  (first (select rooms
-                 (where {:id id})
-                 (with users))))
-
-(defn set-attendance
-  "Sets the attendance of a user for room.
-  Attendance should be an integer:
-  -1 Absent
-   0 Undefined
-   1 Present"
-  [room-id user-id setter-id attendance]
-  (let [room   (get-room room-id)
-        user   (get-user user-id)
-        setter (get-user setter-id)]
-    (cond
-      (not (and user setter))
-      (throw (ex-info nil {:message "User does not exist!"}))
-
-      (not room)
-      (throw (ex-info nil {:message "Room does not exist!"}))
-
-      (not (u/can-edit? setter user))
-      (throw
-       (ex-info nil
-                {:message
-                 (format
-                  "You don't have permission to set %s's attendance."
-                  (:name user))}))
-
-      :else
-      (update users-rooms
-              (set-fields {:attendance attendance})
-              (where {:rooms_id room-id
-                      :users_id user-id})))))
-
-(defn insert-room!
-  "Inserts a room into the database.
-  Also adds an entry to users-rooms between the new room and its creator."
-  [creator-id title description date time room-number max-capacity]
-  (transaction
-   (if (:teacher (get-user creator-id))
-     (let [clj-time-date (timec/from-date date)
-           date-no-time  (time/local-date
-                          (time/year clj-time-date)
-                          (time/month clj-time-date)
-                          (time/day clj-time-date))
-           room-id       (:id (insert rooms
-                                      (values
-                                       {:title        title
-                                        :description  description
-                                        :date
-                                        (timec/to-sql-date
-                                         date-no-time)
-                                        :time         time
-                                        :room_number  room-number
-                                        :max_capacity max-capacity})))]
-       (insert users-rooms
-               (values {:attendance 0
-                        :users_id   creator-id
-                        :rooms_id   room-id})))
-     (throw (ex-info nil {:message "Only teachers can create rooms"})))))
-
-(defn delete-room!
-  "Deletes a room, given a `room-id` and a `user-id`.
-  The `user-id` will be used to check that the user has the correct
-  permissions to delete the room."
-  [user-id room-id]
-  (transaction
-   (let [room    (get-room room-id)
-         teacher (r/get-teacher room)]
-     (if-not (= user-id (:id teacher))
-       (throw (ex-info nil {:message
-                            "Only the creator of a room can delete it."}))
-       (do (delete users-rooms
-                   (where {:rooms_id room-id}))
-           (delete rooms
-                   (where {:id room-id}))
-           (doseq [recipient (:users room)]
-             (a/put! n/notifier {:event     :room/delete
-                                 :recipient recipient
-                                 :room      room})))))))
-
-(defn join-room
-  "Creates a users-rooms relationship between `user-id` and `room-id`."
-  [user-id room-id]
-  (transaction
-   (let [room   (get-room room-id)
-         joined (->> room :users (remove :teacher) count)
-         user   (get-user user-id)]
-     (cond
-       (nil? room)
-       (throw (ex-info nil {:message "Room does not exist."}))
-
-       (:teacher user)
-       (throw (ex-info nil {:message "Teachers cannot join rooms."}))
-
-       (r/in-room? room user-id)
-       (throw (ex-info nil {:message "You are already in this room."}))
-
-       (>= joined
-           (:max-capacity room))
-       (throw (ex-info nil {:message "This room is full."}))
-
-       :else
-       (do
-         (insert users-rooms
-                 (values {:attendance 0
-                          :users_id   user-id
-                          :rooms_id   room-id}))
-         (doseq [recipient [user (r/get-teacher room)]]
-           (a/put! n/notifier {:event     :room/join
-                               :recipient recipient
-                               :user      user
-                               :room      room})))))))
-
-(defn leave-room
-  "Removes a users-rooms relationship between `user-id` and `room-id`."
-  [user-id room-id]
-  (transaction
-   (let [room   (get-room room-id)
-         joined (->> room :users (remove :teacher) count)
-         user   (get-user user-id)]
-     (cond
-       (nil? room)
-       (throw (ex-info nil {:message "Room does not exist."}))
-
-       (:teacher user)
-       (throw (ex-info nil {:message "Teachers cannot leave rooms."}))
-
-       (not (r/in-room? room user-id))
-       (throw (ex-info nil {:message "You are not in this room."}))
-
-       :else
-       (do
-         (delete users-rooms
-                 (where {:users_id user-id
-                         :rooms_id room-id}))
-         (doseq [recipient [user (r/get-teacher room)]]
-           (a/put! n/notifier {:event     :room/leave
-                               :recipient recipient
-                               :user      user
-                               :room      room})))))))
+  "Simple wrapper to delete user.
+  Takes a `user-id` to delete, and a `master-id` responsible for the
+  insertion."
+  [user-id master-id]
+  (binding [*master* (db/select-one User :id master-id)]
+    (db/delete! User :id user-id)))
 
 (defn check-login
-  "Checks if `password` is valid for a user with `email`."
   [email password]
-  (if-let [user (first (select users
-                               (fields :id :name :email :teacher :passwordhash)
-                               (where {:email email})
-                               (limit 1)))]
-    (if (h/check (str password) (:passwordhash user))
-      (dissoc user :passwordhash)
-      false)
-    false))
+  (let [passwordhash (db/select-one-field :passwordhash User
+                       :email email)
+        user         (db/select-one User :email email)]
+    (if (and passwordhash
+             (h/check password  passwordhash))
+      user
+      false)))
 
+(defn set-password!
+  [user-id master-id password]
+  (binding [*master* (db/select-one User :id master-id)]
+    (db/update! User user-id {:password password})))
 
-(defn set-password [password user-id setter-id]
-  (let [user   (get-user user-id)
-        setter (get-user setter-id)]
-    (cond
-      (not (and user setter))
-      (throw (ex-info nil {:message "User does not exist!"}))
+;;;; The following section implements UsersRooms functions.
+;;;;
+;;;; Validation and notification delivery are handled in
+;;;; `flexblock.models.users-rooms`.
 
-      (not (u/can-edit? setter user))
-      (throw
-       (ex-info nil
-                {:message
-                 (format
-                  "You don't have permission to set %s's password."
-                  (:name user))}))
+(defn get-attendance
+  "Gets attendance values for all rooms.
+  Returns a map of [room-id user-id] -> attendance."
+  []
+  (let [room-ids (db/select-ids Room :date [:>= (timec/to-sql-date
+                                                 (time/minus
+                                                  (time/today)
+                                                  (time/weeks 1)))])]
+    (when (seq room-ids)
+      (apply merge
+             (for [{:keys [users-id rooms-id attendance]}
+                   (db/select UsersRooms :rooms-id [:in room-ids])]
+               {[rooms-id users-id] attendance})))))
 
-      :else
-      (do (update users
-                  (set-fields {:passwordhash (h/derive password)})
-                  (where {:id (:id user)}))
-          (a/put! n/notifier {:event     :user/set-password
-                              :recipient user
-                              :user      setter})))))
+(defn set-attendance! [room-id user-id master-id attendance]
+  (binding [*master* (db/select-one User :id master-id)]
+    (let [id (db/select-one-id UsersRooms
+               :rooms-id room-id
+               :users-id user-id)]
+      (db/update! UsersRooms id {:attendance attendance}))))
+
+(defn join-room!
+  "Create a UsersRooms record that associates a user and a room."
+  [room-id master-id]
+  (db/insert! UsersRooms
+    {:rooms-id   room-id
+     :users-id   master-id
+     :attendance 0}))
+
+(defn leave-room!
+  "Deletes a UsersRooms record that associates a user and a room."
+  [room-id master-id]
+  (db/delete! UsersRooms
+              :rooms-id room-id
+              :users-id master-id))

@@ -11,7 +11,8 @@
    [phrase.alpha :as phrase]
    [flexblock.middleware :as m]
    [clojure.spec.alpha :as spec]
-   [clojure.spec.alpha :as s]))
+   [clojure.spec.alpha :as s]
+   [clj-time.coerce :as timec]))
 
 (defn get-users [request]
   (if (authenticated? request)
@@ -23,10 +24,10 @@
   (if-not (authenticated? request)
     (response/unauthorized)
     (let [{:keys [user-id password]} (:params request)]
-      (try (db/set-password
-            password
+      (try (db/set-password!
             user-id
-            (get-in request [:identity :id]))
+            (get-in request [:identity :id])
+            password)
            (response/ok)
            (catch Exception e
              (response/internal-server-error (ex-data e)))))))
@@ -39,7 +40,10 @@
           date     (get-in request [:params :date])
           students (->> users
                         (remove :admin)
-                        (remove #(users/flexblock-on-date? % date)))]
+                        (remove #(users/flexblock-on-date?
+                                  %
+                                  (timec/to-date
+                                   (timec/from-string date)))))]
       (doseq [student students]
         (async/put! notifier/notifier
                     {:event     :user/unenrolled
@@ -62,14 +66,7 @@
       (if-let [error (phrase/phrase-first {} ::users/user user)]
         (response/unprocessable-entity {:message error})
         (try
-          (db/insert-user! (get-in request [:identity :id])
-                           email
-                           password
-                           name
-                           teacher
-                           admin
-                           class
-                           advisor-id)
+          (db/insert-user! user (get-in request [:identity :id]))
           (response/ok)
           (catch Exception e
             (response/unprocessable-entity
