@@ -27,22 +27,16 @@
                  [ring/ring-core "1.6.3"]
                  [ring/ring-defaults "0.3.2"]
                  [selmer "1.11.8"]
-                 [korma "0.4.3"]
                  [org.clojure/java.jdbc "0.7.7"]
                  [org.postgresql/postgresql "42.2.4"]
                  [com.h2database/h2 "1.4.197"]
                  [org.clojure/core.async "0.4.474"]
-                 [log4j "1.2.17" :exclusions [javax.mail/mail
-                                              javax.jms/jms
-                                              com.sun.jdmk/jmxtools
-                                              com.sun.jmx/jmxri]]
                  [clj-fuzzy "0.4.1"]
                  [criterium "0.4.4"]
                  [com.draines/postal "2.0.2"]
                  [day8.re-frame/http-fx "0.1.6"]
                  [phrase "0.3-SNAPSHOT"]
                  [java-jdbc/dsl "0.1.3"]
-                 [honeysql "0.9.3"]
                  [clj-time "0.14.4"]
                  [metosin/spec-tools "0.5.1"]
                  [metosin/compojure-api "2.0.0-SNAPSHOT"]
