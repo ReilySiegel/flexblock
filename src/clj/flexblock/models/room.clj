@@ -1,10 +1,10 @@
 (ns flexblock.models.room
-  (:require [clj-time.coerce :as timec]
-            [clj-time.core :as time]
-            [clojure.core.async :as a]
+  (:require [clojure.core.async :as a]
+            [clojure.spec.alpha :as s]
             [flexblock.models.helpers :as helpers :refer [*master* ex-info-assert]]
             [flexblock.notifier.core :as n]
             [flexblock.rooms :as rooms]
+            [phrase.alpha :as phrase]
             [toucan.db :as db]
             [toucan.hydrate :as hydrate]
             [toucan.models :as models]))
@@ -13,6 +13,9 @@
 
 (defn pre-insert [room]
   (helpers/assert-master)
+  ;; Assert that the room is valid.
+  (ex-info-assert (s/valid? ::rooms/room room)
+                  (phrase/phrase-first {} ::rooms/room room))
   (ex-info-assert (:teacher *master*)
                   "Only teachers can create Sessions.")
   room)

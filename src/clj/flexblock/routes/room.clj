@@ -10,30 +10,25 @@
 
 (defn get-rooms [request]
   (if (authenticated? request)
-    (response/ok (db/get-rooms))
+    (api-try (response/ok (db/get-rooms)))
     (assoc (response/unauthorized)
            :status 401)))
 
 (defn post-rooms [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [{:keys [title description date time room-number max-capacity]
-           :as   room} (get-in request [:params])]
-      (if-let [error (phrase/phrase-first {} ::rooms/room room)]
-        (response/unprocessable-entity {:message error})
-        (try (db/insert-room! room (get-in request [:identity :id]))
-             (response/ok)
-             (catch Exception e
-               (response/unprocessable-entity (ex-data e))))))))
+    (api-try
+     (db/insert-room! (:params request)
+                      (get-in request [:identity :id]))
+     (response/ok))))
 
 (defn join-rooms [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [{:keys [room-id]} (:params request)]
-      (try (db/join-room! room-id (get-in request [:identity :id]))
-           (response/ok)
-           (catch Exception e
-             (response/unprocessable-entity (ex-data e)))))))
+    (api-try
+     (db/join-room! (get-in request [:params :room-id])
+                    (get-in request [:identity :id]))
+     (response/ok))))
 
 (defn leave-rooms [request]
   (if-not (authenticated? request)
@@ -47,24 +42,20 @@
 (defn delete-rooms [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [{:keys [room-id]} (:params request)]
-      (try (db/delete-room! room-id (get-in request [:identity :id]))
-           (response/ok)
-           (catch Exception e
-             (response/unprocessable-entity (ex-data e)))))))
+    (api-try
+     (db/delete-room! (get-in request [:params :room-id])
+                      (get-in request [:identity :id]))
+     (response/ok))))
 
 (defn set-attendance [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [room-id    (get-in request [:params :room-id])
-          user-id    (get-in request [:params :user-id])
-          setter-id  (get-in request [:identity :id])
-          attendance (get-in request [:params :attendance])]
-      (try
-        (db/set-attendance! room-id user-id setter-id attendance)
-        (response/ok)
-        (catch Exception e
-          (response/unprocessable-entity (ex-data e)))))))
+    (api-try
+     (db/set-attendance! (get-in request [:params :room-id])
+                         (get-in request [:params :user-id])
+                         (get-in request [:identity :id])
+                         (get-in request [:params :attendance]))
+     (response/ok))))
 
 (defn get-attendance [request]
   (if-not (authenticated? request)

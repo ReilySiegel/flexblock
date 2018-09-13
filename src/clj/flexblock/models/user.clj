@@ -19,6 +19,9 @@
 ;; post-insert.
 (def ^:dynamic *password*)
 
+(def defaults {:teacher false
+               :admin   false})
+
 (defn pre-delete [user]
   (helpers/assert-master)
   ;; Assert that *master* can delete user.
@@ -43,17 +46,18 @@
       (dissoc :password)))
 
 (defn pre-insert [user]
-  ;; Assert that the user is valid.
-  (ex-info-assert (s/valid? ::users/user user)
-                  (phrase/phrase-first {} ::users/user user))
-  ;; Assert that a password is provided.
-  (ex-info-assert (:password user)
-                  "User does not contain password.")
-  (merge
-   ;; Run all pre-update checks.
-   (pre-update user)
-   (if (= :student (users/highest-role user))
-     {:advisor-id (:id *master*)})))
+  (let [user (merge
+              defaults user
+              (if (= :student (users/highest-role user))
+                {:advisor-id (:id *master*)}))]
+    ;; Assert that the user is valid.
+    (ex-info-assert (s/valid? ::users/user user)
+                    (phrase/phrase-first {} ::users/user user))
+    ;; Assert that a password is provided.
+    (ex-info-assert (:password user)
+                    "User does not contain password.")
+    ;; Run all pre-update checks.
+    (pre-update user)))
 
 (defn post-insert [user]
   (a/put! n/notifier {:event     :user/create
@@ -111,5 +115,6 @@
     :hydration-keys
     (constantly [:advisor :advisor-name :rooms])
     :pre-update  pre-update
+    :pre-delete  pre-delete
     :pre-insert  pre-insert
     :post-insert post-insert}))
