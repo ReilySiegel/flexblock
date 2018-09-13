@@ -3,6 +3,7 @@
             [clj-time.coerce :as timec]
             [clojure.core.async :as async]
             [clojure.spec.alpha :as s]
+            [compojure.api.sweet :refer :all :exclude [routes]]
             [flexblock.db :as db]
             [flexblock.middleware :as m]
             [flexblock.notifier.core :as notifier]
