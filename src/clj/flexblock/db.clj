@@ -1,4 +1,12 @@
 (ns flexblock.db
+  "Public Database API.
+  These are the database-related functions that are made available to
+  other parts of the code base, such as `flexblock.routes` Most
+  functions in this namespace should be pretty simple, and mostly
+  consist of calling into `toucan` functions. The logic behind the
+  database is located in the `flexblock.models` namespaces. All
+  business logic, such as input validation and notification sending
+  should be done from there."
   (:require [buddy.hashers :as h]
             [clj-time.coerce :as timec]
             [clj-time.core :as time]
@@ -95,22 +103,31 @@
 ;;;; password hashing and notification delivery are implemented in
 ;;;; `flexblock.models.room`.
 
-(defn get-room [id]
+(defn get-room
+  "Returns one room, with the given `id`, hydrated with a list of users."
+  [id]
   (hydrate/hydrate
    (db/select-one Room :id id)
    :users))
 
-(defn get-rooms []
+(defn get-rooms
+  "Returns a list of all rooms, hydrated with a list of users."
+  []
   (hydrate/hydrate
    (db/select Room :date [:>= (timec/to-sql-date
                                (time/today))])
    :users))
 
-(defn insert-room! [room master-id]
+(defn insert-room!
+  "Takes a `room` and a `master-id`. Inserts the room into the database."
+  [room master-id]
   (binding [*master* (db/select-one User :id master-id)]
     (db/insert! Room room)))
 
-(defn delete-room! [room-id master-id]
+(defn delete-room!
+  "Takes a `room-id` and a `master-id`. Deletes the room from the
+  database."
+  [room-id master-id]
   (binding [*master* (db/select-one User :id master-id)]
     (db/delete! Room :id room-id)))
 
@@ -170,6 +187,8 @@
     (db/delete! User :id user-id)))
 
 (defn check-login
+  "Takes an `email` and a `password`. Returns the user with `email` if
+  the login is valid, otherwise returns false."
   [email password]
   (let [passwordhash (db/select-one-field :passwordhash User
                        :email email)
@@ -203,7 +222,11 @@
                    (db/select UsersRooms :rooms-id [:in room-ids])]
                {[rooms-id users-id] attendance})))))
 
-(defn set-attendance! [room-id user-id master-id attendance]
+(defn set-attendance!
+  "Takes a `room-id`, `user-id`, `master-id` and `attendance`. Sets
+  the value of `attendance` for the UsersRooms enty with `user-id` and
+  `room-id`."
+  [room-id user-id master-id attendance]
   (binding [*master* (db/select-one User :id master-id)]
     (let [id (db/select-one-id UsersRooms
                :rooms-id room-id
