@@ -4,6 +4,11 @@ cache:
   paths:
     - .m2/
 
+stages:
+  - test
+  - review
+  - deploy
+
 before_script:
   - lein with-profile +ci deps
 
@@ -32,6 +37,62 @@ staging:
   - apt-get update -qy
   - apt-get install -y ruby-dev rubygems
   - gem install dpl
-  - dpl --provider=heroku --app=flexblock-staging --api-key=$HEROKU_STAGING_API_KEY
+  - dpl --provider=heroku --app=flexblock-staging --api-key=$HEROKU_API_KEY
   only:
   - master
+
+review:
+  stage: review
+  image: ruby:2.3
+  before_script: []
+  cache: {}
+  script:
+    - apt-get update -qy
+    - apt-get install -y ruby-dev curl
+    - gem install dpl
+    - echo "$REVIEW_APP_NAME " $REVIEW_APP_NAME
+    - >-
+         curl
+         -n
+         -X POST https://api.heroku.com/apps
+         -d '
+         {
+         "name":  "'"$REVIEW_APP_NAME"'",
+         "region": "us",
+         "stack": "heroku-16"
+         }
+         '
+         -H "Content-Type: application/json"
+         -H "Accept: application/vnd.heroku+json; version=3"
+         -H "Authorization: Bearer $HEROKU_API_KEY"
+    - dpl --provider=heroku --app=$REVIEW_APP_NAME --api-key=$HEROKU_API_KEY
+
+  environment:
+    name: review/$CI_COMMIT_REF_NAME
+    url: https://$CI_COMMIT_REF_SLUG-$CI_PROJECT_NAME.herokuapp.com
+    on_stop: stop_review
+  only:
+    - branches
+  except:
+    - master
+
+stop_review:
+  stage: review
+  before_script: []
+  cache: {}
+  script:
+    - echo "environment is getting deployed !"
+    - >-
+         curl
+         -n
+         -X DELETE https://api.heroku.com/apps/$REVIEW_APP_NAME
+         -H "Content-Type: application/json"
+         -H "Accept: application/vnd.heroku+json; version=3"
+         -H "Authorization: Bearer $HEROKU_API_KEY"
+
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  environment:
+    name: review/$CI_COMMIT_REF_NAME
+    action: stop
