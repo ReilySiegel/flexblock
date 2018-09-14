@@ -41,6 +41,9 @@ staging:
   - apt-get install -y ruby-dev rubygems
   - gem install dpl
   - dpl --provider=heroku --app=flexblock-staging --api-key=$HEROKU_API_KEY
+  environment:
+    name: staging
+    url: https://flexblock-staging.herokuapp.com
   only:
   - master
 
