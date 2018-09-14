@@ -1,0 +1,25 @@
+setup:
+  addons:
+    - plan: 'heroku-postgresql:hobby-dev'
+      as: DATABASE
+  config:
+    BETA_DISCLAIMER: >-
+      You are using the beta version of this website, which is meant
+      for developers only. In the interest of fast development,
+      several trade-offs have been made. The data stored in this
+      website may not be permanent. The database may be completely
+      reset at any time. This data will also be stored off-site, using
+      Heroku and Amazon Web Services. Because of these trade-offs,
+      there is NO requirement that any Ellington Public Schools
+      student, teacher, or other staff member use this version of the
+      system. This system should be used entirely at your own risk.
+    DATABASE__SEED_USER__ADMIN: 'true'
+    DATABASE__SEED_USER__EMAIL: admin
+    DATABASE__SEED_USER__NAME: Admin
+    DATABASE__SEED_USER__PASSWORD: password
+    DATABASE__SEED_USER__TEACHER: 'false'
+build:
+  languages:
+    - clojure
+run:
+  web: java -cp target/uberjar/flexblock.jar clojure.main -m flexblock.core
