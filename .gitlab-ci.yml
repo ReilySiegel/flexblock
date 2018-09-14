@@ -1,5 +1,8 @@
 image: clojure:lein-alpine
 
+variables:
+  REVIEW_APP_NAME: "$CI_COMMIT_REF_SLUG-$CI_PROJECT_NAME"
+
 cache:
   paths:
     - .m2/
