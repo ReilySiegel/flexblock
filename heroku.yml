@@ -20,6 +20,10 @@ setup:
     DATABASE__SEED_USER__TEACHER: 'false'
 build:
   languages:
-    - clojure
+    - java
+  pre:
+    - lein uberjar
+  packages:
+    - leiningen-clojure
 run:
   web: java -cp target/uberjar/flexblock.jar clojure.main -m flexblock.core
