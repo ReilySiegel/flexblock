@@ -68,6 +68,18 @@ review:
          -H "Content-Type: application/json"
          -H "Accept: application/vnd.heroku+json; version=3"
          -H "Authorization: Bearer $HEROKU_API_KEY"
+    - >-
+         curl
+         -n
+         -X POST https://api.heroku.com/apps/$REVIEW_APP_NAME/addons
+         -d '
+         {
+         "plan":  "heroku-postgresql:hobby-dev",
+         }
+         '
+         -H "Content-Type: application/json"
+         -H "Accept: application/vnd.heroku+json; version=3"
+         -H "Authorization: Bearer $HEROKU_API_KEY
     - dpl --provider=heroku --app=$REVIEW_APP_NAME --api-key=$HEROKU_API_KEY
 
   environment:
