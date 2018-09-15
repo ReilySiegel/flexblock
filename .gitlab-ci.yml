@@ -1,3 +1,4 @@
+
 image: clojure:lein-alpine
 
 variables:
@@ -77,6 +78,7 @@ review:
          -X POST https://api.heroku.com/apps/$REVIEW_APP_NAME/addons
          -d '
          {
+         "attachment": {"name": "DATABASE"},
          "plan": "heroku-postgresql:hobby-dev"
          }
          '
@@ -96,6 +98,7 @@ review:
 
 stop_review:
   stage: review
+  image: ruby:2.3
   before_script: []
   cache: {}
   script:
