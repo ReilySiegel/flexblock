@@ -4,6 +4,7 @@
             [clj-time.core :as time]
             [clojure.core.async :as a]
             [clojure.spec.alpha :as s]
+            [clojure.tools.logging :as log]
             [flexblock.models.helpers
              :as helpers
              :refer [*master* ex-info-assert]]
@@ -91,19 +92,23 @@
 
 (defn ^:batched-hydrate rooms
   [users]
-  (let [user-ids       (map :id users)
-        users-rooms    (db/select
-                           'UsersRooms :users-id [:in user-ids])
-        room-ids       (map :rooms-id users-rooms)
-        rooms          (db/select 'Room
-                         :id   [:in room-ids]
-                         :date [:>= (timec/to-sql-date
-                                     (time/minus
-                                      (time/today)
-                                      (time/weeks 1)))])
-        user-id->rooms (rooms-for-user user-ids rooms users-rooms)]
-    (for [user users]
-      (assoc user :rooms (get user-id->rooms (:id user))))))
+  (try
+    (let [user-ids       (map :id users)
+          users-rooms    (db/select
+                          'UsersRooms :users-id [:in user-ids])
+          room-ids       (map :rooms-id users-rooms)
+          rooms          (db/select 'Room
+                                    :id   [:in room-ids]
+                                    :date [:>= (timec/to-sql-date
+                                                (time/minus
+                                                 (time/today)
+                                                 (time/weeks 1)))])
+          user-id->rooms (rooms-for-user user-ids rooms users-rooms)]
+      (for [user users]
+        (assoc user :rooms (get user-id->rooms (:id user)))))
+    (catch Exception e
+      (log/error e "Error hydrating rooms.")
+      users)))
 
 (extend (class User)
   models/IModel
