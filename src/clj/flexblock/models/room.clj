@@ -1,5 +1,6 @@
 (ns flexblock.models.room
-  (:require [clojure.core.async :as a]
+  (:require [clj-time.coerce :as timec]
+            [clojure.core.async :as a]
             [clojure.spec.alpha :as s]
             [flexblock.models.helpers :as helpers :refer [*master* ex-info-assert]]
             [flexblock.notifier.core :as n]
@@ -18,7 +19,7 @@
                   (phrase/phrase-first {} ::rooms/room room))
   (ex-info-assert (:teacher *master*)
                   "Only teachers can create Sessions.")
-  room)
+  (update room :date #(timec/to-sql-date (timec/from-date %))))
 
 (defn post-insert [room]
   (db/simple-insert! 'UsersRooms
