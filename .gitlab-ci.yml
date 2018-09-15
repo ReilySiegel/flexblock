@@ -98,6 +98,7 @@ review:
 
 stop_review:
   stage: review
+  image: ruby:2.3
   before_script: []
   cache: {}
   script:
