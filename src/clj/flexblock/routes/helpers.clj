@@ -1,5 +1,6 @@
 (ns flexblock.routes.helpers
-  (:require [ring.util.http-response :as response]))
+  (:require [ring.util.http-response :as response]
+            [clojure.tools.logging :as log]))
 
 (defmacro api-try
   "Wraps `body` in a try-catch form.
@@ -27,5 +28,7 @@
         (catch Exception e#
           (if (contains? (ex-data e#) :message)
             (response/unprocessable-entity (ex-data e#))
-            (response/internal-server-error
-             {:message "An unknown error has occurred."})))))
+            (do
+              (log/error e# "An error occurred.")
+              (response/internal-server-error
+               {:message "An unknown error has occurred."}))))))
