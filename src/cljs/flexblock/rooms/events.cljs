@@ -105,7 +105,7 @@
 (rf/reg-event-fx
  :room/set-attendance-success
  (fn [_ [_ response]]
-   {:dispatch [:rooms/get]}))
+   {:dispatch [:rooms/get-attendance]}))
 
 (rf/reg-event-fx
  :room/set-attendance
