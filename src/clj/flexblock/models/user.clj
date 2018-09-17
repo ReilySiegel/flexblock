@@ -12,7 +12,8 @@
             [flexblock.users :as users]
             [phrase.alpha :as phrase]
             [toucan.db :as db]
-            [toucan.models :as models]))
+            [toucan.models :as models]
+            [toucan.hydrate :as hydrate]))
 
 (models/defmodel User :users)
 
@@ -29,7 +30,26 @@
   (ex-info-assert (users/can-delete? *master* user)
                   (format "You don't have permission to delete %s."
                           (:name user)))
+  (if-not (:teacher user)
+    ;; If the user is not a teacher, remove them from all rooms.
+    (db/simple-delete! 'UsersRooms :users-id (:id user))
+    (let [room-ids (db/select-field :rooms-id 'UsersRooms
+                     :users-id (:id user))
+          rooms    (when (seq room-ids)
+                     (db/select 'Room :id [:in room-ids]))]
+      ;; Assert that all rooms are in the past or have no users.
+      (ex-info-assert (every? #(or
+                                (time/before? (timec/from-date (:date %))
+                                              (time/today-at-midnight))
+                                ;; Only the teacher is in users.
+                                (= 1 (count (:users %))))
+                              (hydrate/hydrate rooms :users))
+                      "This teacher currently has open rooms.")
+      (when (seq room-ids)
+        (db/simple-delete! 'UsersRooms :rooms-id [:in room-ids])
+        (db/simple-delete! 'Room :id [:in room-ids]))))
   user)
+
 
 
 (defn pre-update [user]
