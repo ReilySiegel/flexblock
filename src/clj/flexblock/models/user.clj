@@ -40,7 +40,8 @@
       ;; Assert that all rooms are in the past or have no users.
       (ex-info-assert (every? #(or
                                 (time/before? (timec/from-date (:date %))
-                                              (time/today-at-midnight))
+                                              ;; Time at midnight.
+                                              (time/today-at 0 0))
                                 ;; Only the teacher is in users.
                                 (= 1 (count (:users %))))
                               (hydrate/hydrate rooms :users))
