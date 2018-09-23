@@ -14,29 +14,32 @@
    [goog.string :as gstring]
    [goog.string.format]))
 
-
-(defn password-modal
-  "Shows a modal that allows a teacher to change the password of `user`."
-  [user opts]
-  (let [{:keys [id]
-         :or   {id (str "passwordmodal" (:id user))}} opts
-        password                                      (r/atom "")]
-    ^{:key (:id user)}
-    [modal/standard
-     {:id       id
-      :on-close #(reset! password "")}
+(defn reset-password []
+  (let [user @(rf/subscribe [:users/password-modal])]
+    [:div
      [:div.modal-content
       [:h4.center.purple-text.text-lighten-3
        (str "Reset Password for " (:name user))]
       [:div.row [:div.col.l6.offset-l3.m12
                  [input/text
-                  {:type        :password
-                   :placeholder "New Password"
-                   :atom        password}]]]]
+                  {:type          :password
+                   :placeholder   "New Password"
+                   :dispatch-key  :users/set-password
+                   :subscribe-key :users/password}]]]]
      [:div.modal-footer
       [:button.btn-flat.amber-text.waves-effect.waves-purple
-       {:on-click #(rf/dispatch [:users/reset-password (:id user) @password])}
+       {:on-click #(rf/dispatch
+                    [:users/reset-password (:id user)])}
        "Reset Password"]]]))
+
+(defn password-modal
+  "Shows a modal that allows a teacher to change the password of `user`."
+  []
+  (let [password (r/atom "")]
+    [modal/standard
+     {:id       "password-modal"
+      :on-close #(rf/dispatch [:users/set-password ""])}
+     [reset-password]]))
 
 
 (defn session
@@ -45,38 +48,40 @@
   [:li.collection-item
    {:key (:id room)}
    [:div
-    {:style {:color (case @(rf/subscribe [:user/get-attendance
+    {:style {:color (case @(rf/subscribe [:room/get-attendance
                                           (:id room)
                                           (:id user)])
                       -1 :red
                       1  :green
                       nil)}}
-    (gstring/format "%s: %s - %s - %s %s "
-                    (:title room)
-                    (:name (rooms/get-teacher room))
+    (gstring/format "%s: %s - %s %s"
                     (rooms/room-number-str room)
+                    (:title room)
                     (rooms/time-str room)
                     (.toDateString (:date room)))]])
+
+(defn sessions []
+  (let [user     @(rf/subscribe [:users/session-modal])
+        sessions (:rooms user)]
+    [:div.modal-content
+     [:h4.purple-text.text-lighten-3 "Sessions"]
+     [:div.row
+      [:div.col.l8.offset-l2.s12
+       (if (seq sessions)
+         [:ul.collection
+          (doall (map (partial session user)
+                      (->> sessions
+                           (sort-by :date)
+                           reverse)))]
+         [:h6.amber-text.center
+          (str (:name user) " is not enrolled in any Sessions.")])]]]))
 
 (defn sessions-modal
   "The bottom sheet modal that shows a list of all sessions a user is
   enrolled in."
-  [user]
-  (let [sessions (:rooms user)]
-    ^{:key (:id user)}
-    [modal/bottom-sheet {:id (str "sessionmodal" (:id user))}
-     [:div.modal-content
-      [:h4.purple-text.text-lighten-3 "Sessions"]
-      [:div.row
-       [:div.col.l8.offset-l2.s12
-        (if (seq sessions)
-          [:ul.collection
-           (doall (map (partial session user)
-                       (->> sessions
-                            (sort-by :date)
-                            reverse)))]
-          [:h6.amber-text.center
-           "This Student is not enrolled in any Sessions."])]]]]))
+  []
+  [modal/bottom-sheet {:id "session-modal"}
+   [sessions]])
 
 (defn get-years [date]
   (let [year  (.getFullYear date)
@@ -166,10 +171,12 @@
         {:keys [id name rooms]}
         user]
     [:div.card-action
-     [:a.btn-flat.amber-text.waves-effect.waves-purple.modal-trigger
-      {:href (str "#sessionmodal" (:id user))} "Sessions"]
-     [:a.btn-flat.amber-text.waves-effect.waves-purple.modal-trigger
-      {:href (str "#passwordmodal" (:id user))} "Reset Password"]
+     [:a.btn-flat.amber-text.waves-effect.waves-purple
+      {:on-click #(rf/dispatch [:users/set-session-modal user])}
+      "Sessions"]
+     [:a.btn-flat.amber-text.waves-effect.waves-purple
+      {:on-click #(rf/dispatch [:users/set-password-modal user])}
+      "Reset Password"]
      (when (users/can-delete? @self user)
        [:a.btn-flat.amber-text.waves-effect.waves-purple
         {:on-click #(rf/dispatch [:users/delete id])}
@@ -179,19 +186,17 @@
 (defn card
   "Creates a card with information about a `user`."
   [user]
-  (when-let [{:keys [id email name advisor rooms]} user]
+  (when-let [{:keys [id email name advisor-name rooms]} user]
     [:div.col.s12.m6.l4.grid-item
      {:key id}
      [:div.card.hoverable
       [:div.card-content
        [:span.card-title.truncate name]
        [:span.truncate email]
-       (when advisor
-         [:p.truncate advisor])]
+       (when advisor-name
+         [:p.truncate advisor-name])]
       [:div.divider]
-      [card-buttons user]
-      [sessions-modal user]
-      [password-modal user]]]))
+      [card-buttons user]]]))
 
 
 (defn grid
@@ -203,7 +208,7 @@
       (rf/dispatch [:users/get])
       [:div.row
        [grid/grid
-        (doall (map card @users))]])))
+        (doall (map card (take 36 @users)))]])))
 
 
 (defn page
@@ -215,4 +220,6 @@
    [grid]
    [reminder/modal]
    [add-user-fab]
-   [add]])
+   [add]
+   [sessions-modal]
+   [password-modal]])

@@ -34,7 +34,7 @@
  :<- [:search]
  :<- [:login/user]
  (fn [[rooms search user]]
-   (let [search (rooms/make-search rooms search)]
+   (let [search (rooms/make-search search)]
      (->> rooms
           (sort-by :date)
           ;; Show rooms created by the logged-in user first.
@@ -43,3 +43,13 @@
           ;; Search gives higher numbers for better matches, so we
           ;; need to sort in descending order.
           (sort-by search #(compare %2 %1))))))
+
+(rf/reg-sub
+ :rooms/attendance-modal
+ (fn [db _]
+   (:attendance-modal db)))
+
+(rf/reg-sub
+ :room/get-attendance
+ (fn [db [_ room-id user-id]]
+   (get-in db [:attendance [room-id user-id]])))

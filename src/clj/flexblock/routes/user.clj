@@ -1,17 +1,16 @@
 (ns flexblock.routes.user
-  (:require
-   [compojure.api.sweet :refer :all :exclude [routes]]
-   [ring.util.http-response :as response]
-   [buddy.auth :refer [authenticated? throw-unauthorized]]
-   [flexblock.db :as db]
-   [flexblock.users :as users]
-   [clojure.core.async :as async]
-   [flexblock.notifier.core :as notifier]
-   [flexblock.validation]
-   [phrase.alpha :as phrase]
-   [flexblock.middleware :as m]
-   [clojure.spec.alpha :as spec]
-   [clojure.spec.alpha :as s]))
+  (:require [buddy.auth :refer [authenticated?]]
+            [clj-time.coerce :as timec]
+            [clojure.core.async :as async]
+            [clojure.spec.alpha :as s]
+            [compojure.api.sweet :refer :all :exclude [routes]]
+            [flexblock.db :as db]
+            [flexblock.middleware :as m]
+            [flexblock.notifier.core :as notifier]
+            [flexblock.routes.helpers :refer [api-try]]
+            [flexblock.users :as users]
+            [phrase.alpha :as phrase]
+            [ring.util.http-response :as response]))
 
 (defn get-users [request]
   (if (authenticated? request)
@@ -22,14 +21,11 @@
 (defn update-password [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [{:keys [user-id password]} (:params request)]
-      (try (db/set-password
-            password
-            user-id
-            (get-in request [:identity :id]))
-           (response/ok)
-           (catch Exception e
-             (response/internal-server-error (ex-data e)))))))
+    (api-try (db/set-password!
+              (get-in request [:params :user-id])
+              (get-in request [:identity :id])
+              (get-in request [:params :password]))
+             (response/ok))))
 
 (defn flexblock-date-mailer [request]
   (if-not (and (authenticated? request)
@@ -39,7 +35,10 @@
           date     (get-in request [:params :date])
           students (->> users
                         (remove :admin)
-                        (remove #(users/flexblock-on-date? % date)))]
+                        (remove #(users/flexblock-on-date?
+                                  %
+                                  (timec/to-date
+                                   (timec/from-string date)))))]
       (doseq [student students]
         (async/put! notifier/notifier
                     {:event     :user/unenrolled
@@ -50,58 +49,25 @@
 (defn post-users [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [{:keys [name email class password teacher admin advisor-id]
-           :as   user
-           :or   {teacher  false
-                  admin    false
-                  password (users/gen-password 16)}}
-          (merge (:params request)
-                 {:advisor-id (when (= :student
-                                       (users/highest-role (:params request)))
-                                (get-in request [:identity :id]))})]
-      (if-let [error (phrase/phrase-first {} ::users/user user)]
-        (response/unprocessable-entity {:message error})
-        (try
-          (db/insert-user! (get-in request [:identity :id])
-                           email
-                           password
-                           name
-                           teacher
-                           admin
-                           class
-                           advisor-id)
-          (response/ok)
-          (catch Exception e
-            (response/unprocessable-entity
-             (or
-              ;; Application Exception
-              (ex-data e)
-              ;; SQL Exception: user already exists
-              {:message "User already exists."}))))))))
+    (api-try
+     (db/insert-user! (:params request)
+                      (get-in request [:identity :id]))
+     (response/ok))))
 
 (defn login [request]
-  (if-let [{username :username password :password } (:params request)]
-    (if-let [user (db/check-login username password)]
-      (response/ok {:token (m/token user)
-                    :user  user})
-      (response/bad-request {:message "Login Failed"}))
-    (response/bad-request "Invalid Request")))
+  (if-let [user (db/check-login (get-in request [:params :username])
+                                (get-in request [:params :password]))]
+    (response/ok {:token (m/token user)
+                  :user  user})
+    (response/bad-request {:message "Login Failed"})))
 
 (defn delete-user [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (try
-      (db/delete-user! (get-in request [:params :user-id])
-                       (get-in request [:identity :id]))
-      (response/ok)
-      (catch Exception e
-        (response/unprocessable-entity
-         (or
-          ;; Application Error
-          (ex-data e)
-          ;; User still owns rooms.
-          {:message
-           "Please delete all rooms owned by this user before deleting them."}))))))
+    (api-try
+     (db/delete-user! (get-in request [:params :user-id])
+                      (get-in request [:identity :id]))
+     (response/ok))))
 
 (defroutes routes
   (GET "/user" []

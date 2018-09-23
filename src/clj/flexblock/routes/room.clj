@@ -1,53 +1,40 @@
 (ns flexblock.routes.room
-  (:require [compojure.api.sweet :refer :all :exclude [routes]]
+  (:require [buddy.auth :refer [authenticated?]]
             [clojure.spec.alpha :as spec]
-            [ring.util.http-response :as response]
-            [flexblock.middleware :as m]
-            [buddy.auth :refer [authenticated? throw-unauthorized]]
+            [compojure.api.sweet :refer :all :exclude [routes]]
             [flexblock.db :as db]
-            [flexblock.routes.user :as user]
             [flexblock.rooms :as rooms]
-            [flexblock.validation]
-            [phrase.alpha :as phrase]))
+            [flexblock.routes.helpers :refer [api-try]]
+            [phrase.alpha :as phrase]
+            [ring.util.http-response :as response]))
 
 (defn get-rooms [request]
   (if (authenticated? request)
-    (response/ok (db/get-rooms))
+    (api-try (response/ok (db/get-rooms)))
     (assoc (response/unauthorized)
            :status 401)))
 
 (defn post-rooms [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [{:keys [title description date time room-number max-capacity]
-           :as   room} (get-in request [:params])]
-      (if-let [error (phrase/phrase-first {} ::rooms/room room)]
-        (response/unprocessable-entity {:message error})
-        (try (db/insert-room! (get-in request [:identity :id])
-                              title
-                              description
-                              date
-                              time
-                              room-number
-                              max-capacity)
-             (response/ok)
-             (catch Exception e
-               (response/unprocessable-entity (ex-data e))))))))
+    (api-try
+     (db/insert-room! (:params request)
+                      (get-in request [:identity :id]))
+     (response/ok))))
 
 (defn join-rooms [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [{:keys [room-id]} (:params request)]
-      (try (db/join-room (get-in request [:identity :id]) room-id)
-           (response/ok)
-           (catch Exception e
-             (response/unprocessable-entity (ex-data e)))))))
+    (api-try
+     (db/join-room! (get-in request [:params :room-id])
+                    (get-in request [:identity :id]))
+     (response/ok))))
 
 (defn leave-rooms [request]
   (if-not (authenticated? request)
     (response/unauthorized)
     (let [{:keys [room-id]} (:params request)]
-      (try (db/leave-room (get-in request [:identity :id]) room-id)
+      (try (db/leave-room! room-id (get-in request [:identity :id]))
            (response/ok)
            (catch Exception e
              (response/unprocessable-entity (ex-data e)))))))
@@ -55,24 +42,26 @@
 (defn delete-rooms [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [{:keys [room-id]} (:params request)]
-      (try (db/delete-room! (get-in request [:identity :id]) room-id)
-           (response/ok)
-           (catch Exception e
-             (response/unprocessable-entity (ex-data e)))))))
+    (api-try
+     (db/delete-room! (get-in request [:params :room-id])
+                      (get-in request [:identity :id]))
+     (response/ok))))
 
 (defn set-attendance [request]
   (if-not (authenticated? request)
     (response/unauthorized)
-    (let [room-id    (get-in request [:params :room-id])
-          user-id    (get-in request [:params :user-id])
-          setter-id  (get-in request [:identity :id])
-          attendance (get-in request [:params :attendance])]
-      (try
-        (db/set-attendance room-id user-id setter-id attendance)
-        (response/ok)
-        (catch Exception e
-          (response/unprocessable-entity (ex-data e)))))))
+    (api-try
+     (db/set-attendance! (get-in request [:params :room-id])
+                         (get-in request [:params :user-id])
+                         (get-in request [:identity :id])
+                         (get-in request [:params :attendance]))
+     (response/ok))))
+
+(defn get-attendance [request]
+  (if-not (authenticated? request)
+    (response/unauthorized)
+    (api-try
+     (response/ok (db/get-attendance)))))
 
 (defroutes routes
   (GET "/room" []
@@ -103,6 +92,10 @@
               :tags       ["Room"]
               :parameters {:body {:room-id int?}}}
     leave-rooms)
+  (GET "/room/attendance" []
+    :swagger {:summary "Get a map mapping [user-id room-id] -> attendance."
+              :tags    ["Room"]}
+    get-attendance)
   (POST "/room/attendance" []
     :swagger {:summary    "Set a student's attendance."
               :tags       ["Room"]

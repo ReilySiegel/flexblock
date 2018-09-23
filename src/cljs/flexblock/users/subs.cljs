@@ -27,7 +27,9 @@
      (if (nil? date)
        users
        (->> users
-            (remove #(users/flexblock-on-date? % date))
+            (remove #(users/flexblock-on-date? % (js/Date.
+                                                  (.setUTCHours date
+                                                                0 0 0 0))))
             (remove :admin))))))
 
 
@@ -39,18 +41,22 @@
 
  ;; Sort the users.
  (fn [[users search] _]
-   (->> users
-        (sort-by :name)
-        (sort-by (partial users/search search)))))
+   (let [search (users/make-search search)]
+     (->> users
+          (sort-by :name)
+          (sort-by search #(compare %2 %1))))))
 
 (rf/reg-sub
- :user/get-attendance
- :<- [:rooms/all]
- (fn [rooms [_ room-id user-id]]
-   (->> rooms
-        (filter #(= room-id (:id %)))
-        first
-        :users
-        (filter #(= user-id (:id %)))
-        first
-        :attendance)))
+ :users/session-modal
+ (fn [db _]
+   (:session-modal db)))
+
+(rf/reg-sub
+ :users/password-modal
+ (fn [db _]
+   (:password-modal db)))
+
+(rf/reg-sub
+ :users/password
+ (fn [db _]
+   (:password db)))

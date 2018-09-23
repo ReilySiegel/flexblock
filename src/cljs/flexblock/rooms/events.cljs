@@ -6,7 +6,8 @@
 (rf/reg-event-fx
  :rooms/set
  (fn [{:keys [db]} [_ rooms]]
-   {:db (assoc db :rooms rooms)}))
+   {:db       (assoc db :rooms rooms)
+    :dispatch [:rooms/get-attendance]}))
 
 (rf/reg-event-db
  :rooms/toggle-filter
@@ -102,12 +103,12 @@
                  :on-failure      [:http/failure]}}))
 
 (rf/reg-event-fx
- :room/attendance-success
+ :room/set-attendance-success
  (fn [_ [_ response]]
-   {:dispatch [:rooms/get]}))
+   {:dispatch [:rooms/get-attendance]}))
 
 (rf/reg-event-fx
- :room/attendance
+ :room/set-attendance
  (fn [{:keys [db]} [_ room-id user-id attendance]]
    {:http-xhrio {:method          :post
                  :uri             "/room/attendance"
@@ -116,5 +117,26 @@
                                    :attendance attendance}
                  :format          (ajax/transit-request-format)
                  :response-format (ajax/detect-response-format)
-                 :on-success      [:room/attendance-success]
+                 :on-success      [:room/set-attendance-success]
                  :on-failure      [:http/failure]}}))
+
+(rf/reg-event-fx
+ :rooms/get-attendance-success
+ (fn [{:keys [db]} [_ response]]
+   {:db (assoc db :attendance response)}))
+
+(rf/reg-event-fx
+ :rooms/get-attendance
+ (fn [{:keys [db]} [_ room-id user-id attendance]]
+   {:http-xhrio {:method          :get
+                 :uri             "/room/attendance"
+                 :format          (ajax/transit-request-format)
+                 :response-format (ajax/detect-response-format)
+                 :on-success      [:rooms/get-attendance-success]
+                 :on-failure      [:http/failure]}}))
+
+(rf/reg-event-fx
+ :rooms/set-attendance-modal
+ (fn [{:keys [db]} [_ room]]
+   {:db         (assoc db :attendance-modal room)
+    :open-modal "#attendance-modal"}))

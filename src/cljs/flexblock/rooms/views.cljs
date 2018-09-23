@@ -78,7 +78,9 @@
     {:style {:margin-bottom "0px"}}
     [:div.col.s6
      [:span.left
-      {:style {:color (case (:attendance user)
+      {:style {:color (case @(rf/subscribe [:room/get-attendance
+                                            (:id room)
+                                            (:id user)])
                         -1 :red
                         1  :green
                         nil)}}
@@ -86,39 +88,41 @@
     [:div.col.s6
      [:div.right-align
       [:a.btn-flat.green-text.waves-effect.waves-green
-       {:on-click #(rf/dispatch [:room/attendance
+       {:on-click #(rf/dispatch [:room/set-attendance
                                  (:id room)
                                  (:id user)
                                  1])}
        "Present"]
       [:a.btn-flat.red-text.waves-effect.waves-red
-       {:on-click #(rf/dispatch [:room/attendance
+       {:on-click #(rf/dispatch [:room/set-attendance
                                  (:id room)
                                  (:id user)
                                  -1])}
        "Absent"]]]]])
 
-(defn attendance
-  "The bottom sheet modal that shows a list of students."
-  [room]
-  (let [students        (rooms/get-students room)
+(defn attendance []
+  (let [room            @(rf/subscribe [:rooms/attendance-modal])
+        students        (rooms/get-students room)
         students-sorted (->> students
                              (sort-by :name)
                              (sort-by :attendance)
                              (sort-by (fn [student]
                                         (not (zero?
                                               (:attendance student))))))]
-    ^{:key (:id room)}
-    [modal/bottom-sheet {:id (str "attendance" (:id room))}
-     [:div.modal-content
-      [:h4.purple-text.text-lighten-3 "Students"]
-      [:div.row
-       [:div.col.l8.offset-l2.s12
-        (if (seq students)
-          [:ul.collection
-           (map (partial student room) students-sorted)]
-          [:h6.amber-text.center "No students have joined yet."])]]]]))
+    [:div.modal-content
+     [:h4.purple-text.text-lighten-3 "Students"]
+     [:div.row
+      [:div.col.l8.offset-l2.s12
+       (if (seq students)
+         [:ul.collection
+          (doall (map (partial student room) students-sorted))]
+         [:h6.amber-text.center "No students have joined yet."])]]]))
 
+(defn attendance-modal
+  "The bottom sheet modal that shows a list of students."
+  []
+  [modal/bottom-sheet {:id "attendance-modal"}
+   [attendance]])
 
 (defn buttons
   "Returns the appropriate actions that a user can take on a `room`."
@@ -149,12 +153,21 @@
      (cond ;Information
        (or (:teacher user)
            (:admin user))
-       [:a.btn-flat.amber-text.waves-effect.waves-purple.modal-trigger
-        {:href (str "#attendance" (:id room))} "Students"]
+       [:a.btn-flat.amber-text.waves-effect.waves-purple
+        {:on-click #(rf/dispatch [:rooms/set-attendance-modal room])}
+        "Students"]
 
        :else
        [:div])]))
 
+(defn date-string [date]
+  (-> date
+      (.toUTCString)
+      ;; Remove time data.
+      (str/split #"\d\d:\d\d")
+      first
+      ;; Remove comma.
+      (str/replace #"," "")))
 
 (defn card
   "Creates a card with information about a `room`."
@@ -174,7 +187,7 @@
         [:div.card-content
          [:span.card-title.truncate title]
          [:h6.truncate (or (->> users (filter :teacher) first :name) "")]
-         [:span (.toDateString date)]
+         [:span (date-string date)]
          [:p (rooms/time-str room)]
          [:p (rooms/room-number-str room)]
          [:p (str (->> users (remove :teacher) count) "/" max-capacity)]]
@@ -182,8 +195,7 @@
         [:div.card-content
          {:style {:overflow :hidden}}
          [:p description]]
-        [buttons room]]
-       [attendance room]])))
+        [buttons room]]])))
 
 (defn fab []
   (when (and
@@ -208,7 +220,7 @@
          ;; Get rooms if rooms are empty.
          (rf/dispatch [:rooms/get])
          ;; Otherwise show the rooms
-         [grid/grid (doall (map card @rooms))])])))
+         [grid/grid (doall (map card (take 36 @rooms)))])])))
 
 
 (defn filters []
@@ -249,4 +261,5 @@
       [fab]
       [add]
       [filters]
-      [grid]])])
+      [grid]
+      [attendance-modal]])])

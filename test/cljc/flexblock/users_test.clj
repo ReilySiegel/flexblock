@@ -25,13 +25,11 @@
         "A student must have a class and advisor-id.")))
 
 (deftest search-test
-  (let [usera {:name    "A User"
+  (let [usera {:name    "A Usera"
                :advisor "A Advisor"}
-        userb {:name    "B User"
+        userb {:name    "B Userb"
                :advisor "B Advisor"}]
-    (is (< (search "A" usera) (search "A" userb)))
-    (is (> (search "!A" usera) (search "!A" userb))
-        "Inverted search.")))
+    (is (> ((make-search "usera") usera) ((make-search "usera") userb)))))
 
 (deftest gen-password-test
   (testing "Gen password."

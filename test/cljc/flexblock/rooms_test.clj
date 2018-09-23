@@ -58,10 +58,9 @@
                            :description "An Example Room"
                            :users       [{:name    "Another Teacher"
                                           :teacher true}]}
-        rooms             [rooma roomb]
-        search-example    (make-search rooms "Example")
-        search-example-up (make-search rooms "EXAMPLE")
-        search-another    (make-search rooms "Another")]
+        search-example    (make-search "Example")
+        search-example-up (make-search "EXAMPLE")
+        search-another    (make-search  "Another")]
     (testing "Correctly searches by title."
       (is (< (search-example rooma)
              (search-example roomb)))
