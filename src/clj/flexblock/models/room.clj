@@ -43,7 +43,7 @@
         :users-id (:id user))
       (a/put! n/notifier {:event     :room/delete
                           :recipient user
-                          :room      room}))
+                          :room      room-h}))
     room))
 
 (defn- users-for-room

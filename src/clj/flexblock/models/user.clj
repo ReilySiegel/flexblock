@@ -54,18 +54,28 @@
 
 
 (defn pre-update [user]
-  (helpers/assert-master)
-  ;; Assert that master is allowed to edit user.
-  (ex-info-assert (users/can-edit? *master* user)
-                  "You don't have permission to edit this user.")
-  (ex-info-assert (not (db/exists? User :email (:email user)))
-                  "A user with this email already exists.")
-  (-> user
-      (merge
-       (if (contains? user :password)
-         {:passwordhash
-          (h/derive (:password user))}))
-      (dissoc :password)))
+  ;; Get all user fields
+  (let [new-user? (nil? (:id user))
+        user      (merge (db/select-one User :id (:id user))
+                         user)]
+    (helpers/assert-master)
+    ;; Assert that master is allowed to edit user.
+    (ex-info-assert (users/can-edit? *master* user)
+                    "You don't have permission to edit this user.")
+    (when new-user?
+      (ex-info-assert (not (db/exists? User :email (:email user)))
+                      "A user with this email already exists."))
+    (when (and (not new-user?) (:password user))
+      (a/put! n/notifier
+              {:event     :user/set-password
+               :recipient user
+               :user      *master*}))
+    (-> user
+        (merge
+         (if (contains? user :password)
+           {:passwordhash
+            (h/derive (:password user))}))
+        (dissoc :password))))
 
 (defn pre-insert [user]
   (let [user (merge
