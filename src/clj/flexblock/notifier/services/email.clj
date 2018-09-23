@@ -10,11 +10,12 @@
   :start (get-in env [:notifier :services :email]))
 
 (defn create [event]
-  {:from    (:from email)
-   :to      (or (:send-to email)
-                (get-in event [:recipient :email]))
-   :subject (events/subject event)
-   :body    (events/message event)})
+  (let [{:keys [subject message]} (events/notification event)]
+    {:from    (:from email)
+     :to      (or (:send-to email)
+                  (get-in event [:recipient :email]))
+     :subject subject
+     :body    message}))
 
 
 (defn send [message]
