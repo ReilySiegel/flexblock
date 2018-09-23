@@ -2,10 +2,11 @@
   "This namespace collects notifications from the system, batches
   them, and dispatches them to the enabled services."
   (:require [clojure.core.async :as a]
-            [mount.core :as mount]
             [flexblock.config :refer [env]]
             [flexblock.notifier.services.core :as services]
-            [flexblock.notifier.services.email]))
+            [flexblock.notifier.services.email]
+            [flexblock.notifier.services.stdout]
+            [mount.core :as mount]))
 
 (defn notify
   "Dispatches each notification in a batch to its service.
