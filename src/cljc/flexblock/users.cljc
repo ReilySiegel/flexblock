@@ -80,7 +80,8 @@
   [editor editee]
   (cond
     ;; A user can always edit themself.
-    (= editor editee) true
+    (or (= editor editee)
+        (= (:id editor) (:id editee))) true
 
     ;; Admins can edit other admins.
     (and (= :admin (highest-role editor))

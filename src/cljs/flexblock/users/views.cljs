@@ -210,13 +210,43 @@
        [grid/grid
         (doall (map card (take 36 @users)))]])))
 
+(defn filters []
+  (let [filters @(rf/subscribe [:users/role-filter])
+        show?   @(rf/subscribe [:users/filter])]
+    [:div
+     (when show?
+       [:div
+        [search/date-bar]
+        [:div.row
+         (for [k (keys users/roles)]
+           [:div.col.s4.m3.offset-m1
+            {:key k}
+            [:label
+             [:input
+              {:type      :checkbox
+               :checked   (contains? filters k)
+               :value     (filters k)
+               :on-change #(rf/dispatch [:users/update-role-filter
+                                         k
+                                         (-> %
+                                             .-target
+                                             .-checked)])}]
+             [:span (str/capitalize (name k))]]])]])
+     [:div.row
+      [:div.col.s12.center
+       {:style {:padding-top (if show? "2vh" "0px")}}
+       [:a
+        {:style    {:cursor :pointer}
+         :on-click #(rf/dispatch [:users/toggle-filter])}
+        (if show? "Hide Filters" "Show Filters")]]]]))
+
 
 (defn page
   "Root component for the Users page."
   []
   [:div.container
    [search/search-bar]
-   [search/date-bar]
+   [filters]
    [grid]
    [reminder/modal]
    [add-user-fab]

@@ -88,3 +88,15 @@
  :users/set-password
  (fn [{:keys [db]} [_ password]]
    {:db (assoc db :password password)}))
+
+(rf/reg-event-db
+ :users/toggle-filter
+ (fn [db _]
+   (update db :users/filter not)))
+
+(rf/reg-event-db
+ :users/update-role-filter
+ (fn [db [_ key filter?]]
+   (if filter?
+     (update db :users/role-filter conj key)
+     (update db :users/role-filter disj key))))
