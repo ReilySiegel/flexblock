@@ -156,13 +156,18 @@
 
 (defn get-users
   "Wrapper to get all users, which hydrates related data.
-  Does not select users whose :class is less than `school-year`"
-  []
-  (hydrate/hydrate
-   (db/select User {:where [:or
-                            [:= :class nil]
-                            [:>= :class (school-year)]]})
-   :advisor-name :rooms))
+  Does not select users whose :class is less than `school-year`. If
+  given a seq of `ids`, will return only users with that id."
+  ([]
+   (hydrate/hydrate
+    (db/select User {:where [:or
+                             [:= :class nil]
+                             [:>= :class (school-year)]]})
+    :advisor-name :rooms))
+  ([ids]
+    (hydrate/hydrate
+     (db/select User :id [:in])
+     :advisor-name :rooms)))
 
 (defn get-user
   "Wrapper to get user by :id, hydrating related fields."
@@ -191,7 +196,7 @@
   the login is valid, otherwise returns false."
   [email password]
   (let [passwordhash (db/select-one-field :passwordhash User
-                       :email email)
+                                          :email email)
         user         (db/select-one User :email email)]
     (if (and passwordhash
              (h/check password  passwordhash))
@@ -229,17 +234,17 @@
   [room-id user-id master-id attendance]
   (binding [*master* (db/select-one User :id master-id)]
     (let [id (db/select-one-id UsersRooms
-               :rooms-id room-id
-               :users-id user-id)]
+                               :rooms-id room-id
+                               :users-id user-id)]
       (db/update! UsersRooms id {:attendance attendance}))))
 
 (defn join-room!
   "Create a UsersRooms record that associates a user and a room."
   [room-id master-id]
   (db/insert! UsersRooms
-    {:rooms-id   room-id
-     :users-id   master-id
-     :attendance 0}))
+              {:rooms-id   room-id
+               :users-id   master-id
+               :attendance 0}))
 
 (defn leave-room!
   "Deletes a UsersRooms record that associates a user and a room."
