@@ -12,21 +12,17 @@
 
 
 ;; Users after all irrelevant entries have been removed.
-
-(defn filter [users logged-in date]
-  (let [users (if (:admin logged-in)
-                users
-                (->> users
-                     (remove :teacher)
-                     (remove :admin)))]
+(defn filter-users [users logged-in date roles]
+  (let [users (->> users
+                   (filter (partial users/can-edit? logged-in))
+                   (filter #(some (set roles) (users/user-roles %))))]
     (if (nil? date)
       users
       (->> users
            (remove #(users/flexblock-on-date? %
                                               (js/Date.
                                                (.setUTCHours date
-                                                             0 0 0 0))))
-           (remove :admin)))))
+                                                             0 0 0 0))))))))
 
 (rf/reg-sub
  :users/filtered
@@ -34,8 +30,9 @@
  :<- [:users/all]
  :<- [:login/user]
  :<- [:date]
- (fn [[users logged-in date] _]
-   (filter users logged-in date)))
+ :<- [:users/role-filter]
+ (fn [[users logged-in date roles] _]
+   (filter-users users logged-in date roles)))
 
 
 (rf/reg-sub
@@ -65,3 +62,13 @@
  :users/password
  (fn [db _]
    (:password db)))
+
+(rf/reg-sub
+ :users/filter
+ (fn [db _]
+   (:users/filter db)))
+
+(rf/reg-sub
+ :users/role-filter
+ (fn [db _]
+   (:users/role-filter db)))

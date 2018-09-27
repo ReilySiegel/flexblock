@@ -22,6 +22,7 @@
           :user              {}
           :rooms             []
           :rooms/time-filter #{}
+          :users/role-filter #{:student :teacher :admin}
           :users             []
           :search            ""
           :date              nil}

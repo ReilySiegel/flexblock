@@ -36,6 +36,7 @@
                                 (interpose ", ")))]]]))]
      [:div.modal-footer
       [:a.btn-flat.amber-text.waves-effect.waves-purple
-       {:disabled (zero? (count @users))
+       {:disabled (or (nil? @date)
+                      (zero? (count @users)))
         :on-click #(rf/dispatch [:reminder/post-date])}
        "Send Reminder"]]]))
