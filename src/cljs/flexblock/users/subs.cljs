@@ -12,6 +12,22 @@
 
 
 ;; Users after all irrelevant entries have been removed.
+
+(defn filter [users logged-in date]
+  (let [users (if (:admin logged-in)
+                users
+                (->> users
+                     (remove :teacher)
+                     (remove :admin)))]
+    (if (nil? date)
+      users
+      (->> users
+           (remove #(users/flexblock-on-date? %
+                                              (js/Date.
+                                               (.setUTCHours date
+                                                             0 0 0 0))))
+           (remove :admin)))))
+
 (rf/reg-sub
  :users/filtered
  ;; Use raw users, the selected date and the logged-in user as signals.
@@ -19,18 +35,7 @@
  :<- [:login/user]
  :<- [:date]
  (fn [[users logged-in date] _]
-   (let [users (if (:admin logged-in)
-                 users
-                 (->> users
-                      (remove :teacher)
-                      (remove :admin)))]
-     (if (nil? date)
-       users
-       (->> users
-            (remove #(users/flexblock-on-date? % (js/Date.
-                                                  (.setUTCHours date
-                                                                0 0 0 0))))
-            (remove :admin))))))
+   (filter users logged-in date)))
 
 
 (rf/reg-sub

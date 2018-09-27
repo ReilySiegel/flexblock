@@ -27,22 +27,17 @@
               (get-in request [:params :password]))
              (response/ok))))
 
-(defn flexblock-date-mailer [request]
+(defn flexblock-reminder [request]
   (if-not (and (authenticated? request)
                (get-in request [:identity :admin]))
     (response/unauthorized)
-    (let [users    (db/get-users)
-          date     (get-in request [:params :date])
-          students (->> users
-                        (remove :admin)
-                        (remove #(users/flexblock-on-date?
-                                  %
-                                  (timec/to-date
-                                   (timec/from-string date)))))]
-      (doseq [student students]
+    (let [date  (get-in request [:params :date])
+          ids   (get-in request [:params :user-ids])
+          users (db/get-users ids)]
+      (doseq [user users]
         (async/put! notifier/notifier
                     {:event     :user/unenrolled
-                     :recipient student
+                     :recipient user
                      :date      date}))
       (response/ok))))
 
@@ -100,11 +95,12 @@
   (POST "/user/flexblock" []
     :swagger {:summary     "Send FlexBlock reminder."
               :tags        ["User"]
-              :parameters  {:body {:date inst?}}
+              :parameters  {:body {:date     inst?
+                                   :user-ids (s/coll-of ::users/id)}}
               :description "Sends a reminder to all students and
     teachers (excludes administrators who are not also teachers) that
     have not creates a FlexBlock session on `date`."}
-    flexblock-date-mailer)
+    flexblock-reminder)
   (POST "/login" []
     :swagger {:summary     "Get a token for a user."
               :tags        ["User"]
