@@ -102,7 +102,8 @@
  :<- [:users/password]
  :<- [:users/password-dict]
  (fn [[password dict] _]
-   (let [results         (js->clj (js/zxcvbn password (clj->js dict))
+   (let [results         (js->clj (js/zxcvbn (str password)
+                                             (clj->js dict))
                                   :keywordize-keys true)
          score           (* 10 (+ -3 (:guesses_log10 results) ))
          processed-score (cond
