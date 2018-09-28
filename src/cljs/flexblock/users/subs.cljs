@@ -90,7 +90,8 @@
  (fn [user]
    (let [dict [password-dict
                (str/split (:name user) #"\W")
-               (str/split (:email user) #"\W")]]
+               (str/split (:email user) #"\W")
+               (:email user)]]
      (->> dict
           flatten
           (remove nil?)
