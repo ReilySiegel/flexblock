@@ -15,17 +15,29 @@
    [goog.string.format]))
 
 (defn reset-password []
-  (let [user @(rf/subscribe [:users/password-modal])]
+  (let [user @(rf/subscribe [:users/password-modal])
+        {:keys [score score% feedback]}
+        @(rf/subscribe [:users/password-strength])]
     [:div
      [:div.modal-content
       [:h4.center.purple-text.text-lighten-3
        (str "Reset Password for " (:name user))]
-      [:div.row [:div.col.l6.offset-l3.m12
+      [:div.row [:div.col.l6.offset-l3.s12
                  [input/text
                   {:type          :password
                    :placeholder   "New Password"
                    :dispatch-key  :users/set-password
-                   :subscribe-key :users/password}]]]]
+                   :subscribe-key :users/password}]]]
+      [:div.row
+       [:div.col.l6.s12.offset-l3.center
+        [:div.progress
+         [:div.determinate
+          {:style {:width score%}
+           :class (cond
+                    (< 80 score) "green"
+                    (< 60 score) "yellow"
+                    :else        "red")}]]
+        [:span (:warning feedback)]]]]
      [:div.modal-footer
       [:button.btn-flat.amber-text.waves-effect.waves-purple
        {:on-click #(rf/dispatch

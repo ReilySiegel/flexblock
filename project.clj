@@ -45,7 +45,8 @@
                  [amalloy/ring-gzip-middleware "0.1.3"]
                  [com.7theta/re-frame-fx "0.2.1"]
                  [re-com "2.2.0-SNAPSHOT"]
-                 [toucan "1.1.9"]]
+                 [toucan "1.1.9"]
+                 [cljsjs/zxcvbn "4.4.0-1"]]
 
   :min-lein-version "2.0.0"
 

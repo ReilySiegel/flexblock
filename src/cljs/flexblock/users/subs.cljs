@@ -1,6 +1,8 @@
 (ns flexblock.users.subs
   "This namespace contains the subscription handlers relating to students."
-  (:require [flexblock.users :as users]
+  (:require [cljsjs.zxcvbn]
+            [clojure.string :as str]
+            [flexblock.users :as users]
             [re-frame.core :as rf]))
 
 ;; Returns all users in the database.
@@ -72,3 +74,42 @@
  :users/role-filter
  (fn [db _]
    (:users/role-filter db)))
+
+(def password-dict
+  ["flexblock"
+   "flex"
+   "block"
+   "ellington"
+   "high"
+   "school"
+   "ehs"])
+
+(rf/reg-sub
+ :users/password-dict
+ :<- [:users/password-modal]
+ (fn [user]
+   (let [dict [password-dict
+               (str/split (:name user) #"\W")
+               (str/split (:email user) #"\W")
+               (:email user)]]
+     (->> dict
+          flatten
+          (remove nil?)
+          (remove str/blank?)))))
+
+(rf/reg-sub
+ :users/password-strength
+ :<- [:users/password]
+ :<- [:users/password-dict]
+ (fn [[password dict] _]
+   (let [results         (js->clj (js/zxcvbn (str password)
+                                             (clj->js dict))
+                                  :keywordize-keys true)
+         score           (* 10 (+ -3 (:guesses_log10 results) ))
+         processed-score (cond
+                           (> 0 score)   0
+                           (< 100 score) 100
+                           :else         (.round js/Math score))]
+     (-> results
+         (assoc :score processed-score)
+         (assoc :score% (str processed-score "%"))))))
