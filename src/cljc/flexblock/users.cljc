@@ -18,8 +18,8 @@
                                   (:admin %))))
 
 (defmethod user-type false [_]
-  (s/keys :req-un [::name ::email ::class ::advisor-id]
-          :opt-un [::password]))
+  (s/keys :req-un [::name ::email ::class]
+          :opt-un [::password ::advisor-id]))
 
 (defmethod user-type true [_]
   (s/keys :req-un [::name ::email]

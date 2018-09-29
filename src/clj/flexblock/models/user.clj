@@ -80,7 +80,8 @@
 (defn pre-insert [user]
   (let [user (merge
               defaults user
-              (if (= :student (users/highest-role user))
+              (if (and (= :student (users/highest-role user))
+                       (:teacher *master*))
                 {:advisor-id (:id *master*)}))]
     ;; Assert that the user is valid.
     (ex-info-assert (s/valid? ::users/user user)
