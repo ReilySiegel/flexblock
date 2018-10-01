@@ -73,6 +73,41 @@
                  :on-failure      [:http/failure]}}))
 
 (rf/reg-event-fx
+ :users/claim-success
+ (fn [_ [_ response]]
+   {:notification "User claimed."
+    :dispatch     [:users/get]}))
+
+(rf/reg-event-fx
+ :users/claim
+ (fn [{:keys [db]} [_ user-id]]
+   {:http-xhrio {:method          :patch
+                 :uri             (str "/user/claim")
+                 :params          {:user-id user-id}
+                 :format          (ajax/json-request-format)
+                 :response-format (ajax/detect-response-format)
+                 :on-success      [:users/claim-success]
+                 :on-failure      [:http/failure]}}))
+
+(rf/reg-event-fx
+ :users/abandon-success
+ (fn [_ [_ response]]
+   {:notification "User abandoned."
+    :dispatch     [:users/get]}))
+
+(rf/reg-event-fx
+ :users/abandon
+ (fn [{:keys [db]} [_ user-id]]
+   {:http-xhrio {:method          :patch
+                 :uri             (str "/user/abandon")
+                 :params          {:user-id user-id}
+                 :format          (ajax/json-request-format)
+                 :response-format (ajax/detect-response-format)
+                 :on-success      [:users/abandon-success]
+                 :on-failure      [:http/failure]}}))
+
+
+(rf/reg-event-fx
  :users/set-session-modal
  (fn [{:keys [db]} [_ user]]
    {:db         (assoc db :session-modal user)

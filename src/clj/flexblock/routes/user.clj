@@ -64,6 +64,23 @@
                       (get-in request [:identity :id]))
      (response/ok))))
 
+(defn claim-user [request]
+  (if-not (authenticated? request)
+    (response/unauthorized)
+    (api-try
+     (db/claim-user! (get-in request [:params :user-id])
+                     (get-in request [:identity :id]))
+     (response/ok))))
+
+
+(defn abandon-user [request]
+  (if-not (authenticated? request)
+    (response/unauthorized)
+    (api-try
+     (db/abandon-user! (get-in request [:params :user-id])
+                       (get-in request [:identity :id]))
+     (response/ok))))
+
 (defroutes routes
   (GET "/user" []
     :swagger {:summary "Get all users."
@@ -112,4 +129,16 @@
               :tags       ["User"]
               :parameters {:body {:user-id  int?
                                   :password ::users/password}}}
-    update-password))
+    update-password)
+  (PATCH "/user/claim" []
+    :swagger {:summary     "Claim a user."
+              :tags        ["User"]
+              :parameters  {:body {:user-id ::users/id}}
+              :description "Takes a user-id"}
+    claim-user)
+  (PATCH "/user/abandon" []
+    :swagger {:summary     "Abandon a user."
+              :tags        ["User"]
+              :parameters  {:body {:user-id ::users/id}}
+              :description "Takes a user-id"}
+    abandon-user))

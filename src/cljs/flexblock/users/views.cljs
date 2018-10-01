@@ -218,6 +218,20 @@
      [:a.btn-flat.amber-text.waves-effect.waves-purple
       {:on-click #(rf/dispatch [:users/set-password-modal user])}
       "Reset Password"]
+     (when (and (users/can-edit? @self user)
+                (:teacher @self)
+                (= :student (users/highest-role user))
+                (nil? (:advisor-id user)))
+       [:a.btn-flat.amber-text.waves-effect.waves-purple
+        {:on-click #(rf/dispatch [:users/claim id])}
+        "Claim"])
+     (when (and (or (= (:advisor-id user) (:id self))
+                    (:admin @self))
+                (= :student (users/highest-role user))
+                (:advisor-id user))
+       [:a.btn-flat.amber-text.waves-effect.waves-purple
+        {:on-click #(rf/dispatch [:users/abandon id])}
+        "Reset Advisor"])
      (when (users/can-delete? @self user)
        [:a.btn-flat.amber-text.waves-effect.waves-purple
         {:on-click #(rf/dispatch [:users/delete id])}
