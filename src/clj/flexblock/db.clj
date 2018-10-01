@@ -97,7 +97,7 @@
   works."
   :start (start-db env))
 
-;;;; The following section relates to users.
+;;;; The following section relates to rooms.
 ;;;;
 ;;;; Details such as hydration, error checking, permission validation,
 ;;;; password hashing and notification delivery are implemented in
@@ -190,6 +190,21 @@
   [user-id master-id]
   (binding [*master* (db/select-one User :id master-id)]
     (db/delete! User :id user-id)))
+
+
+(defn claim-user!
+  "Simple wrapper to claim a user.
+  Takes a `user-id` to claim, and a `master-id` responsible."
+  [user-id master-id]
+  (binding [*master* (db/select-one User :id master-id)]
+    (db/update! User user-id {:advisor-id master-id})))
+
+(defn abandon-user!
+  "Simple wrapper to abandon a user.
+  Takes a `user-id` to abandon, and a `master-id` responsible."
+  [user-id master-id]
+  (binding [*master* (db/select-one User :id master-id)]
+    (db/update! User user-id {:advisor-id nil})))
 
 (defn check-login
   "Takes an `email` and a `password`. Returns the user with `email` if

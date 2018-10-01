@@ -102,6 +102,49 @@
       (range (inc year) (+ 5 year))
       (range year (+ 4 year)))))
 
+(defn add-student
+  "the form for adding a student. `name`, `email`, and `class` should be
+  atoms."
+  [name email class]
+  [:div.modal-content
+   [:h4.center.purple-text.text-lighten-3 "Add Student"]
+   [:div.row
+    [:div.col.s12
+     [input/text
+      {:placeholder "Email"
+       :atom        email}]]
+    [:div.col.m6.s12
+     [input/text
+      {:placeholder "Name"
+       :atom        name}]]
+    [:div.input-field.col.m6.s12
+     [input/select
+      {:placeholder "Class"
+       :options     (get-years (js/Date.))
+       :atom        class}]]]])
+
+(defn add-staff [name email admin? teacher?]
+  [:div.modal-content
+   [:h4.center.purple-text.text-lighten-3  "Add User"]
+   [:div.row
+    [:div.col.s12
+     [input/text
+      {:placeholder "Email"
+       :atom        email}]]
+    [:div.col.m6.s12
+     [input/text
+      {:placeholder "Name"
+       :atom        name}]]
+    [:div
+     [:div.input-field.col.m3.s6
+      [input/checkbox
+       {:label "Teacher"
+        :atom  teacher?}]]
+     [:div.input-field.col.m3.s6
+      [input/checkbox
+       {:label "Admin"
+        :atom  admin?}]]]]])
+
 (defn add
   "The form for creating a new user."
   []
@@ -111,57 +154,43 @@
         teacher? (r/atom false)
         admin?   (r/atom false)
         class    (r/atom nil)]
-    (fn []
-      [modal/standard
-       {:id       "add-user-modal"
-        :on-close (fn []
-                    (reset! name "")
-                    (reset! email "")
-                    ;; Possibly useful to keep teacher?, admin?, and
-                    ;; class, as these are not likely to change when
-                    ;; adding several users in a row. Open to change.
-                    #_(reset! teacher? false?)
-                    #_(reset! admin? false?)
-                    #_(reset class nil))}
-       [:div.modal-content
-        [:h4.center.purple-text.text-lighten-3
-         (if (:admin @user)
-           "Add User"
-           "Add Student")]
-        [:div.row
-         [:div.col.s12
-          [input/text
-           {:placeholder "Email"
-            :atom        email}]]
-         [:div.col.m6.s12
-          [input/text
-           {:placeholder "Name"
-            :atom        name}]]
-
-         (if (:admin @user)
-           [:div
-            [:div.input-field.col.m3.s6
-             [input/checkbox
-              {:label "Teacher"
-               :atom  teacher?}]]
-            [:div.input-field.col.m3.s6
-             [input/checkbox
-              {:label "Admin"
-               :atom  admin?}]]]
-           [:div.input-field.col.m6.s12
-            [input/select
-             {:placeholder "Class"
-              :options     (get-years (js/Date.))
-              :atom        class}]])]]
-       [:div.modal-footer
-        [:button.btn-flat.amber-text.darken-1.waves-effect.waves-purple
-         {:on-click (fn []
-                      (rf/dispatch [:users/post-user {:name    @name
-                                                      :email   @email
-                                                      :teacher @teacher?
-                                                      :admin   @admin?
-                                                      :class   @class}]))}
-         "Submit"]]])))
+    (r/create-class
+     {:component-did-mount
+      #(let [e (.getElementById js/document "tabs")]
+         (when e
+           (.init js/M.Tabs e)))
+      :reagent-render
+      (fn []
+        [modal/standard
+         {:id       "add-user-modal"
+          :on-close (fn []
+                      (reset! name "")
+                      (reset! email "")
+                      ;; Possibly useful to keep teacher?, admin?, and
+                      ;; class, as these are not likely to change when
+                      ;; adding several users in a row. Open to change.
+                      #_(reset! teacher? false?)
+                      #_(reset! admin? false?)
+                      #_(reset class nil))}
+         (if-not (:admin @user)
+           [add-student name email class]
+           [:div.row
+            [:div.col.s12
+             [:ul.tabs
+              {:id "tabs"}
+              [:li.tab.col.s6 [:a {:href "#staff"} "Add User"]]
+              [:li.tab.col.s6 [:a {:href "#student"} "Add Student"]]]]
+            [:div.col.s12 {:id "staff"} [add-staff name email admin? teacher?]]
+            [:div.col.s12 {:id "student"} [add-student name email class]]])
+         [:div.modal-footer
+          [:button.btn-flat.amber-text.darken-1.waves-effect.waves-purple
+           {:on-click (fn []
+                        (rf/dispatch [:users/post-user {:name    @name
+                                                        :email   @email
+                                                        :teacher @teacher?
+                                                        :admin   @admin?
+                                                        :class   @class}]))}
+           "Submit"]]])})))
 
 (defn add-user-fab []
   (when (and
@@ -189,6 +218,20 @@
      [:a.btn-flat.amber-text.waves-effect.waves-purple
       {:on-click #(rf/dispatch [:users/set-password-modal user])}
       "Reset Password"]
+     (when (and (users/can-edit? @self user)
+                (:teacher @self)
+                (= :student (users/highest-role user))
+                (nil? (:advisor-id user)))
+       [:a.btn-flat.amber-text.waves-effect.waves-purple
+        {:on-click #(rf/dispatch [:users/claim id])}
+        "Claim"])
+     (when (and (or (= (:advisor-id user) (:id self))
+                    (:admin @self))
+                (= :student (users/highest-role user))
+                (:advisor-id user))
+       [:a.btn-flat.amber-text.waves-effect.waves-purple
+        {:on-click #(rf/dispatch [:users/abandon id])}
+        "Reset Advisor"])
      (when (users/can-delete? @self user)
        [:a.btn-flat.amber-text.waves-effect.waves-purple
         {:on-click #(rf/dispatch [:users/delete id])}
