@@ -121,7 +121,7 @@ stop_review:
 pages:
   stage: deploy
   image: node:8.9
-  before-script: []
+  before_script: []
   cache: {}
   script:
     - npm install gitbook-cli -g
