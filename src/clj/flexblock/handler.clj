@@ -29,12 +29,18 @@
      routes.users/routes]
     ["/swagger.json"
      {:get {:no-doc  true
-            :swagger {:info     {:title "Flexblock API"}
-                      :securityDefinitions
-                      {:jwt {:type :apiKey
-                             :in   :header
-                             :name "Authorization"}}
-                      :security [{:jwt []}]}
+            :swagger
+            {:info     {:title "Flexblock API"}
+             :securityDefinitions
+             {:jwt {:type :apiKey
+                    :in   :header
+                    :name "Authorization"
+                    :description
+                    "When authenticating with a token, the token must
+      be prepended with the string \"Token \", as per JWT
+      standard. For example, assuming a token of \"my_token\", the
+      Authorization header should be set to \"Token my_token\"."}}
+             :security [{:jwt []}]}
             :handler (swagger/create-swagger-handler)}}]]
    {:conflicts nil
     :data
