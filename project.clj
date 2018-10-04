@@ -7,7 +7,6 @@
                  [cider/cider-nrepl "0.17.0"]
                  [clj-time "0.14.4"]
                  [cljs-ajax "0.7.4"]
-                 [compojure "1.6.1"]
                  [cprop "0.1.11"]
                  [funcool/struct "1.3.0"]
                  [luminus-immutant "0.2.4"]
@@ -38,15 +37,14 @@
                  [phrase "0.3-SNAPSHOT"]
                  [java-jdbc/dsl "0.1.3"]
                  [clj-time "0.14.4"]
-                 [metosin/spec-tools "0.5.1"]
-                 [metosin/compojure-api "2.0.0-SNAPSHOT"]
                  [metosin/ring-swagger-ui "3.17.2"]
-                 [metosin/ring-swagger "0.26.1"]
                  [amalloy/ring-gzip-middleware "0.1.3"]
                  [com.7theta/re-frame-fx "0.2.1"]
                  [re-com "2.2.0-SNAPSHOT"]
                  [toucan "1.1.9"]
-                 [cljsjs/zxcvbn "4.4.0-1"]]
+                 [cljsjs/zxcvbn "4.4.0-1"]
+                 [metosin/reitit "0.2.3"]
+                 [org.clojure/test.check "0.9.0"]]
 
   :min-lein-version "2.0.0"
 

@@ -191,27 +191,18 @@
   (binding [*master* (db/select-one User :id master-id)]
     (db/delete! User :id user-id)))
 
-
-(defn claim-user!
-  "Simple wrapper to claim a user.
-  Takes a `user-id` to claim, and a `master-id` responsible."
-  [user-id master-id]
+(defn set-advisor-id!
+  "Simple wrapper to set a user's `advisor-id`."
+  [user-id master-id advisor-id]
   (binding [*master* (db/select-one User :id master-id)]
-    (db/update! User user-id {:advisor-id master-id})))
-
-(defn abandon-user!
-  "Simple wrapper to abandon a user.
-  Takes a `user-id` to abandon, and a `master-id` responsible."
-  [user-id master-id]
-  (binding [*master* (db/select-one User :id master-id)]
-    (db/update! User user-id {:advisor-id nil})))
+    (db/update! User user-id {:advisor-id advisor-id})))
 
 (defn check-login
   "Takes an `email` and a `password`. Returns the user with `email` if
   the login is valid, otherwise returns false."
   [email password]
   (let [passwordhash (db/select-one-field :passwordhash User
-                                          :email email)
+                       :email email)
         user         (db/select-one User :email email)]
     (if (and passwordhash
              (h/check password  passwordhash))

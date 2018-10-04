@@ -11,6 +11,7 @@
             [luminus.repl-server :as repl]
             [luminus.http-server :as http]
             [flexblock.config :refer [env]]
+            [flexblock.validation]
             [cider.nrepl :refer [cider-nrepl-handler]]
             [clojure.tools.cli :refer [parse-opts]]
             [clojure.tools.logging :as log]

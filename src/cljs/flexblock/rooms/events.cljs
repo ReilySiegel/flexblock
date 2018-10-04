@@ -1,7 +1,9 @@
 (ns flexblock.rooms.events
   (:require [re-frame.core :as rf]
             [ajax.core :as ajax]
-            [flexblock.db :as db]))
+            [flexblock.db :as db]
+            [goog.string :as gstring]
+            [goog.string.format]))
 
 (rf/reg-event-fx
  :rooms/set
@@ -26,7 +28,7 @@
  :rooms/get
  (fn [{:keys [db]} _]
    {:http-xhrio {:method          :get
-                 :uri             "/room"
+                 :uri             "/rooms"
                  :format          (ajax/transit-request-format)
                  :response-format (ajax/detect-response-format)
                  :on-success      [:rooms/set]
@@ -43,7 +45,7 @@
  :room/post
  (fn [{:keys [db]} [_ room]]
    {:http-xhrio {:method          :post
-                 :uri             "/room"
+                 :uri             "/rooms"
                  :params          (-> room
                                       (update :max-capacity js/parseInt))
                  :format          (ajax/transit-request-format)
@@ -61,8 +63,8 @@
  :room/join
  (fn [{:keys [db]} [_ room-id]]
    {:http-xhrio {:method          :post
-                 :uri             "/room/join"
-                 :params          {:room-id room-id}
+                 :uri             (gstring/format "/rooms/%s/join"
+                                                  room-id)
                  :format          (ajax/transit-request-format)
                  :response-format (ajax/detect-response-format)
                  :on-success      [:room/join-success]
@@ -78,8 +80,8 @@
  :room/leave
  (fn [{:keys [db]} [_ room-id]]
    {:http-xhrio {:method          :post
-                 :uri             "/room/leave"
-                 :params          {:room-id room-id}
+                 :uri             (gstring/format "/rooms/%s/leave"
+                                                  room-id)
                  :format          (ajax/transit-request-format)
                  :response-format (ajax/detect-response-format)
                  :on-success      [:room/leave-success]
@@ -95,8 +97,7 @@
  :room/delete
  (fn [{:keys [db]} [_ room-id]]
    {:http-xhrio {:method          :delete
-                 :uri             "/room"
-                 :params          {:room-id room-id}
+                 :uri             (str "/rooms/" room-id)
                  :format          (ajax/transit-request-format)
                  :response-format (ajax/detect-response-format)
                  :on-success      [:room/delete-success]
@@ -110,10 +111,11 @@
 (rf/reg-event-fx
  :room/set-attendance
  (fn [{:keys [db]} [_ room-id user-id attendance]]
-   {:http-xhrio {:method          :post
-                 :uri             "/room/attendance"
-                 :params          {:room-id    room-id
-                                   :user-id    user-id
+   {:http-xhrio {:method          :patch
+                 :uri             (gstring/format
+                                   "/rooms/%s/attendance"
+                                   room-id)
+                 :params          {:id         user-id
                                    :attendance attendance}
                  :format          (ajax/transit-request-format)
                  :response-format (ajax/detect-response-format)
@@ -129,7 +131,7 @@
  :rooms/get-attendance
  (fn [{:keys [db]} [_ room-id user-id attendance]]
    {:http-xhrio {:method          :get
-                 :uri             "/room/attendance"
+                 :uri             "/rooms/attendance"
                  :format          (ajax/transit-request-format)
                  :response-format (ajax/detect-response-format)
                  :on-success      [:rooms/get-attendance-success]

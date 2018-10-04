@@ -3,7 +3,8 @@
   "Contains functions for operating on rooms."
   (:require [flexblock.search :as search]
             [clojure.string :as str]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [flexblock.primitives :as primitives]))
 
 (def during-schedule
   "Session times that fall within a regular school schedule, excluding
@@ -36,6 +37,7 @@
        (sort-by second)
        (sort-by #(count (second %)))))
 
+(s/def ::id ::primitives/pos-int?)
 (s/def ::title (s/and string?
                       #(not (str/blank? %))
                       #(>= 50 (count %))))
@@ -48,12 +50,22 @@
                             #(not (str/blank? %))
                             #(>= 25 (count %))))
 (s/def ::max-capacity pos-int?)
+(s/def ::attendance ::primitives/int?)
+(s/def ::users (s/coll-of :flexblock.users/user-single))
 (s/def ::room (s/keys :req-un [::title
                                ::description
                                ::date
                                ::time
                                ::room-number
                                ::max-capacity]))
+
+(s/def ::room-hydrated (s/keys :req-un [::title
+                                        ::description
+                                        ::date
+                                        ::time
+                                        ::room-number
+                                        ::max-capacity
+                                        ::users]))
 
 (defn get-teacher
   "Given a `room`, returns the teacher."

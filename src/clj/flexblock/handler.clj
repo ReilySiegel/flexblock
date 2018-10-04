@@ -1,28 +1,58 @@
 (ns flexblock.handler
-  (:require [compojure.core :refer [routes wrap-routes]]
-            [flexblock.layout :refer [error-page]]
-            [flexblock.routes.home :refer [home-routes]]
-            [flexblock.routes.service :as service]
-            [compojure.route :as route]
-            [flexblock.env :refer [defaults]]
+  (:require [flexblock.env :refer [defaults]]
+            [flexblock.layout :refer [error-page] :as layout]
+            [flexblock.middleware :as middleware]
+            [flexblock.routes.rooms :as routes.rooms]
+            [flexblock.routes.users :as routes.users]
+            [flexblock.users :as users]
+            [flexblock.views.home :refer [home]]
             [mount.core :as mount]
-            [flexblock.middleware :as middleware]))
+            [muuntaja.core :as m]
+            reitit.coercion.spec
+            [reitit.ring :as ring]
+            [reitit.swagger :as swagger]
+            [reitit.swagger-ui :as swagger-ui]))
 
 (mount/defstate init-app
   :start ((or (:init defaults) identity))
   :stop  ((or (:stop defaults) identity)))
 
+(def router
+  (ring/router
+   [["/" {:handler (fn [_] (layout/render (home)))
+          :no-doc  true}]
+    ["/rooms" {:restricted? true
+               :swagger     {:tags ["Rooms"]}}
+     routes.rooms/routes]
+    ["/users" {:restricted? true
+               :swagger     {:tags ["Users"]}}
+     routes.users/routes]
+    ["/swagger.json"
+     {:get {:no-doc  true
+            :swagger {:info     {:title "Flexblock API"}
+                      :securityDefinitions
+                      {:jwt {:type :apiKey
+                             :in   :header
+                             :name "Authorization"}}
+                      :security [{:jwt []}]}
+            :handler (swagger/create-swagger-handler)}}]]
+   {:conflicts nil
+    :data
+    {:coercion   reitit.coercion.spec/coercion
+     :muuntaja   m/instance
+     :middleware middleware/middleware}}))
+
 (mount/defstate app
   :start
-  (middleware/wrap-base
-   (routes
-    (-> #'home-routes
-        (wrap-routes middleware/wrap-csrf)
-        (wrap-routes middleware/wrap-formats))
-    (-> #'service/flexblock-api
-        (wrap-routes middleware/wrap-csrf)
-        (wrap-routes middleware/wrap-formats))
-    (route/not-found
-     (:body
-      (error-page {:status 404
-                   :title  "page not found"}))))))
+  (ring/ring-handler
+   router
+   (ring/routes
+    (swagger-ui/create-swagger-ui-handler
+     {:path   "/api"
+      :config {:validatorUrl nil}})
+    (ring/create-resource-handler {:path "/"})
+    (ring/create-default-handler
+     {:not-found (constantly
+                  (error-page
+                   {:status 404
+                    :title  "How did you end up here?"}))}))))

@@ -1,18 +1,26 @@
 (ns flexblock.users
   (:require [clojure.string :as str]
             [flexblock.search :as search]
-            [clojure.spec.alpha :as s]))
+            [flexblock.primitives :as primitives]
+            [clojure.spec.alpha :as s]
+            [spec-tools.spec :as spec]))
 
-(s/def ::id pos-int?)
-(s/def ::name (s/and string?
+(s/def ::id ::primitives/pos-int?)
+(s/def ::name (s/and ::primitives/string?
                      #(not (str/blank? %))
                      #(>= 50 (count %))))
-(s/def ::email (s/and string?
+(s/def ::email (s/and ::primitives/string?
                       #(not (str/blank? %))
                       #(>= 50 (count %))))
-(s/def ::class pos-int?)
-(s/def ::advisor-id ::id)
-(s/def ::password string?)
+(s/def ::class ::primitives/pos-int?)
+(s/def ::advisor-id (s/or ::id
+                          ::primitives/nil?))
+(s/def ::advisor-name ::name)
+(s/def ::password ::primitives/string?)
+(s/def ::token ::primitives/string?)
+(s/def ::teacher ::primitives/boolean?)
+(s/def ::admin ::primitives/boolean?)
+(s/def ::rooms (s/coll-of :flexblock.rooms/room))
 
 (defmulti user-type #(boolean (or (:teacher %)
                                   (:admin %))))
@@ -26,6 +34,15 @@
           :opt-un [::password]))
 
 (s/def ::user (s/multi-spec user-type ::type))
+
+;; A user not defined as a multi spec. not used for validation.
+(s/def ::user-single
+  (s/keys :req-un [::name ::email]
+          :opt-un [::class ::advisor-id ::teacher ::admin]))
+
+(s/def ::user-hydrated
+  (s/keys :req-un [::name ::email ::rooms]
+          :opt-un [::class ::advisor-id ::advisor-name ::teacher ::admin]))
 
 (defn flexblock-on-date?
   "Returns true if user is enrolled in a flexblock on a date."
