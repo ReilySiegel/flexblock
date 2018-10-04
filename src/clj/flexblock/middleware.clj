@@ -72,7 +72,9 @@
   [handler]
   (fn [{{:keys [id]} :identity
         :as          request}]
-    (binding [models.helpers/*master* (db/get-user id)]
+    (binding [models.helpers/*master*
+              ;; Guard against NPE.
+              (when id (db/get-user id))]
       (handler request))))
 
 (def middleware
