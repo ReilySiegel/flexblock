@@ -13,8 +13,8 @@
                       #(not (str/blank? %))
                       #(>= 50 (count %))))
 (s/def ::class ::primitives/pos-int?)
-(s/def ::advisor-id (s/or ::id
-                          ::primitives/nil?))
+(s/def ::advisor-id (s/or :id ::id
+                          :nil ::primitives/nil?))
 (s/def ::advisor-name ::name)
 (s/def ::password ::primitives/string?)
 (s/def ::token ::primitives/string?)
