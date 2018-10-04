@@ -12,11 +12,9 @@
             :handler   (fn [_]
                          (response/ok (vec (db/get-rooms))))}
      :post {:summary "Add a room."
-            :handler (fn [{room   :body-params
-                           master :identity}]
-                       (db/insert-room! room (:id master))
+            :handler (fn [{room :body-params}]
+                       (db/insert-room! room)
                        (response/ok))}}]
-
    ["/attendance"
     {:get {:summary     "Get attendance for all rooms."
            :description "Get a map mapping [user-id room-id] -> attendance."
@@ -28,9 +26,8 @@
    ["/:id"
     {:parameters {:path {:id ::rooms/id}}
      :delete     {:summary "Delete a room."
-                  :handler (fn [{{{:keys [id]} :path} :parameters
-                                 master               :identity}]
-                             (db/delete-room! id (:id master))
+                  :handler (fn [{{{:keys [id]} :path} :parameters}]
+                             (db/delete-room! id)
                              (response/ok))}}]
    ;; Define a second "/:id", so that the delete handler is not cloned
    ;; to children.
@@ -53,8 +50,6 @@
       :patch      {:summary "Set the attendance of a user."
                    :handler (fn [{{{:keys [id]}  :path
                                    {:keys   [attendance]
-                                    user-id :id} :body} :parameters
-                                  master                :identity}]
-                              (db/set-attendance! id user-id
-                                                  (:id master) attendance)
+                                    user-id :id} :body} :parameters}]
+                              (db/set-attendance! id user-id attendance)
                               (response/ok))}}]]])

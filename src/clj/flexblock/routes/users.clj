@@ -32,9 +32,8 @@
             :handler   (fn [_]
                          (response/ok (vec (db/get-users))))}
      :post {:summary "Add a new user."
-            :handler (fn [{user   :body-params
-                           master :identity}]
-                       (db/insert-user! user (:id master))
+            :handler (fn [{user :body-params}]
+                       (db/insert-user! user)
                        (response/ok))}}]
    ["/flexblock"
     {:parameters {:body {:date inst?
@@ -60,9 +59,8 @@
     {:parameters {:path {:id ::users/id}}
      :delete     {:summary "Delete a user."
                   :handler
-                  (fn [{{{:keys [id]} :path} :parameters
-                        master               :identity}]
-                    (db/delete-user! id (:id master))
+                  (fn [{{{:keys [id]} :path} :parameters}]
+                    (db/delete-user! id)
                     (response/ok))}}]
    ;; Define a second "/:id", so that the delete handler is not cloned
    ;; to children.
@@ -72,16 +70,12 @@
      {:parameters {:body {:password ::users/password}}
       :put        {:summary "Update password."
                    :handler (fn [{{{:keys [id]}       :path
-                                   {:keys [password]} :body} :parameters
-                                  master                     :identity}]
-                              (db/set-password! id (:id master) password)
+                                   {:keys [password]} :body} :parameters}]
+                              (db/set-password! id password)
                               (response/ok))}}]
     ["/advisor-id"
      {:parameters {:body {:advisor-id ::users/advisor-id}}
       :put        {:summary "Update advisor-id."
                    :handler (fn [{{{:keys [id]}         :path
-                                   {:keys [advisor-id]} :body} :parameters
-                                  master                       :identity}]
-                              (db/set-advisor-id! id
-                                                  (:id master)
-                                                  advisor-id))}}]]])
+                                   {:keys [advisor-id]} :body} :parameters}]
+                              (db/set-advisor-id! id advisor-id))}}]]])

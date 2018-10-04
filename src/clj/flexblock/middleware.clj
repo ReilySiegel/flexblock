@@ -6,15 +6,16 @@
             [buddy.sign.jwt :refer [encrypt]]
             [clj-time.core :as time]
             [flexblock.config :refer [env]]
+            [flexblock.models.helpers :as models.helpers]
             [flexblock.views.home :refer [*app-context*]]
-            [immutant.web.middleware :refer [wrap-session]]
             [reitit.ring :as ring]
             [reitit.ring.coercion :as coercion]
             [reitit.ring.middleware.exception :as exception]
             [reitit.ring.middleware.multipart :as multipart]
             [reitit.ring.middleware.muuntaja :as muuntaja]
             [reitit.ring.middleware.parameters :as parameters]
-            [ring.middleware.gzip :as gzip])
+            [ring.middleware.gzip :as gzip]
+            [flexblock.db :as db])
   (:import javax.servlet.ServletContext))
 
 (defonce secret (random-bytes 32))
@@ -65,6 +66,15 @@
    (merge exception/default-handlers
           {:domain exception-handler})))
 
+(defn master-middleware
+  "Sets the value of the dynamic var `flexblock.models.helpers/*master*`
+  to the user who made the request, if they are logged in."
+  [handler]
+  (fn [{{:keys [id]} :identity
+        :as          request}]
+    (binding [models.helpers/*master* (db/get-user id)]
+      (handler request))))
+
 (def middleware
   [wrap-context
    ;; query-params & form-params
@@ -86,5 +96,7 @@
    ;; auth
    auth
    restrict-middleware
+   ;; Set `flexblock.modals.helpers/*master*`
+   master-middleware
    ;; gzip
    gzip/wrap-gzip])
