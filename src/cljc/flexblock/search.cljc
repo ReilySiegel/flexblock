@@ -14,7 +14,7 @@
 (defn tokenize [s]
   (remove
    stopwords
-   (str/split (str/lower-case s) #"[^a-zäöüáéíóúãâêîôûàèìòùçñ]+")))
+   (str/split (str/lower-case s) #"[^a-z]+")))
 
 (def exact-score
   "The number of points given for an exact match."
@@ -32,9 +32,8 @@
 (def ^:dynamic *stem-fn* (memoize stemmers/lancaster))
 
 
-(defn- double-metaphone-score [search word]
-  (let [word-m   (*metaphone-fn* word)
-        search-m (*metaphone-fn* search)]
+(defn- double-metaphone-score [search search-m word]
+  (let [word-m (*metaphone-fn* word)]
     (cond
       ;; Exact match.
       (= word search)
@@ -56,11 +55,9 @@
 
 (defn- score-document
   [tokenized-search tokenized-document]
-  (reduce +
-          (for [term tokenized-search]
-            (reduce +
-                    (for [word tokenized-document]
-                      (double-metaphone-score term word))))))
+  (apply + (for [[term term-m] tokenized-search
+                 word          tokenized-document]
+             (double-metaphone-score term term-m word))))
 
 (defn- make-document-str
   "Returns a string given a string `s` and a weight `n`."
@@ -80,7 +77,9 @@
   `tokenize-fn` defaults to `flexblock.search/tokenize`."
   ([weight-map search] (make-search weight-map search tokenize))
   ([weight-map search tokenize-fn]
-   (let [tokenized-search (tokenize-fn search)]
+   (let [tokenized-search (map (fn [search]
+                                 [search (*metaphone-fn* search)])
+                               (tokenize-fn search))]
      (fn search [document]
        (score-document tokenized-search
                        (tokenize-fn (make-document-str
