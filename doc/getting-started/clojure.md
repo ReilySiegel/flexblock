@@ -1,11 +1,5 @@
 # Learn Clojure
 
-## Table of Contents
-
-- [What is Clojure?](#what-is-clojure)
-- [Clojure Syntax](#clojure-syntax)
-- [Immutable Data Structures](#immutable-data-structures)
-
 ## What is Clojure?
 
 [Clojure](https://clojure.org/) is a programming language. However,
@@ -13,11 +7,11 @@ it's syntax may be a bit foreign to someone who is new to programming,
 or used to programming in languages like C, Python, or Java. If you
 want to read a comprehensive, but humorous introduction to Clojure,
 see [Clojure for the Brave and
-True](https://www.braveclojure.com/introduction/). If you would prefer
-reference style docs, see the ClojureDocs
-[Quickref](https://clojuredocs.org/quickref). I will attempt to give
-you a crash course, but these resources are probably much better than
-what I could write.
+True](https://www.braveclojure.com/introduction/). For in-depth guides
+on specific language features, see the [Clojure
+Reference](https://clojure.org/reference/documentation). I will
+attempt to give you a crash course, but these resources are probably
+much better than what I could write.
 
 ## Clojure Syntax
 
