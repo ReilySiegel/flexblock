@@ -153,25 +153,23 @@
         email    (r/atom "")
         teacher? (r/atom false)
         admin?   (r/atom false)
-        class    (r/atom nil)]
+        class    (r/atom nil)
+        reset-fn (fn []
+                   (reset! name "")
+                   (reset! email "")
+                   (reset! teacher? false)
+                   (reset! admin? false)
+                   (reset! class nil))]
     (r/create-class
      {:component-did-mount
       #(let [e (.getElementById js/document "tabs")]
          (when e
-           (.init js/M.Tabs e)))
+           (.init js/M.Tabs e (clj->js {:onShow reset-fn}))))
       :reagent-render
       (fn []
         [modal/standard
          {:id       "add-user-modal"
-          :on-close (fn []
-                      (reset! name "")
-                      (reset! email "")
-                      ;; Possibly useful to keep teacher?, admin?, and
-                      ;; class, as these are not likely to change when
-                      ;; adding several users in a row. Open to change.
-                      #_(reset! teacher? false?)
-                      #_(reset! admin? false?)
-                      #_(reset class nil))}
+          :on-close reset-fn}
          (if-not (:admin @user)
            [add-student name email class]
            [:div.row
