@@ -117,3 +117,19 @@ stop_review:
   environment:
     name: review/$CI_COMMIT_REF_NAME
     action: stop
+
+pages:
+  stage: deploy
+  image: node:8.9
+  before_script: []
+  cache: {}
+  script:
+    - npm install gitbook-cli -g
+    - gitbook fetch latest
+    - gitbook install
+    - gitbook build doc public
+  artifacts:
+    paths:
+      - public
+  only:
+    - master

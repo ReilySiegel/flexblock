@@ -2,16 +2,13 @@
 
 Welcome to the Flexblock Documentation! This is the best place to
 learn about how Flexblock works! If you are looking for something
-specific, see the table of contents below. Otherwise, read on!
+specific, see the table of contents. Otherwise, read on!
 
-## Table of Contents
-
-- [Learn Clojure](clojure.md)
-- [Components](components.md)
-- [Environment](environment.md)
-- [Database](database.md)
-
-## Getting Started With Flexblock's Documentation
+Flexblock has two different types of documentation. There are comments
+and docstrings in the source code, which describe specifically how
+small parts of the code (usually functions) work. For documentation
+about the broader system, and how different pieces of the system work
+together, read these docs.
 
 ### Comments and Docstrings
 

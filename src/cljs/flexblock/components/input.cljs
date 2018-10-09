@@ -87,36 +87,45 @@
   [{:keys [id atom placeholder options]
     :or   {atom (r/atom nil)
            id   (name (gensym "select"))}}]
-  (r/create-class
-   {:component-did-mount
-    (fn []
-      (.init js/M.Select
-             (.getElementById js/document id)))
-    :reagent-render
-    (fn [_]
-      (into [:select
-             {:id        id
-              :on-change #(reset! atom
-                                  (-> %
-                                      .-target
-                                      .-value
-                                      reader/read-string))
-              :value     (or @atom "")}]
-            (conj (for [option options]
-                    ^{:key option}
+  (let [select-el (cljs.core/atom nil)]
+    (r/create-class
+     {:component-did-mount
+      (fn []
+        (reset! select-el (.init js/M.Select
+                                 (.getElementById js/document id))))
+      :component-did-update
+      (fn []
+        (.destroy (deref select-el))
+        (reset! select-el
+                (.init js/M.Select
+                       (.getElementById js/document id))))
+      :reagent-render
+      (fn [_]
+        (into [:select
+               {:id        id
+                :on-change #(reset! atom
+                                    (-> %
+                                        .-target
+                                        .-value
+                                        reader/read-string))
+                :value     (if @atom
+                             (prn-str @atom)
+                             "")}]
+              (conj (for [option options]
+                      ^{:key option}
 
-                    (if (map? option)
-                      ;; If the option is a map, use :value and :label
-                      ;; vals. prn-str is used to retain the exact
-                      ;; Clojure value, even though it would otherwise
-                      ;; be converted to a string.
-                      [:option {:value (prn-str (:value option))}
-                       (str (:label option))]
-                      ;; If not, use the option itself as val and label.
-                      [:option {:value (prn-str option)} (str option)]))
-                  (when placeholder
-                    [:option {:value    ""
-                              :disabled true} placeholder]))))}))
+                      (if (map? option)
+                        ;; If the option is a map, use :value and :label
+                        ;; vals. prn-str is used to retain the exact
+                        ;; Clojure value, even though it would otherwise
+                        ;; be converted to a string.
+                        [:option {:value (prn-str (:value option))}
+                         (str (:label option))]
+                        ;; If not, use the option itself as val and label.
+                        [:option {:value (prn-str option)} (str option)]))
+                    (when placeholder
+                      [:option {:value    ""
+                                :disabled true} placeholder]))))})))
 
 (defn datepicker
   "A datepicker input. Tales a map of options. All options are optional.
