@@ -35,7 +35,3 @@
 (defphraser #(contains? (hash-set a b c) %)
   [_ {:keys [via]} a b c]
   (prettify via " must be selected."))
-
-(defphraser #(contains? % x)
-  [_ {:keys [via]} x]
-  "Please fill out all fields.")
