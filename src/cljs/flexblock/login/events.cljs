@@ -26,7 +26,7 @@
  :login
  (fn [{:keys [db]} [_ username password]]
    {:http-xhrio {:method          :post
-                 :uri             "/login"
+                 :uri             "/users/login"
                  :params          {:username username :password password}
                  :format          (ajax/json-request-format)
                  :response-format (ajax/detect-response-format)

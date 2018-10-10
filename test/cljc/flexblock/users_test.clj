@@ -9,7 +9,7 @@
                :email   "user@a.com"
                :teacher true}
         userb {:id         2
-               :name       "User V"
+               :name       "User B"
                :email      "user@b.com"
                :advisor-id 1
                :class      2020}

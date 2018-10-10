@@ -6,7 +6,8 @@
   "assert implemented with ExceptionInfo for ease of programmatic use."
   [assertion message]
   (when-not assertion
-    (throw (ex-info message {:message message}))))
+    (throw (ex-info message {:message message
+                             :type    :domain}))))
 
 (defn assert-master
   "Assert that the dynamic variable *master* is set.

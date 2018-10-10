@@ -16,7 +16,8 @@
   (helpers/assert-master)
   ;; Assert that the room is valid.
   (ex-info-assert (s/valid? ::rooms/room room)
-                  (phrase/phrase-first {} ::rooms/room room))
+                  (or (phrase/phrase-first {} ::rooms/room room)
+                      "Please fill out all required fields."))
   (ex-info-assert (:teacher *master*)
                   "Only teachers can create Sessions.")
   (update room :date #(timec/to-sql-date (timec/from-date %))))

@@ -12,7 +12,6 @@
             [clj-time.core :as time]
             [flexblock.config :refer [env]]
             [flexblock.migrations :as migrations]
-            [flexblock.models.helpers :refer [*master*]]
             [flexblock.models.room :refer [Room]]
             [flexblock.models.user :refer [*password* User]]
             [flexblock.models.users-rooms :refer [UsersRooms]]
@@ -119,17 +118,15 @@
    :users))
 
 (defn insert-room!
-  "Takes a `room` and a `master-id`. Inserts the room into the database."
-  [room master-id]
-  (binding [*master* (db/select-one User :id master-id)]
-    (db/insert! Room room)))
+  "Takes a `room`. Inserts the room into the database."
+  [room]
+  (db/insert! Room room))
 
 (defn delete-room!
-  "Takes a `room-id` and a `master-id`. Deletes the room from the
+  "Takes a `room-id`. Deletes the room from the
   database."
-  [room-id master-id]
-  (binding [*master* (db/select-one User :id master-id)]
-    (db/delete! Room :id room-id)))
+  [room-id]
+  (db/delete! Room :id room-id))
 
 ;;;; The following section relates to users.
 ;;;;
@@ -176,42 +173,28 @@
 
 (defn insert-user!
   "Simple wrapper to insert user.
-  Takes a `user` to insert, and a `master-id` responsible for the
-  insertion."
-  [user master-id]
-  (binding [*password* (:password user (users/gen-password 16))
-            *master*   (db/select-one User :id master-id)]
+  Takes a `user` to insert."
+  [user]
+  (binding [*password* (:password user (users/gen-password 16))]
     (db/insert! User (assoc user :password *password*))))
 
 (defn delete-user!
   "Simple wrapper to delete user.
-  Takes a `user-id` to delete, and a `master-id` responsible for the
-  insertion."
-  [user-id master-id]
-  (binding [*master* (db/select-one User :id master-id)]
-    (db/delete! User :id user-id)))
+  Takes a `user-id` to delete."
+  [user-id]
+  (db/delete! User :id user-id))
 
-
-(defn claim-user!
-  "Simple wrapper to claim a user.
-  Takes a `user-id` to claim, and a `master-id` responsible."
-  [user-id master-id]
-  (binding [*master* (db/select-one User :id master-id)]
-    (db/update! User user-id {:advisor-id master-id})))
-
-(defn abandon-user!
-  "Simple wrapper to abandon a user.
-  Takes a `user-id` to abandon, and a `master-id` responsible."
-  [user-id master-id]
-  (binding [*master* (db/select-one User :id master-id)]
-    (db/update! User user-id {:advisor-id nil})))
+(defn set-advisor-id!
+  "Simple wrapper to set a user's `advisor-id`."
+  [user-id advisor-id]
+  (db/update! User user-id {:advisor-id advisor-id}))
 
 (defn check-login
   "Takes an `email` and a `password`. Returns the user with `email` if
   the login is valid, otherwise returns false."
   [email password]
   (let [passwordhash (db/select-one-field :passwordhash User
-                                          :email email)
+                       :email email)
         user         (db/select-one User :email email)]
     (if (and passwordhash
              (h/check password  passwordhash))
@@ -219,9 +202,8 @@
       false)))
 
 (defn set-password!
-  [user-id master-id password]
-  (binding [*master* (db/select-one User :id master-id)]
-    (db/update! User user-id {:password password})))
+  [user-id password]
+  (db/update! User user-id {:password password}))
 
 ;;;; The following section implements UsersRooms functions.
 ;;;;
@@ -243,27 +225,26 @@
                {[rooms-id users-id] attendance})))))
 
 (defn set-attendance!
-  "Takes a `room-id`, `user-id`, `master-id` and `attendance`. Sets
+  "Takes a `room-id`, `user-id`, and `attendance`. Sets
   the value of `attendance` for the UsersRooms enty with `user-id` and
   `room-id`."
-  [room-id user-id master-id attendance]
-  (binding [*master* (db/select-one User :id master-id)]
-    (let [id (db/select-one-id UsersRooms
-                               :rooms-id room-id
-                               :users-id user-id)]
-      (db/update! UsersRooms id {:attendance attendance}))))
+  [room-id user-id attendance]
+  (let [id (db/select-one-id UsersRooms
+             :rooms-id room-id
+             :users-id user-id)]
+    (db/update! UsersRooms id {:attendance attendance})))
 
 (defn join-room!
   "Create a UsersRooms record that associates a user and a room."
-  [room-id master-id]
+  [room-id user-id]
   (db/insert! UsersRooms
-              {:rooms-id   room-id
-               :users-id   master-id
-               :attendance 0}))
+    {:rooms-id   room-id
+     :users-id   user-id
+     :attendance 0}))
 
 (defn leave-room!
   "Deletes a UsersRooms record that associates a user and a room."
-  [room-id master-id]
+  [room-id user-id]
   (db/delete! UsersRooms
-              :rooms-id room-id
-              :users-id master-id))
+    :rooms-id room-id
+    :users-id user-id))

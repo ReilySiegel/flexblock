@@ -1,7 +1,9 @@
 (ns flexblock.users.events
   (:require [re-frame.core :as rf]
             [ajax.core :as ajax]
-            [flexblock.db :as db]))
+            [flexblock.db :as db]
+            [goog.string :as gstring]
+            [goog.string.format]))
 
 (rf/reg-event-fx
  :users/set
@@ -12,7 +14,7 @@
  :users/get
  (fn [{:keys [db]} _]
    {:http-xhrio {:method          :get
-                 :uri             "/user"
+                 :uri             "/users"
                  :format          (ajax/transit-request-format)
                  :response-format (ajax/detect-response-format)
                  :on-success      [:users/set]
@@ -28,10 +30,10 @@
 (rf/reg-event-fx
  :users/reset-password
  (fn [{:keys [db]} [_ user-id]]
-   {:http-xhrio {:method          :patch
-                 :uri             "/user/password"
-                 :params          {:user-id  user-id
-                                   :password (:password db)}
+   {:http-xhrio {:method          :put
+                 :uri             (gstring/format "/users/%s/password"
+                                                  user-id)
+                 :params          {:password (:password db)}
                  :format          (ajax/json-request-format)
                  :response-format (ajax/detect-response-format)
                  :on-success      [:users/reset-password-success]
@@ -48,7 +50,7 @@
  :users/post-user
  (fn [{:keys [db]} [_ user]]
    {:http-xhrio {:method          :post
-                 :uri             "/user"
+                 :uri             "/users"
                  :params          user
                  :format          (ajax/json-request-format)
                  :response-format (ajax/detect-response-format)
@@ -65,8 +67,7 @@
  :users/delete
  (fn [{:keys [db]} [_ user-id]]
    {:http-xhrio {:method          :delete
-                 :uri             "/user"
-                 :params          {:user-id user-id}
+                 :uri             (str "/users/" user-id)
                  :format          (ajax/json-request-format)
                  :response-format (ajax/detect-response-format)
                  :on-success      [:users/delete-success]
@@ -81,9 +82,10 @@
 (rf/reg-event-fx
  :users/claim
  (fn [{:keys [db]} [_ user-id]]
-   {:http-xhrio {:method          :patch
-                 :uri             (str "/user/claim")
-                 :params          {:user-id user-id}
+   {:http-xhrio {:method          :put
+                 :uri             (gstring/format "/users/%s/advisor-id"
+                                                  user-id)
+                 :params          {:advisor-id (get-in db [:login/user :id])}
                  :format          (ajax/json-request-format)
                  :response-format (ajax/detect-response-format)
                  :on-success      [:users/claim-success]
@@ -98,9 +100,10 @@
 (rf/reg-event-fx
  :users/abandon
  (fn [{:keys [db]} [_ user-id]]
-   {:http-xhrio {:method          :patch
-                 :uri             (str "/user/abandon")
-                 :params          {:user-id user-id}
+   {:http-xhrio {:method          :put
+                 :uri             (gstring/format "/users/%s/advisor-id"
+                                                  user-id)
+                 :params          {:advisor-id (get-in db [:user :id])}
                  :format          (ajax/json-request-format)
                  :response-format (ajax/detect-response-format)
                  :on-success      [:users/abandon-success]

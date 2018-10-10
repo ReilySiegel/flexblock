@@ -13,14 +13,14 @@
  :reminder/post-date
  (fn [{:keys [db]}]
    {:http-xhrio {:method          :post
-                 :uri             "/user/flexblock"
-                 :params          {:date     (:date db)
-                                   :user-ids (map :id
-                                                  (users.subs/filter-users
-                                                   (:users db)
-                                                   (:login/user db)
-                                                   (:date db)
-                                                   (:users/role-filter db)))}
+                 :uri             "/users/flexblock"
+                 :params          {:date (:date db)
+                                   :ids  (map :id
+                                              (users.subs/filter-users
+                                               (:users db)
+                                               (:login/user db)
+                                               (:date db)
+                                               (:users/role-filter db)))}
                  :format          (ajax/json-request-format)
                  :response-format (ajax/detect-response-format)
                  :on-success      [:reminder/post-date-success]
