@@ -120,10 +120,11 @@ stop_review:
 
 pages:
   stage: deploy
-  image: node
+  image: alpine
   before_script: []
   cache: {}
   script:
+    - apk add npm
     - npm install gitbook-cli -g
     - gitbook fetch latest
     - gitbook build doc public
