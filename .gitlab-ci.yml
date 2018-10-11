@@ -124,7 +124,7 @@ pages:
   before_script: []
   cache: {}
   script:
-    - apk add npm
+    - apk add npm git
     - npm install gitbook-cli -g
     - gitbook fetch latest
     - gitbook build doc public
