@@ -126,7 +126,6 @@ pages:
   script:
     - npm install gitbook-cli -g
     - gitbook fetch latest
-    - gitbook install
     - gitbook build doc public
   artifacts:
     paths:
