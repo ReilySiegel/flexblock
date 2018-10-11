@@ -120,7 +120,7 @@ stop_review:
 
 pages:
   stage: deploy
-  image: node:8.9
+  image: node
   before_script: []
   cache: {}
   script:
