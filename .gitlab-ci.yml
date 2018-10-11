@@ -126,7 +126,7 @@ pages:
   script:
     - apk add npm git
     - npm install gitbook-cli -g
-    - gitbook fetch latest
+    - gitbook fetch 3.2.3
     - gitbook build doc public
   artifacts:
     paths:
