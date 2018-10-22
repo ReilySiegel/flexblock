@@ -8,92 +8,125 @@
    [flexblock.users :as users]
    [flexblock.components.grid :as grid]
    [flexblock.search.views :as search]
+   [flexblock.components.material :as material]
    [flexblock.components.modal :as modal]
    [flexblock.components.input :as input]
+   [flexblock.interop :as interop]
    [flexblock.reminder.views :as reminder]
    [goog.string :as gstring]
    [goog.string.format]))
 
-(defn reset-password []
-  (let [user @(rf/subscribe [:users/password-modal])
-        {:keys [score score% feedback]}
-        @(rf/subscribe [:users/password-strength])]
+(defn reset-password [user]
+  (let [{:keys [score feedback]}
+        @(rf/subscribe [:users/password-strength])
+        color (if (< 70 score)
+                :primary
+                :secondary)]
     [:div
-     [:div.modal-content
-      [:h4.center.purple-text.text-lighten-3
-       (str "Reset Password for " (:name user))]
-      [:div.row [:div.col.l6.offset-l3.s12
-                 [input/text
-                  {:type          :password
-                   :placeholder   "New Password"
-                   :dispatch-key  :users/set-password
-                   :subscribe-key :users/password}]]]
-      [:div.row
-       [:div.col.l6.s12.offset-l3.center
-        [:div.progress
-         [:div.determinate
-          {:style {:width score%}
-           :class (cond
-                    (< 80 score) "green"
-                    (< 60 score) "yellow"
-                    :else        "red")}]]
-        [:span (:warning feedback)]]]]
-     [:div.modal-footer
-      [:button.btn-flat.amber-text.waves-effect.waves-purple
-       {:on-click #(rf/dispatch
-                    [:users/reset-password (:id user)])}
+     [material/DialogTitle
+      (str "Reset Password for " (:name user))]
+     [material/DialogContent
+      [material/Grid
+       {:container true
+        :justify   :center}
+       [material/Grid
+        {:item true
+         :xs   12
+         :md   6}
+        [material/TextField
+         {:type        :password
+          :autoFocus   true
+          :fullWidth   true
+          :label       "New Password"
+          :placeholder "correcthorsebatterystaple"
+          :value       @(rf/subscribe [:users/password])
+          :onChange    #(rf/dispatch [:users/set-password
+                                      (interop/event->value %)])}]]]
+      [material/Grid
+       {:container true
+        :justify   :center}
+       [material/Grid
+        {:item true
+         :xs   12
+         :md   6}
+        [material/LinearProgress
+         {:variant :determinate
+          :value   score
+          :color   color}]
+        [material/Typography (:warning feedback)]]]]
+     [material/DialogActions
+      [material/Button
+       {:color   :secondary
+        :onClick (fn []
+                   (rf/dispatch-sync
+                    [:users/reset-password (:id user)])
+                   (rf/dispatch [:users/set-password ""]))}
        "Reset Password"]]]))
 
 (defn password-modal
   "Shows a modal that allows a teacher to change the password of `user`."
   []
-  (let [password (r/atom "")]
-    [modal/standard
-     {:id       "password-modal"
-      :on-close #(rf/dispatch [:users/set-password ""])}
-     [reset-password]]))
+  (let [user @(rf/subscribe [:users/password-modal])]
+    [material/Dialog
+     {:open      (boolean user)
+      :fullWidth true
+      :onClose   (fn []
+                   (rf/dispatch [:users/set-password-modal nil])
+                   (rf/dispatch [:users/set-password ""]))}
+     [reset-password user]]))
 
 
 (defn session
   "One session in :rooms list."
   [user room]
-  [:li.collection-item
-   {:key (:id room)}
-   [:div
-    {:style {:color (case @(rf/subscribe [:room/get-attendance
-                                          (:id room)
-                                          (:id user)])
-                      -1 :red
-                      1  :green
-                      nil)}}
-    (gstring/format "%s: %s - %s %s"
-                    (rooms/room-number-str room)
-                    (:title room)
-                    (rooms/time-str room)
-                    (.toDateString (:date room)))]])
+  (let [attendance     @(rf/subscribe [:room/get-attendance
+                                       (:id room)
+                                       (:id user)])
+        [avatar label] (get rooms/attendance->icon attendance)]
+    [material/ListItem
+     {:key (:id room)}
+     [material/ListItemAvatar
+      [material/Avatar
+       [:i.material-icons avatar]]]
+     [material/ListItemText
+      {:primary   (:title room)
+       :secondary (gstring/format "%s: %s %s"
+                                  (rooms/room-number-str room)
+                                  (rooms/time-str room)
+                                  (.toDateString (:date room)))}]]))
 
-(defn sessions []
-  (let [user     @(rf/subscribe [:users/session-modal])
-        sessions (:rooms user)]
-    [:div.modal-content
-     [:h4.purple-text.text-lighten-3 "Sessions"]
-     [:div.row
-      [:div.col.l8.offset-l2.s12
+(defn sessions [user]
+  (let [sessions (:rooms user)]
+    [material/DialogContent
+     [material/Typography
+      {:variant :h5}
+      "Sessions"]
+     [material/Grid
+      {:container true
+       :justify   :center}
+      [material/Grid
+       {:item true
+        :xs   12
+        :lg   8}
        (if (seq sessions)
          [:ul.collection
           (doall (map (partial session user)
                       (->> sessions
                            (sort-by :date)
                            reverse)))]
-         [:h6.amber-text.center
+         [material/Typography
           (str (:name user) " is not enrolled in any Sessions.")])]]]))
 
 (defn sessions-modal
   "The bottom sheet modal that shows a list of all sessions a user is
   enrolled in."
   []
-  [modal/bottom-sheet {:id "session-modal"}
-   [sessions]])
+  (let [user @(rf/subscribe [:users/session-modal])]
+    [material/Drawer
+     {:anchor  :bottom
+      :open    (boolean user)
+      :onClose #(rf/dispatch [:users/set-session-modal nil])}
+     [sessions user]]))
 
 (defn get-years [date]
   (let [year  (.getFullYear date)
@@ -102,48 +135,80 @@
       (range (inc year) (+ 5 year))
       (range year (+ 4 year)))))
 
-(defn add-student
-  "the form for adding a student. `name`, `email`, and `class` should be
-  atoms."
-  [name email class]
-  [:div.modal-content
-   [:h4.center.purple-text.text-lighten-3 "Add Student"]
-   [:div.row
-    [:div.col.s12
-     [input/text
-      {:placeholder "Email"
-       :atom        email}]]
-    [:div.col.m6.s12
-     [input/text
-      {:placeholder "Name"
-       :atom        name}]]
-    [:div.input-field.col.m6.s12
-     [input/select
-      {:placeholder "Class"
-       :options     (get-years (js/Date.))
-       :atom        class}]]]])
+(defn add-student [name email class]
+  [material/Grid
+   {:container true
+    :spacing   16}
+   [material/Grid
+    {:item true :xs 12}
+    [material/TextField
+     {:label       "Email"
+      :placeholder "20xx@ellingtonschools.net"
+      :fullWidth   true
+      :value       @email
+      :onChange    #(reset! email (-> % .-target .-value))}]]
+   [material/Grid
+    {:item true :xs 12 :sm 6}
+    [material/TextField
+     {:label       "Name"
+      :placeholder "Joe Average"
+      :fullWidth   true
+      :value       @name
+      :onChange    #(reset! name (-> % .-target .-value))}]]
+   [material/Grid {:item true :xs 12 :sm 6}
+    [material/TextField
+     {:label     "Class"
+      :fullWidth true
+      :select    true
+      :value     @class
+      :onChange  #(reset! class
+                          (-> % .-target .-value))}
+     (for [year (get-years (js/Date.))]
+       [material/MenuItem
+        {:key   year
+         :value (str year)}
+        (str year)])]]])
 
 (defn add-staff [name email admin? teacher?]
-  [:div.modal-content
-   [:h4.center.purple-text.text-lighten-3  "Add User"]
-   [:div.row
-    [:div.col.s12
-     [input/text
-      {:placeholder "Email"
-       :atom        email}]]
-    [:div.col.m6.s12
-     [input/text
-      {:placeholder "Name"
-       :atom        name}]]
-    [:div
-     [:div.input-field.col.m3.s6
-      [input/checkbox
-       {:label "Teacher"
-        :atom  teacher?}]]
-     [:div.input-field.col.m3.s6
-      [input/checkbox
-       {:label "Admin"
-        :atom  admin?}]]]]])
+  [material/Grid
+   {:container true
+    :spacing   16}
+   [material/Grid
+    {:item true :xs 12}
+    [material/TextField
+     {:label       "Email"
+      :placeholder "averagej@ellingtonschools.net"
+      :fullWidth   true
+      :value       @email
+      :onChange    #(reset! email (-> % .-target .-value))}]]
+   [material/Grid
+    {:item true :xs 12 :sm 6}
+    [material/TextField
+     {:label       "Name"
+      :placeholder "Joe Average"
+      :fullWidth   true
+      :value       @name
+      :onChange    #(reset! name (-> % .-target .-value))}]]
+   [material/Grid {:item true :xs 6 :sm 3}
+    [material/FormControlLabel
+     {:label "Teacher"
+      :control
+      (r/as-element
+       [material/Checkbox
+        {:checked  @teacher?
+         :onChange #(reset! teacher? (-> %
+                                         .-target
+                                         .-checked))}])}]]
+   [material/Grid {:item true :xs 6 :sm 3}
+    [material/FormControlLabel
+     {:label "Admin"
+      :control
+      (r/as-element
+       [material/Checkbox
+        {:checked  @admin?
+         :onChange #(reset! admin? (-> %
+                                       .-target
+                                       .-checked))}])}]]])
 
 (defn add
   "The form for creating a new user."
@@ -153,55 +218,61 @@
         email    (r/atom "")
         teacher? (r/atom false)
         admin?   (r/atom false)
-        class    (r/atom nil)
+        class    (r/atom "")
+        tab      (r/atom 0)
         reset-fn (fn []
                    (reset! name "")
                    (reset! email "")
                    (reset! teacher? false)
                    (reset! admin? false)
-                   (reset! class nil))]
-    (r/create-class
-     {:component-did-mount
-      #(let [e (.getElementById js/document "tabs")]
-         (when e
-           (.init js/M.Tabs e (clj->js {:onShow reset-fn}))))
-      :reagent-render
-      (fn []
-        [modal/standard
-         {:id       "add-user-modal"
-          :on-close reset-fn}
-         (if-not (:admin @user)
-           [add-student name email class]
-           [:div.row
-            [:div.col.s12
-             [:ul.tabs
-              {:id "tabs"}
-              [:li.tab.col.s6 [:a {:href "#staff"} "Add User"]]
-              [:li.tab.col.s6 [:a {:href "#student"} "Add Student"]]]]
-            [:div.col.s12 {:id "staff"} [add-staff name email admin? teacher?]]
-            [:div.col.s12 {:id "student"} [add-student name email class]]])
-         [:div.modal-footer
-          [:button.btn-flat.amber-text.darken-1.waves-effect.waves-purple
-           {:on-click (fn []
-                        (rf/dispatch [:users/post-user {:name    @name
-                                                        :email   @email
-                                                        :teacher @teacher?
-                                                        :admin   @admin?
-                                                        :class   @class}]))}
-           "Submit"]]])})))
+                   (reset! class ""))]
+    (fn []
+      [material/Dialog
+       {:open      @(rf/subscribe [:users/modal-open])
+        :onClose   #(rf/dispatch [:users/set-modal-open false])
+        :fullWidth true}
+       [material/Tabs
+        {:value          @tab
+         :indicatorColor :primary
+         :textColor      :primary
+         :fullWidth      true
+         :onChange       (fn [_ selected]
+                           (reset-fn)
+                           (reset! tab selected))}
+        [material/Tab {:label "Add User"}]
+        [material/Tab {:label "Add Student"}]]
+       [material/DialogContent
+        (condp = @tab
+          0 [add-staff name email admin? teacher?]
+          1 [add-student name email class])]
+       [material/DialogActions
+        [material/Button
+         {:color :secondary
+          :on-click
+          (fn []
+            (rf/dispatch [:users/post-user
+                          {:name    @name
+                           :email   @email
+                           :teacher @teacher?
+                           :admin   @admin?
+                           :class   (.parseInt js/window
+                                               @class)}]))}
+         "Add User"]]])))
 
 (defn add-user-fab []
   (when (and
          (some #(% @(rf/subscribe [:login/user])) [:teacher :admin])
          (not (str/blank? @(rf/subscribe [:login/token]))))
-    [:div {:style {:z-index  1
-                   :position :fixed
-                   :right    24
-                   :bottom   24}}
-     [:a.btn-floating.btn-large.amber.hoverable.modal-trigger
-      {:href "#add-user-modal"}
-      [:i.large.material-icons "add"]]]))
-
+    [material/Zoom
+     {:in true}
+     [material/Button
+      {:variant :fab
+       :color   :primary
+       :onClick #(rf/dispatch [:users/set-modal-open true])
+       :style   {:position :fixed
+                 :right    "2em"
+                 :bottom   "2em"}}
+      [:i.material-icons :add]]]))
 
 (defn- card-buttons
   "Returns the appropriate actions that a user can take on a `user`."
@@ -209,48 +280,72 @@
   (let [self (rf/subscribe [:login/user])
         {:keys [id name rooms]}
         user]
-    [:div.card-action
-     [:a.btn-flat.amber-text.waves-effect.waves-purple
-      {:on-click #(rf/dispatch [:users/set-session-modal user])}
-      "Sessions"]
-     [:a.btn-flat.amber-text.waves-effect.waves-purple
-      {:on-click #(rf/dispatch [:users/set-password-modal user])}
-      "Reset Password"]
+    [material/CardActions
+     [material/Tooltip {:title "Sessions"}
+      [material/IconButton
+       {:on-click #(rf/dispatch [:users/set-session-modal user])}
+       [:i.material-icons :list]]]
+     [material/Tooltip {:title "Reset Password"}
+      [material/IconButton
+       {:onClick #(rf/dispatch [:users/set-password-modal user])}
+       [:i.material-icons :lock]]]
      (when (and (users/can-edit? @self user)
                 (:teacher @self)
                 (= :student (users/highest-role user))
                 (nil? (:advisor-id user)))
-       [:a.btn-flat.amber-text.waves-effect.waves-purple
-        {:on-click #(rf/dispatch [:users/claim id])}
-        "Claim"])
+       [material/Tooltip {:title "Claim"}
+        [material/IconButton
+         {:onClick #(rf/dispatch [:users/claim id])}
+         [:i.material-icons :group_add]]])
      (when (and (or (= (:advisor-id user) (:id self))
                     (:admin @self))
                 (= :student (users/highest-role user))
                 (:advisor-id user))
-       [:a.btn-flat.amber-text.waves-effect.waves-purple
-        {:on-click #(rf/dispatch [:users/abandon id])}
-        "Reset Advisor"])
+       [material/Tooltip {:title "Reset Advisor"}
+        [material/IconButton
+         {:onClick #(rf/dispatch [:users/abandon id])}
+         [:i.material-icons :restore]]])
      (when (users/can-delete? @self user)
-       [:a.btn-flat.amber-text.waves-effect.waves-purple
-        {:on-click #(rf/dispatch [:users/delete id])}
-        "Delete"])]))
+       [material/Tooltip {:title "Delete"}
+        [material/IconButton
+         {:onClick #(rf/dispatch [:users/delete id])}
+         [:i.material-icons :delete]]])]))
 
 
 (defn card
   "Creates a card with information about a `user`."
-  [user]
-  (when-let [{:keys [id email name advisor-name rooms]} user]
-    [:div.col.s12.m6.l4.grid-item
-     {:key id}
-     [:div.card.hoverable
-      [:div.card-content
-       [:span.card-title.truncate name]
-       [:span.truncate email]
-       (when advisor-name
-         [:p.truncate advisor-name])]
-      [:div.divider]
-      [card-buttons user]]]))
-
+  [index
+   {:keys [id email name advisor-name rooms]
+    :as   user}]
+  [material/Grid
+   {:item true
+    :xs   12
+    :sm   6
+    :lg   4
+    :key  id
+    :class
+    (condp = (str/lower-case @(rf/subscribe [:search]))
+      ;; Rotate the card by 2 degrees.
+      "askew"            "askew"
+      ;; Does a barrel roll.
+      "do a barrel roll" "barrel-roll"
+      "")}
+   [material/Slide
+    {:in        true
+     :direction :right
+     :timeout   (* 250 (inc index))}
+    [material/Card
+     [material/CardContent
+      [material/Typography
+       {:variant :h5
+        :noWrap  true}
+       name]
+      [material/Typography
+       {:variant :subtitle1
+        :color   :textSecondary
+        :noWrap  true}
+       email]]
+     [card-buttons user]]]])
 
 (defn grid
   "Shows a grid of user cards."
@@ -259,50 +354,72 @@
     (if-not (seq @users)
       ;; Get users if empty.
       (rf/dispatch [:users/get])
-      [:div.row
-       [grid/grid
-        (doall (map card (take 36 @users)))]])))
+      [material/Grid
+       {:container true
+        :spacing   16
+        :style     {:padding-top "3em"}}
+       (doall (map-indexed card (take 36 @users)))])))
 
 (defn filters []
   (let [filters @(rf/subscribe [:users/role-filter])
         show?   @(rf/subscribe [:users/filter])]
-    [:div
-     (when show?
-       [:div
-        [search/date-bar]
-        [:div.row
-         (for [k (keys users/roles)]
-           [:div.col.s4.m3.offset-m1
-            {:key k}
-            [:label
-             [:input
-              {:type      :checkbox
-               :checked   (contains? filters k)
-               :value     (filters k)
-               :on-change #(rf/dispatch [:users/update-role-filter
-                                         k
-                                         (-> %
-                                             .-target
-                                             .-checked)])}]
-             [:span (str/capitalize (name k))]]])]])
-     [:div.row
-      [:div.col.s12.center
-       {:style {:padding-top (if show? "2vh" "0px")}}
-       [:a
-        {:style    {:cursor :pointer}
-         :on-click #(rf/dispatch [:users/toggle-filter])}
-        (if show? "Hide Filters" "Show Filters")]]]]))
+    [material/Grid
+     {:container true
+      :item      true
+      :lg        6
+      :md        8
+      :xs        10
+      :justify   :center
+      :style     {:padding-top "3vh"}}
+     [material/Collapse
+      {:in show?}
+      [material/Grid
+       {:container true
+        :justify   :center}
+       [search/date-bar]
+       (for [k (keys users/roles)]
+         [material/Grid
+          {:item true
+           :sm   4
+           :xs   12
+           :key  k}
+          [material/FormControlLabel
+           {:label (str/capitalize (name k))
+            :control
+            (r/as-element
+             [material/Checkbox
+              {:checked  (boolean (filters k))
+               :onChange #(rf/dispatch [:users/update-role-filter
+                                        k
+                                        (-> %
+                                            .-target
+                                            .-checked)])}])}]])]]
+     [material/Grid
+      {:container true
+       :justify   :center
+       :style     {:padding-top (if show? "2vh" "0px")}}
+      [material/Button
+       {:color   :inherit
+        :onClick #(rf/dispatch [:users/toggle-filter])}
+       (if show? "Hide Filters" "Show Filters")]]]))
 
 
 (defn page
   "Root component for the Users page."
   []
-  [:div.container
-   [search/search-bar]
-   [filters]
-   [grid]
-   [reminder/modal]
-   [add-user-fab]
-   [add]
-   [sessions-modal]
-   [password-modal]])
+  [material/Grid
+   {:container true
+    :justify   :center}
+   [material/Grid
+    {:container true
+     :item      true
+     :xl        8
+     :xs        10
+     :justify   :center}
+    [search/search-bar]
+    [filters]
+    [grid]
+    [reminder/modal]
+    [add-user-fab]
+    [add]
+    [sessions-modal]]])

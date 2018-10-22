@@ -162,9 +162,9 @@
                              [:>= :class (school-year)]]})
     :advisor-name :rooms))
   ([ids]
-    (hydrate/hydrate
-     (db/select User :id [:in])
-     :advisor-name :rooms)))
+   (hydrate/hydrate
+    (db/select User :id [:in (set ids)])
+    :advisor-name :rooms)))
 
 (defn get-user
   "Wrapper to get user by :id, hydrating related fields."
@@ -246,5 +246,5 @@
   "Deletes a UsersRooms record that associates a user and a room."
   [room-id user-id]
   (db/delete! UsersRooms
-    :rooms-id room-id
-    :users-id user-id))
+              :rooms-id room-id
+              :users-id user-id))

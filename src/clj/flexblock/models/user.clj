@@ -33,8 +33,9 @@
   (if-not (:teacher user)
     ;; If the user is not a teacher, remove them from all rooms.
     (db/simple-delete! 'UsersRooms :users-id (:id user))
-    (let [room-ids (db/select-field :rooms-id 'UsersRooms
-                     :users-id (:id user))
+    (let [room-ids (try (db/select-field :rooms-id 'UsersRooms
+                          :users-id (:id user))
+                        (catch Exception e []))
           rooms    (when (seq room-ids)
                      (db/select 'Room :id [:in room-ids]))]
       ;; Assert that all rooms are in the past or have no users.
@@ -126,15 +127,17 @@
   [users]
   (try
     (let [user-ids       (map :id users)
-          users-rooms    (db/select
-                          'UsersRooms :users-id [:in user-ids])
+          users-rooms    (try  (db/select
+                                   'UsersRooms :users-id [:in user-ids])
+                               (catch Exception e []))
           room-ids       (map :rooms-id users-rooms)
-          rooms          (db/select 'Room
-                                    :id   [:in room-ids]
-                                    :date [:>= (timec/to-sql-date
-                                                (time/minus
-                                                 (time/today)
-                                                 (time/weeks 1)))])
+          rooms          (when (seq room-ids)
+                           (db/select 'Room
+                             :id   [:in room-ids]
+                             :date [:>= (timec/to-sql-date
+                                         (time/minus
+                                          (time/today)
+                                          (time/weeks 1)))]))
           user-id->rooms (rooms-for-user user-ids rooms users-rooms)]
       (for [user users]
         (assoc user :rooms (get user-id->rooms (:id user)))))

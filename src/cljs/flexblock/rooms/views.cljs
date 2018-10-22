@@ -1,15 +1,17 @@
 (ns flexblock.rooms.views
   "Render functions for elements related to showing rooms."
-  (:require
-   [reagent.core :as r]
-   [re-frame.core :as rf]
-   [clojure.string :as str]
-   [flexblock.rooms :as rooms]
-   [flexblock.components.input :as input]
-   [flexblock.components.grid :as grid]
-   [flexblock.components.modal :as modal]
-   [flexblock.search.views :as search])
-  (:import goog.date.Date))
+  (:require [cljs.reader :as reader]
+            [clojure.set :as set]
+            [clojure.string :as str]
+            [flexblock.components.grid :as grid]
+            [flexblock.components.material :as material]
+            [flexblock.components.modal :as modal]
+            [flexblock.interop :as interop]
+            [flexblock.rooms :as rooms]
+            [flexblock.users :as users]
+            [flexblock.search.views :as search]
+            [re-frame.core :as rf]
+            [reagent.core :as r]))
 
 (defn add
   "The form for creating a new room."
@@ -18,87 +20,128 @@
         number      (r/atom "")
         capacity    (r/atom "")
         description (r/atom "")
-        date        (r/atom nil)
-        time        (r/atom nil)]
+        date        (r/atom "")
+        time        (r/atom "")
+        open        (rf/subscribe [:rooms/modal-open])
+        reset-fn    (fn []
+                      (reset! title "")
+                      (reset! capacity "")
+                      (reset! number "")
+                      (reset! description "")
+                      (reset! date "")
+                      (reset! time ""))]
     (fn []
-      [modal/fixed-footer
-       {:id       "add-room-modal"
+      [material/Dialog
+       {:open    @open
+        :scroll  :body
         ;; Reset all inputs when when the modal is closed.
-        :on-close (fn []
-                    (reset! title "")
-                    (reset! capacity "")
-                    (reset! number "")
-                    (reset! description "")
-                    (reset! date nil)
-                    (reset! time nil))}
-       [:div.modal-content
-        [:h4.center.purple-text.text-lighten-3 "Add Session"]
-        [:div.row
-         [:div.col.s12
-          [input/text {:placeholder "Title" :atom title}]]
-         [:div.col.m6.s12
-          [input/text {:placeholder "Room Number"
-                       :atom        number}]]
-         [:div.col.m6.s12
-          [input/text {:placeholder "Max Capacity"
-                       :atom        capacity
-                       :type        :number}]]
-         [:div.col.s12
-          [input/text {:placeholder "Description" :atom description}]]
-         [:div.col.m6.s12
-          [:div.input-field
-           ;; Styles defined in resources/public/css/styles.css
-           [input/datepicker {:atom date}]]]
-         [:div.input-field.col.m6.s12
-          [input/select
-           {:atom        time
-            :placeholder "Choose a Time"
-            :options     (map (fn [[val label]]
-                                {:value (name val)
-                                 :label label})
-                              rooms/sorted-times)}]]]]
-       [:div.modal-footer
-        [:button.btn-flat.amber-text.darken-1.waves-effect.waves-purple
-         {:on-click (fn []
-                      (rf/dispatch [:room/post {:title        @title
-                                                :max-capacity @capacity
-                                                :room-number  @number
-                                                :description  @description
-                                                :date         @date
-                                                :time         @time}]))}
+        :onClose (fn []
+                   (rf/dispatch [:rooms/set-modal-open false])
+                   (reset-fn))}
+       [material/DialogTitle "Add Session"]
+       [material/DialogContent
+        [material/Grid {:container true :spacing 16}
+         [material/Grid {:item true :xs 12}
+          [material/TextField
+           {:label     "Title"
+            :autoFocus true
+            :fullWidth true
+            :value     @title
+            :onChange  #(reset! title (-> % .-target .-value))}]]
+         [material/Grid {:item true :xs 12 :sm 6}
+          [material/TextField
+           {:label     "Room Number"
+            :fullWidth true
+            :value     @number
+            :onChange  #(reset! number (-> % .-target .-value))}]]
+         [material/Grid {:item true :xs 12 :sm 6}
+          [material/TextField
+           {:label     "Max Capacity"
+            :fullWidth true
+            :value     @capacity
+            :type      :number
+            :onChange  #(reset! capacity (-> % .-target .-value))}]]
+         [material/Grid {:item true :xs 12}
+          [material/TextField
+           {:label     "Description"
+            :fullWidth true
+            :value     @description
+            :onChange  #(reset! description (-> % .-target .-value))}]]
+         [material/Grid {:item true :xs 12 :sm 6}
+          [material/TextField
+           {:label           "Date"
+            :fullWidth       true
+            :type            :date
+            :value           @date
+            :onChange        #(reset! date (-> % .-target .-value))
+            :InputLabelProps {:shrink true}}]]
+         [material/Grid {:item true :xs 12 :sm 6}
+          [material/TextField
+           {:label     "Time"
+            :fullWidth true
+            :select    true
+            :value     @time
+            :onChange  #(reset! time
+                                (-> % .-target .-value))}
+           (for [[time label] rooms/sorted-times]
+             [material/MenuItem
+              {:key   time
+               :value label}
+              label])]]]]
+       [material/DialogActions
+        [material/Button
+         {:color   :secondary
+          :onClick (fn []
+                     (rf/dispatch
+                      [:room/post {:title        @title
+                                   :max-capacity @capacity
+                                   :room-number  @number
+                                   :description  @description
+                                   :date
+                                   (interop/str->date @date)
+                                   :time
+                                   (get (set/map-invert rooms/times)
+                                        @time)}])
+                     (reset-fn))}
          "Submit"]]])))
-
 
 (defn student
   "One student in the attendance list."
   [room user]
-  [:li.collection-item
-   {:key (:id user)}
-   [:div.row.valign-wrapper
-    {:style {:margin-bottom "0px"}}
-    [:div.col.s6
-     [:span.left
-      {:style {:color (case @(rf/subscribe [:room/get-attendance
-                                            (:id room)
-                                            (:id user)])
-                        -1 :red
-                        1  :green
-                        nil)}}
-      (:name user)]]
-    [:div.col.s6
-     [:div.right-align
-      [:a.btn-flat.green-text.waves-effect.waves-green
-       {:on-click #(rf/dispatch [:room/set-attendance
+  (let [attendance     @(rf/subscribe [:room/get-attendance
+                                       (:id room)
+                                       (:id user)])
+        [avatar label] (get rooms/attendance->icon attendance)]
+    [material/ListItem
+     {:key (:id user)}
+     [material/ListItemAvatar
+      [material/Avatar
+       [:i.material-icons avatar]]]
+     [material/ListItemText
+      {:primary   (:name user)
+       :secondary label}]
+     [material/ListItemSecondaryAction
+      [material/Tooltip {:title "Present"}
+       [material/IconButton
+        {:onClick #(rf/dispatch [:room/set-attendance
                                  (:id room)
                                  (:id user)
                                  1])}
-       "Present"]
-      [:a.btn-flat.red-text.waves-effect.waves-red
-       {:on-click #(rf/dispatch [:room/set-attendance
+        [:i.material-icons :check]]]
+      [material/Tooltip {:title "Late"}
+       [material/IconButton
+        {:onClick #(rf/dispatch [:room/set-attendance
+                                 (:id room)
+                                 (:id user)
+                                 -2])}
+        [:i.material-icons :priority_high]]]
+      [material/Tooltip {:title "Absent"}
+       [material/IconButton
+        {:onClick #(rf/dispatch [:room/set-attendance
                                  (:id room)
                                  (:id user)
                                  -1])}
-       "Absent"]]]]])
+        [:i.material-icons :clear]]]]]))
 
 (defn attendance []
   (let [room            @(rf/subscribe [:rooms/attendance-modal])
@@ -109,56 +152,69 @@
                              (sort-by (fn [student]
                                         (not (zero?
                                               (:attendance student))))))]
-    [:div.modal-content
-     [:h4.purple-text.text-lighten-3 "Students"]
-     [:div.row
-      [:div.col.l8.offset-l2.s12
-       (if (seq students)
-         [:ul.collection
-          (doall (map (partial student room) students-sorted))]
-         [:h6.amber-text.center "No students have joined yet."])]]]))
+    [material/Grid {:container true}
+     [material/Grid
+      {:item true
+       :xs   12
+       :lg   8}
+      (if (seq students)
+        [material/List
+         (doall (map (partial student room) students-sorted))]
+        [material/Typography
+         "No students have joined yet."])]]))
 
 (defn attendance-modal
-  "The bottom sheet modal that shows a list of students."
+  "The bottom drawer that shows a list of students."
   []
-  [modal/bottom-sheet {:id "attendance-modal"}
-   [attendance]])
+  [material/Drawer
+   {:open    (boolean @(rf/subscribe [:rooms/attendance-modal]))
+    :anchor  :bottom
+    :onClose #(rf/dispatch [:rooms/set-attendance-modal nil])}
+   [material/DialogContent
+    [material/Typography {:variant :h5} "Students"]
+    [attendance]]])
 
 (defn buttons
   "Returns the appropriate actions that a user can take on a `room`."
-  [room]
+  [room expand?]
   (let [{:keys [id title users description date room-number max-capacity]}
         room
         user          @(rf/subscribe [:login/user])
         user-in-room? ((->> users (map :id) (apply hash-set)) (:id user))]
-    [:div.card-action
-     (cond ; Actions
+    [material/CardActions
+     ;; Join and Leave room.
+     (cond
        (and (not (:teacher user))
             (not user-in-room?))
-       [:a.btn-flat.amber-text.waves-effect.waves-purple
-        {:on-click #(rf/dispatch [:room/join id])} "Join"]
+       [material/Tooltip {:title "Join"}
+        [material/IconButton
+         {:on-click #(rf/dispatch [:room/join id])}
+         [:i.material-icons :person_add]]]
 
        (and (not (:teacher user))
             user-in-room?)
-       [:a.btn-flat.amber-text.waves-effect.waves-purple
-        {:on-click #(rf/dispatch [:room/leave id])} "Leave"]
-
-       (and (:teacher user)
-            user-in-room?)
-       [:a.btn-flat.amber-text.waves-effect.waves-purple
-        {:on-click #(rf/dispatch [:room/delete id])} "Delete"]
-
-       :else
-       [:div])
-     (cond ;Information
-       (or (:teacher user)
-           (:admin user))
-       [:a.btn-flat.amber-text.waves-effect.waves-purple
-        {:on-click #(rf/dispatch [:rooms/set-attendance-modal room])}
-        "Students"]
-
-       :else
-       [:div])]))
+       [material/Tooltip {:title "Leave"}
+        [material/IconButton
+         {:on-click #(rf/dispatch [:room/leave id])}
+         [:i.material-icons :person_add_disabled]]])
+     (when-not (= :student (users/highest-role user))
+       [material/Tooltip {:title "Students"}
+        [material/IconButton
+         {:on-click #(rf/dispatch [:rooms/set-attendance-modal room])}
+         [:i.material-icons :list]]])
+     (when (or (:admin user)
+               (and user-in-room? (:teacher user)))
+       [material/Tooltip {:title "Delete"}
+        [material/IconButton
+         {:on-click #(rf/dispatch [:room/delete id])}
+         [:i.material-icons :delete]]])
+     [material/Tooltip {:title "Description"}
+      [material/IconButton
+       {:style    {:margin-left :auto}
+        :on-click #(swap! expand? not)}
+       [:i.material-icons (if @expand?
+                            :expand_less
+                            :expand_more)]]]]))
 
 (defn date-string [date]
   (-> date
@@ -171,43 +227,80 @@
 
 (defn card
   "Creates a card with information about a `room`."
-  [room]
-  (when-let [{:keys [id title users description date time room-number max-capacity]} room]
-    (let [search (rf/subscribe [:search])]
-      [:div.col.s12.m6.l4.grid-item
-       {:key   id
-        ;; Used for easter eggs. Styles are defined in styles.css
-        :class (condp = (str/lower-case @search)
-                 ;; Rotate the card by 2 degrees.
-                 "askew"            "askew"
-                 ;; Does a barrel roll.
-                 "do a barrel roll" "barrel-roll"
-                 "")}
-       [:div.card.hoverable
-        [:div.card-content
-         [:span.card-title.truncate title]
-         [:h6.truncate (or (->> users (filter :teacher) first :name) "")]
-         [:span (date-string date)]
-         [:p (rooms/time-str room)]
-         [:p (rooms/room-number-str room)]
-         [:p (str (->> users (remove :teacher) count) "/" max-capacity)]]
-        [:div.divider]
-        [:div.card-content
-         {:style {:overflow :hidden}}
-         [:p description]]
-        [buttons room]]])))
+  [index room]
+  (let [expand? (r/atom false)]
+    (fn [index
+         {:keys [id title users description date time room-number max-capacity]
+          :as   room}]
+      [material/Grid
+       {:item true
+        :xs   12
+        :sm   6
+        :md   4
+        :key  id
+        :class
+        (condp = (str/lower-case @(rf/subscribe [:search]))
+          ;; Rotate the card by 2 degrees.
+          "askew"            "askew"
+          ;; Does a barrel roll.
+          "do a barrel roll" "barrel-roll"
+          "")}
+       [material/Slide
+        {:in        true
+         :direction :right
+         :timeout   (* 250 (inc index))}
+        [material/Card
+         [material/CardContent
+          [material/Typography
+           {:variant :h5
+            :noWrap  true}
+           title]
+          [material/Typography
+           {:variant :body1
+            :color   :textSecondary
+            :noWrap  true}
+           (rooms/time-str room)]
+          [material/Typography
+           {:variant :body1
+            :color   :textSecondary
+            :noWrap  true}
+           (date-string date)]
+          [material/Typography
+           {:variant :body1
+            :color   :textSecondary
+            :noWrap  true}
+           (rooms/room-number-str room)]
+          [material/Typography
+           {:variant :body1
+            :color   :textSecondary
+            :noWrap  true}
+           (:name (rooms/get-teacher room))]
+          [material/Typography
+           {:variant :body1
+            :color   :textSecondary
+            :noWrap  true}
+           (str (dec (count users)) "/" (:max-capacity room))]]
+         [buttons room expand?]
+         [material/Collapse
+          {:in @expand?}
+          [material/CardContent
+           [material/Typography
+            description]]]]]])))
 
 (defn fab []
   (when (and
          (:teacher @(rf/subscribe [:login/user]))
          (not (str/blank? @(rf/subscribe [:login/token]))))
-    [:div {:style {:z-index  1
-                   :position :fixed
-                   :right    24
-                   :bottom   24}}
-     [:a.btn-floating.btn-large.amber.hoverable.modal-trigger
-      {:href "#add-room-modal"}
-      [:i.large.material-icons "add"]]]))
+    [material/Zoom
+     {:in true}
+     [material/Button
+      {:variant :fab
+       :color   :primary
+       :onClick #(rf/dispatch [:rooms/set-modal-open true])
+       :style   {:position :fixed
+                 :right    "2em"
+                 :bottom   "2em"}}
+      [:i.material-icons :add]]]))
 
 (defn grid
   "Returns a grid of rooms."
@@ -215,37 +308,57 @@
   (let [token (rf/subscribe [:login/token])
         rooms (rf/subscribe [:rooms/sorted])]
     (when-not (empty? @token)
-      [:div.row
-       (if-not (seq @rooms)
-         ;; Get rooms if rooms are empty.
-         (rf/dispatch [:rooms/get])
-         ;; Otherwise show the rooms
-         [grid/grid (doall (map card (take 36 @rooms)))])])))
+      (if-not (seq @rooms)
+        ;; Get rooms if rooms are empty.
+        (rf/dispatch [:rooms/get])
+        ;; Otherwise show the rooms
+        (into [material/Grid
+               {:container true
+                :spacing   16
+                :style     {:padding-top "3em"}}]
+              (doall (map-indexed (fn [i r]
+                                    [card i r]) @rooms)))))))
 
 
 (defn filters []
   (let [filters @(rf/subscribe [:rooms/time-filter])
         show?   @(rf/subscribe [:rooms/filter])]
-    [:div.row
-     (when show?
+    [material/Grid
+     {:container true
+      :item      true
+      :lg        6
+      :md        8
+      :xs        10
+      :justify   :center
+      :style     {:padding-top "3vh"}}
+     [material/Collapse
+      {:in show?}
+      [material/Grid
+       {:container true}
        (for [[k s] rooms/sorted-times]
-         [:div.col.s6.m3
-          {:key k}
-          [:label
-           [:input
-            {:type      :checkbox
-             :value     (filters k)
-             :on-change #(rf/dispatch [:rooms/update-time-filter
-                                       k
-                                       (-> %
-                                           .-target
-                                           .-checked)])}]
-           [:span s]]]))
-     [:div.col.s12.center
-      {:style {:padding-top (if show? "2vh" "0px")}}
-      [:a
-       {:style    {:cursor :pointer}
-        :on-click #(rf/dispatch [:rooms/toggle-filter])}
+         [material/Grid
+          {:item true
+           :sm   3
+           :xs   6
+           :key  k}
+          [material/FormControlLabel
+           {:label s
+            :control
+            (r/as-element
+             [material/Checkbox
+              {:checked  (boolean (filters k))
+               :onChange #(rf/dispatch [:rooms/update-time-filter
+                                        k
+                                        (-> %
+                                            .-target
+                                            .-checked)])}])}]])]]
+     [material/Grid
+      {:container true
+       :justify   :center
+       :style     {:padding-top (if show? "2vh" "0px")}}
+      [material/Button
+       {:color   :inherit
+        :onClick #(rf/dispatch [:rooms/toggle-filter])}
        (if show? "Hide Filters" "Show Filters")]]]))
 
 
@@ -254,12 +367,19 @@
   Consists of a search bar, a grid of rooms, and a FAB that can be
   used to open a form for adding rooms."
   []
-  [:div.container
-   (when-not (str/blank? @(rf/subscribe [:login/token]))
-     [:div
+  (when-not (str/blank? @(rf/subscribe [:login/token]))
+    [material/Grid
+     {:container true
+      :justify   :center}
+     [material/Grid
+      {:container true
+       :item      true
+       :xl        8
+       :xs        10
+       :justify   :center}
       [search/search-bar]
-      [fab]
-      [add]
       [filters]
+      [add]
+      [fab]
       [grid]
-      [attendance-modal]])])
+      [attendance-modal]]]))

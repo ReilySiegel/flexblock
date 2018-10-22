@@ -1,6 +1,8 @@
 (ns flexblock.navbar.views
-  (:require [re-frame.core :as rf]
+  (:require [reagent.core :as r]
+            [re-frame.core :as rf]
             [flexblock.components.input :as input]
+            [flexblock.components.material :as material]
             [flexblock.users.views :as users]))
 
 (defn nav-link [uri title page]
@@ -9,44 +11,85 @@
    [:a.nav-link {:href uri} title]])
 
 (defn page-button []
-  (let [page @(rf/subscribe [:page])]
-    (condp = page
-      :rooms    [:li
-                 {:on-click #(rf/dispatch [:set-active-page :students])}
-                 [:a (if (:admin @(rf/subscribe [:login/user]))
-                       "Users"
-                       "Students")]]
-      :students [:li
-                 {:on-click #(rf/dispatch [:set-active-page :rooms])}
-                 [:a "Sessions"]])))
+  (let [page            (rf/subscribe [:page])
+        zoom?           (rf/subscribe [:navbar/page-zoom])
+        [active-page
+         inactive-page] (if (= :rooms @page)
+                          ["Users" "Sessions"]
+                          ["Sessions" "Users"])]
+    [material/Slide
+     {:in        @zoom?
+      :direction :right}
+     [material/Button
+      {:color   :inherit
+       :onClick #(rf/dispatch [:navbar/swap-page
+                               (if (= :rooms @page)
+                                 :users
+                                 :rooms)])}
+      (if @zoom?
+        active-page
+        inactive-page)]]))
+
+(defn user-options [user]
+  (fn []
+    [:div
+     [material/Slide
+      {:in        true
+       :direction :left}
+      [material/IconButton
+       {:id      :user-options
+        :color   :inherit
+        :onClick #(rf/dispatch [:navbar/set-options-open true])}
+       [:i.material-icons :account_circle]]]
+     [material/Menu
+      {:anchorEl (.getElementById js/document "user-options")
+       :open     @(rf/subscribe [:navbar/options-open])
+       :onClose  #(rf/dispatch [:navbar/set-options-open false])}
+      [material/MenuItem
+       {:onClick (fn []
+                   (rf/dispatch [:users/set-password-modal
+                                 @(rf/subscribe [:login/user])])
+                   (rf/dispatch [:navbar/set-options-open false]))}
+       "Reset Password"]
+      [material/MenuItem
+       {:onClick (fn []
+                   (rf/dispatch [:navbar/set-options-open false])
+                   (rf/dispatch [:logout]))}
+       "Log Out"]]]))
 
 (defn navbar []
   (let [user  (rf/subscribe [:login/user])
         token (rf/subscribe [:login/token])]
-    [:div
-     [users/password-modal @user {:id "reset-password-modal"}]
-     [:nav
-      [:div.nav-wrapper.purple
-       [:a.brand-logo.center
-        {:on-click (fn []
-                     (rf/dispatch [:rooms/get])
-                     (rf/dispatch [:users/get]))
-         :style    {:cursor :pointer}}
-        "FlexBlock"]
-       [:ul.left
-        (if (and (some #(% @user) [:teacher :admin])
-                 (not (empty? @token)))
-          [page-button])]
-       [:ul.right
-        (if (empty? @token)
-          [:li [:a.modal-trigger
-                {:on-click #(input/focus "login-username-input")
-                 :href     "#login-modal"} "Login"]]
-          [:div
-           [:li.hide-on-small-only
-            [:a
-             {:on-click #(rf/dispatch [:users/set-password-modal
-                                       @(rf/subscribe [:login/user])])}
-             "Reset Password"]]
-           [:li [:a {:on-click #(rf/dispatch [:logout])}
-                 "Logout"]]])]]]]))
+    [material/Slide
+     {:in true}
+     [material/AppBar {:position :sticky}
+      [material/Toolbar
+       [material/Grid
+        {:container  true
+         :justify    :space-between
+         :alignItems :center}
+        (when (and (some #(% @user) [:teacher :admin])
+                   (not (empty? @token)))
+          [material/Grid
+           {:item true
+            :xs   4}
+           [page-button]])
+        [material/Grid
+         {:item true
+          :xs   4}
+         [material/Typography
+          {:variant :h6
+           :color   :inherit
+           :align   :center}
+          "Flexblock"]]
+        [material/Grid
+         {:item true
+          :xs   4}
+         [:div
+          {:style {:float :right}}
+          (if (empty? @token)
+            [material/Button
+             {:color   :inherit
+              :onClick #(rf/dispatch [:login/set-open true])}
+             "Log In"]
+            [user-options user])]]]]]]))

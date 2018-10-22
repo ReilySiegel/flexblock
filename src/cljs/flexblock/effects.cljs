@@ -1,5 +1,6 @@
 (ns flexblock.effects
-  (:require [re-frame.fx :refer [reg-fx]]
+  (:require [re-frame.core :as rf]
+            [re-frame.fx :refer [reg-fx]]
             [flexblock.db :as db]))
 
 (reg-fx
@@ -15,7 +16,8 @@
 (reg-fx
  :notification
  (fn [message]
-   (.toast js/M (clj->js {:html message}))))
+   (when message
+     (rf/dispatch [:set-snackbar message]))))
 
 (reg-fx
  :overwrite-localstorage
@@ -38,3 +40,9 @@
  (fn [query-selector]
    (if-let [e (.querySelector js/document query-selector)]
      (.open (.getInstance js/M.Modal e)))))
+
+(reg-fx
+ :focus
+ (fn [query-selector]
+   (if-let [e (.querySelector js/document query-selector)]
+     (.focus e))))

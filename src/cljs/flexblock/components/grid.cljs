@@ -1,5 +1,6 @@
 (ns flexblock.components.grid
-  (:require [reagent.core :as r]))
+  (:require [flexblock.components.material :as material]
+            [reagent.core :as r]))
 
 (defn grid
   "Returns a masonry grid `children` as items.
@@ -18,7 +19,10 @@
       :reagent-render
       (fn [children]
         (if (seq children)
-          [:div.row
-           {:id id}
+          [material/Grid
+           {:id        id
+            :container true
+            :spacing   16
+            :style     {:padding-top "3em"}}
            children]
           [:div {:id id}]))})))

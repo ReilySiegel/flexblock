@@ -9,6 +9,7 @@
             [flexblock.reminder.events]
             [flexblock.rooms.events]
             [flexblock.search.events]
+            [flexblock.snackbar.events]
             [flexblock.users.events]
             [re-frame.core :as rf]
             [re-frame-fx.dispatch]))
@@ -16,8 +17,9 @@
 
 (rf/reg-event-db
  :initialize-db
- (fn [_ _]
-   (db/default-db)))
+ (fn [db _]
+   (merge db
+          (db/default-db))))
 
 
 (rf/reg-event-fx

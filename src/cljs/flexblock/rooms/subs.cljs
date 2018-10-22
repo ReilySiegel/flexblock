@@ -31,7 +31,7 @@
 (rf/reg-sub
  :rooms/sorted
  :<- [:rooms/filtered]
- :<- [:search]
+ :<- [:search-debounced]
  :<- [:login/user]
  (fn [[rooms search user]]
    (let [search (rooms/make-search search)]
@@ -53,3 +53,8 @@
  :room/get-attendance
  (fn [db [_ room-id user-id]]
    (get-in db [:attendance [room-id user-id]])))
+
+(rf/reg-sub
+ :rooms/modal-open
+ (fn [db _]
+   (:rooms/modal-open db)))

@@ -9,10 +9,11 @@
                       (assoc :login/token token)
                       (assoc :login/user user))
     :notification "Logged In"
-    :dispatch-n   [[:rooms/get] [:users/get]]
+    :dispatch-n   [[:rooms/get]
+                   [:users/get]
+                   [:login/set-open false]]
     :localstorage {:login/token token
-                   :login/user  user}
-    :close-modal  "#login-modal"}))
+                   :login/user  user}}))
 
 (rf/reg-event-fx
  :logout
@@ -32,3 +33,8 @@
                  :response-format (ajax/detect-response-format)
                  :on-success      [:login/set-user]
                  :on-failure      [:http/failure]}}))
+
+(rf/reg-event-db
+ :login/set-open
+ (fn [db [_ open?]]
+   (assoc db :login/open open?)))

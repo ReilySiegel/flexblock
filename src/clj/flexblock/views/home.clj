@@ -13,7 +13,7 @@
   "A list of sylesheets to include in the home page.
   Stylesheets are loaded in order, in the HEAD."
   ["https://fonts.googleapis.com/icon?family=Material+Icons"
-   "https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-alpha.3/css/materialize.min.css"
+   "https://fonts.googleapis.com/css?family=Roboto:300,400,500"
    "css/screen.css"])
 
 (def scripts
@@ -45,7 +45,8 @@
     [:div#app
      [:div.loader-container
       [:div.loader "Loading..."]]
-     [:div.center
+     [:div
+      {:style "text-align:center;"}
       [:p (rand-nth loading/messages)]
       [:noscript "Please enable JavaScript."]]]
     (js-string "csrfToken" (or *anti-forgery-token* ""))
