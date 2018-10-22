@@ -1,6 +1,5 @@
 (ns flexblock.login.views
-  (:require [flexblock.components.input :as input]
-            [flexblock.components.material :as material]
+  (:require [flexblock.components.material :as material]
             [re-frame.core :as rf]
             [reagent.core :as r]))
 

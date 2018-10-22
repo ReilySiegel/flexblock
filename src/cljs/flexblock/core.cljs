@@ -22,7 +22,6 @@
    [flexblock.effects]
    [flexblock.keybinds :as keybinds]
    ;; Load components that need to be displayed on every page.
-   [flexblock.components.beta :as beta]
    [flexblock.login.views :as login]
    [flexblock.navbar.views :as navbar]
    [flexblock.snackbar.views :as snackbar]
@@ -48,8 +47,6 @@
                :secondary (material/color :amber)}})}
     [navbar/navbar]
     [login/modal]
-    ;; Load the beta disclaimer here, as this is the first page visible.
-    #_[beta/disclaimer]
     ;; Konami Code Easter Egg
     [konami/egg]
     [(pages @(rf/subscribe [:page]))]

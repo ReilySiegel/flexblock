@@ -2,7 +2,6 @@
   (:require
    [re-com.core :as rc]
    [re-frame.core :as rf]
-   [flexblock.components.input :as input]
    [flexblock.components.material :as material]
    [flexblock.reminder.views :as reminder]
    [clojure.string :as str]))

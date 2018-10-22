@@ -1,7 +1,6 @@
 (ns flexblock.reminder.views
   (:require [clojure.string :as str]
             [flexblock.components.material :as material]
-            [flexblock.components.modal :as modal]
             [re-frame.core :as rf]
             [goog.string :as gstring]
             [goog.string.format]))

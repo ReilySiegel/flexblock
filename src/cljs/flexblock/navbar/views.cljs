@@ -1,7 +1,6 @@
 (ns flexblock.navbar.views
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
-            [flexblock.components.input :as input]
             [flexblock.components.material :as material]
             [flexblock.users.views :as users]))
 

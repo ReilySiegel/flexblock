@@ -51,5 +51,4 @@
       [:noscript "Please enable JavaScript."]]]
     (js-string "csrfToken" (or *anti-forgery-token* ""))
     (js-string "context" (or *app-context* ""))
-    (js-string "betaDisclaimer" (or (:beta-disclaimer env) ""))
     (apply include-js scripts)]])
