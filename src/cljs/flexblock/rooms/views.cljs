@@ -152,7 +152,9 @@
                              (sort-by (fn [student]
                                         (not (zero?
                                               (:attendance student))))))]
-    [material/Grid {:container true}
+    [material/Grid
+     {:container true
+      :justify   :center}
      [material/Grid
       {:item true
        :xs   12

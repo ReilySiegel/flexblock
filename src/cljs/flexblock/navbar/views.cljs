@@ -78,7 +78,7 @@
          {:item true
           :xs   4}
          [material/Typography
-          {:variant :h6
+          {:variant :h5
            :color   :inherit
            :align   :center}
           "Flexblock"]]

@@ -2,7 +2,9 @@
   (:require [clojure.string :as str]
             [flexblock.components.material :as material]
             [flexblock.components.modal :as modal]
-            [re-frame.core :as rf]))
+            [re-frame.core :as rf]
+            [goog.string :as gstring]
+            [goog.string.format]))
 
 (defn button
   "Button to open reminder modal."
@@ -39,7 +41,9 @@
           [:div
            [material/Typography
             {:variant :subtitle1}
-            "Are you sure you want to send a reminder to the following users?"]
+            (gstring/format
+             "Are you sure you want to send a reminder to the following %s users?"
+             (count @users))]
            [material/Typography
             (apply str (->> @users
                             (map :name)
