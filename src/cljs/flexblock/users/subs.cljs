@@ -39,7 +39,7 @@
  :users/sorted
  ;; Subscribe to filtered users and search as signals.
  :<- [:users/filtered]
- :<- [:search]
+ :<- [:search-debounced]
 
  ;; Sort the users.
  (fn [[users search] _]

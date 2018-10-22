@@ -23,8 +23,8 @@
 
 (rf/reg-event-fx
  :set-search-debounce
- (fn [_ [_ search]]
-   {:dispatch [:set-search search]
+ (fn [{:keys [db]} [_ search]]
+   {:db (assoc db :search search)
     :dispatch-debounce
     [{:id      ::set-search-debounce
       :timeout 500
