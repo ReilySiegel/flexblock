@@ -120,9 +120,10 @@
   []
   (let [user @(rf/subscribe [:users/session-modal])]
     [material/Drawer
-     {:anchor  :bottom
-      :open    (boolean user)
-      :onClose #(rf/dispatch [:users/set-session-modal nil])}
+     {:anchor     :bottom
+      :open       (boolean user)
+      :onClose    #(rf/dispatch [:users/set-session-modal nil])
+      :PaperProps {:style {:max-height "50vh"}}}
      [sessions user]]))
 
 (defn get-years [date]
@@ -321,7 +322,7 @@
     :lg   4
     :key  id
     :class
-    (condp = (str/lower-case @(rf/subscribe [:search]))
+    (condp = (str/lower-case @(rf/subscribe [:search-debounced]))
       ;; Rotate the card by 2 degrees.
       "askew"            "askew"
       ;; Does a barrel roll.

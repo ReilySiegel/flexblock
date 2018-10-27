@@ -167,9 +167,10 @@
   "The bottom drawer that shows a list of students."
   []
   [material/Drawer
-   {:open    (boolean @(rf/subscribe [:rooms/attendance-modal]))
-    :anchor  :bottom
-    :onClose #(rf/dispatch [:rooms/set-attendance-modal nil])}
+   {:open       (boolean @(rf/subscribe [:rooms/attendance-modal]))
+    :anchor     :bottom
+    :onClose    #(rf/dispatch [:rooms/set-attendance-modal nil])
+    :PaperProps {:style {:max-height "50vh"}}}
    [material/DialogContent
     [material/Typography {:variant :h5} "Students"]
     [attendance]]])
