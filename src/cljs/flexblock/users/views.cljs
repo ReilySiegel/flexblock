@@ -330,7 +330,7 @@
    [material/Slide
     {:in        true
      :direction :right
-     :timeout   (* 250 (inc index))}
+     :timeout   (* 250 (.sqrt js/Math (* 2 (inc index))))}
     [material/Card
      [material/CardContent
       [material/Typography

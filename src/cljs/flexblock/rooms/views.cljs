@@ -239,7 +239,7 @@
         :md   4
         :key  id
         :class
-        (condp = (str/lower-case @(rf/subscribe [:search]))
+        (condp = (str/lower-case @(rf/subscribe [:search-debounced]))
           ;; Rotate the card by 2 degrees.
           "askew"            "askew"
           ;; Does a barrel roll.
@@ -248,7 +248,7 @@
        [material/Slide
         {:in        true
          :direction :right
-         :timeout   (* 250 (inc index))}
+         :timeout   (* 250 (.sqrt js/Math (* 2 (inc index))))}
         [material/Card
          [material/CardContent
           [material/Typography
@@ -316,8 +316,8 @@
                {:container true
                 :spacing   16
                 :style     {:padding-top "3em"}}]
-              (doall (map-indexed (fn [i r]
-                                    [card i r]) @rooms)))))))
+              (doall (take 36 (map-indexed (fn [i r]
+                                             [card i r]) @rooms))))))))
 
 
 (defn filters []
