@@ -19,9 +19,7 @@
 (def scripts
   "A list of scripts to include in the home page.
   Scripts are loaded in order, at the end of the BODY."
-  ["js/materialize.min.js"
-   "js/masonry.pkgd.min.js"
-   "js/app.js"])
+  ["js/app.js"])
 
 (defn js-string
   "Defines variable `v` as equal to string `s` in JavaScript included
