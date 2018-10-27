@@ -59,6 +59,10 @@
 
 (defn init! []
   (rf/dispatch-sync [:initialize-db])
+  (js/setInterval (fn []
+                    (rf/dispatch-sync [:rooms/get])
+                    (rf/dispatch-sync [:users/get]))
+                  (* 60 1000))
   (load-interceptors!)
   (keybinds/init-keybindings!)
-  (js/setTimeout mount-components 2000))
+  (mount-components))
