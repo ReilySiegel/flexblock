@@ -2,7 +2,8 @@
   (:require [camel-snake-kebab.core :as case]
             [clojure.set :as set]
             [material-ui]
-            [reagent.core])
+            [reagent.core :as r]
+            [reagent.impl.template :as rtpl])
   (:require-macros
    [flexblock.components.macros
     :refer [export-material-ui-react-classes]]))
@@ -26,5 +27,47 @@
 (def MuiThemeProvider (-> js/MaterialUIStyles
                           (aget "MuiThemeProvider")
                           (reagent.core/adapt-react-class)))
+
+(def ^:private input-component
+  (r/reactify-component
+   (fn [props]
+     [:input (-> props
+                 (assoc :ref (:inputRef props))
+                 (dissoc :inputRef))])))
+
+(def ^:private textarea-component
+  (r/reactify-component
+   (fn [props]
+     [:textarea (-> props
+                    (assoc :ref (:inputRef props))
+                    (dissoc :inputRef))])))
+
+(defn TextField [props & children]
+  (let [props
+        (-> props
+            (assoc-in [:InputProps :inputComponent]
+                      (cond
+                        (and (:multiline props)
+                             (:rows props)
+                             (not (:maxRows props)))
+                        textarea-component
+
+                        ;; FIXME: Autosize multiline field is broken.
+                        (:multiline props)
+                        nil
+
+                        ;; Select doesn't require cursor fix so
+                        ;; default can be used.
+                        (:select props)
+                        nil
+
+                        :else
+                        input-component))
+            rtpl/convert-prop-value)]
+    (apply r/create-element
+           (aget js/MaterialUI "TextField")
+           props
+           (map r/as-element children))))
+
 
 (export-material-ui-react-classes)

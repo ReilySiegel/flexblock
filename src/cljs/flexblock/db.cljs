@@ -23,6 +23,7 @@
           :login/open          false
           :navbar/options-open false
           :navbar/page-zoom    true
+          :reminder/open       false
           :rooms               []
           :rooms/modal-open    false
           :rooms/time-filter   #{}
@@ -31,5 +32,6 @@
           :users/role-filter   #{:student :teacher :admin}
           :users               []
           :search              ""
+          :search-debounced ""
           :date                ""}
          (get-localstorage)))

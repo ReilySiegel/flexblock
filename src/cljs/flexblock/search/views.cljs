@@ -20,10 +20,10 @@
      {:fullWidth true
       :label     "Search"
       :id        :search
-      :on-change #(rf/dispatch [:set-search-debounce
-                                (-> %
-                                    .-target
-                                    .-value)])
+      :onChange  #(rf/dispatch-sync [:set-search-debounce
+                                     (-> %
+                                         .-target
+                                         .-value)])
       :value     @(rf/subscribe [:search])}]]])
 
 (defn date-picker []

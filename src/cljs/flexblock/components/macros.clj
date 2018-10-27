@@ -36,7 +36,8 @@
     Slide
     Tab
     Tabs
-    TextField
+    ;; Use fix in flexblock.components.material.
+    #_TextField
     Toolbar
     Tooltip
     Typography
