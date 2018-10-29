@@ -14,8 +14,3 @@
  :login/user
  (fn [db _]
    (:login/user db)))
-
-(rf/reg-sub
- :login/open
- (fn [db _]
-   (:login/open db)))

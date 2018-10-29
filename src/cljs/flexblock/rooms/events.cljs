@@ -38,7 +38,8 @@
  :room/post-success
  (fn [_ [_ response]]
    {:notification "Room added."
-    :dispatch-n   [[:rooms/set-modal-open false] [:rooms/get]]}))
+    :dispatch     [:rooms/get]
+    :close-modal  "#add-room-modal"}))
 
 (rf/reg-event-fx
  :room/post
@@ -141,8 +142,3 @@
  (fn [{:keys [db]} [_ room]]
    {:db         (assoc db :attendance-modal room)
     :open-modal "#attendance-modal"}))
-
-(rf/reg-event-db
- :rooms/set-modal-open
- (fn [db [_ open?]]
-   (assoc db :rooms/modal-open open?)))

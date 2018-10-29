@@ -12,11 +12,9 @@
     "who" "will" "with"})
 
 (defn tokenize [s]
-  (if-not s
-    []
-    (remove
-     stopwords
-     (str/split (str/lower-case s) #"[^a-z]+"))))
+  (remove
+   stopwords
+   (str/split (str/lower-case s) #"[^a-z]+")))
 
 (def exact-score
   "The number of points given for an exact match."

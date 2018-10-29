@@ -14,8 +14,8 @@
               :user  user}}
     (response/bad-request {:message "Login Failed"})))
 
-(defn flexblock-reminder [{{{:keys [date ids]} :body} :parameters
-                           {:keys [admin]}            :identity}]
+(defn flexblock-reminder [{{:keys [date ids]} :params
+                           {:keys [admin]}    :identity}]
   (if-not admin
     (response/unauthorized)
     (do (doseq [user (db/get-users ids)]

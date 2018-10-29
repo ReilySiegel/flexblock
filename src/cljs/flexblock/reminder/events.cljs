@@ -7,7 +7,7 @@
  :reminder/post-date-success
  (fn [_ [_ response]]
    {:notification "Mail sent."
-    :dispatch-n   [[:reminder/set-open false]]}))
+    :close-modal  "#reminder-modal"}))
 
 (rf/reg-event-fx
  :reminder/post-date
@@ -25,8 +25,3 @@
                  :response-format (ajax/detect-response-format)
                  :on-success      [:reminder/post-date-success]
                  :on-failure      [:http/failure]}}))
-
-(rf/reg-event-db
- :reminder/set-open
- (fn [db [_ open?]]
-   (assoc db :reminder/open open?)))
