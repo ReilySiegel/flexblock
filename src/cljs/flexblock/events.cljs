@@ -9,7 +9,6 @@
             [flexblock.reminder.events]
             [flexblock.rooms.events]
             [flexblock.search.events]
-            [flexblock.snackbar.events]
             [flexblock.users.events]
             [re-frame.core :as rf]
             [re-frame-fx.dispatch]))
@@ -17,9 +16,8 @@
 
 (rf/reg-event-db
  :initialize-db
- (fn [db _]
-   (merge db
-          (db/default-db))))
+ (fn [_ _]
+   (db/default-db)))
 
 
 (rf/reg-event-fx
@@ -37,9 +35,9 @@
      401 {;; Delete the expired token from the app-db, so that the
           ;; user can reopen the log-in modal if they accidentally
           ;; close it.
-          :db           (assoc db
-                               :token ""
-                               :login/open true)
+          :db           (assoc db :token "")
+          ;; Open the login modal.
+          :open-modal   "#login-modal"
           ;; Prompt the user to log back in.
           :notification "Your session has expired. Please log in again."}
      ;; Expired or invalid CSRF token.

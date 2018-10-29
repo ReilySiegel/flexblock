@@ -1,9 +1,7 @@
 (ns flexblock.reminder.views
   (:require [clojure.string :as str]
-            [flexblock.components.material :as material]
-            [re-frame.core :as rf]
-            [goog.string :as gstring]
-            [goog.string.format]))
+            [flexblock.components.modal :as modal]
+            [re-frame.core :as rf]))
 
 (defn button
   "Button to open reminder modal."
@@ -11,10 +9,8 @@
   (when (and
          (:admin @(rf/subscribe [:login/user]))
          (not (str/blank? @(rf/subscribe [:login/token]))))
-    [material/Button
-     {:color     :secondary
-      :fullWidth true
-      :onClick   #(rf/dispatch [:reminder/set-open true])}
+    [:a.btn-flat.amber-text.modal-trigger
+     {:href "#reminder-modal"}
      "Reminder"]))
 
 (defn modal
@@ -22,35 +18,25 @@
   []
   (let [users (rf/subscribe [:users/filtered])
         date  (rf/subscribe [:date])]
-    [material/Dialog
-     {:fullWidth true
-      :scroll    :paper
-      :open      @(rf/subscribe [:reminder/open])
-      :onClose   #(rf/dispatch [:reminder/set-open false])}
-     [material/DialogTitle "Reminder"]
-     [material/DialogContent
+    [modal/fixed-footer {:id "reminder-modal"}
+     [:div.modal-content
+      [:h4.center.purple-text.text-lighten-3 "Reminder"]
       (if (str/blank? @date)
-        [material/Typography
-         {:variant :subtitle1}
+        [:h6.amber-text
          "No Date Selected"]
         (if (zero? (count @users))
-          [material/Typography
-           {:variant :subtitle1}
+          [:h6.amber-text
            "All Students are enrolled."]
           [:div
-           [material/Typography
-            {:variant :subtitle1}
-            (gstring/format
-             "Are you sure you want to send a reminder to the following %s users?"
-             (count @users))]
-           [material/Typography
-            (apply str (->> @users
-                            (map :name)
-                            (interpose ", ")))]]))]
-     [material/DialogActions
-      [material/Button
-       {:color    :secondary
-        :disabled (or (empty? @date)
+           [:h6.amber-text
+            "Are you sure you want to send a reminder to the following stundents?"]
+           [:div
+            [:p (apply str (->> @users
+                                (map :name)
+                                (interpose ", ")))]]]))]
+     [:div.modal-footer
+      [:a.btn-flat.amber-text.waves-effect.waves-purple
+       {:disabled (or (nil? @date)
                       (zero? (count @users)))
-        :onClick  #(rf/dispatch [:reminder/post-date])}
+        :on-click #(rf/dispatch [:reminder/post-date])}
        "Send Reminder"]]]))

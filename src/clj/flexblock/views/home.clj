@@ -13,13 +13,15 @@
   "A list of sylesheets to include in the home page.
   Stylesheets are loaded in order, in the HEAD."
   ["https://fonts.googleapis.com/icon?family=Material+Icons"
-   "https://fonts.googleapis.com/css?family=Roboto:300,400,500"
+   "https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-alpha.3/css/materialize.min.css"
    "css/screen.css"])
 
 (def scripts
   "A list of scripts to include in the home page.
   Scripts are loaded in order, at the end of the BODY."
-  ["js/app.js"])
+  ["js/materialize.min.js"
+   "js/masonry.pkgd.min.js"
+   "js/app.js"])
 
 (defn js-string
   "Defines variable `v` as equal to string `s` in JavaScript included
@@ -43,10 +45,10 @@
     [:div#app
      [:div.loader-container
       [:div.loader "Loading..."]]
-     [:div
-      {:style "text-align:center;"}
+     [:div.center
       [:p (rand-nth loading/messages)]
       [:noscript "Please enable JavaScript."]]]
     (js-string "csrfToken" (or *anti-forgery-token* ""))
     (js-string "context" (or *app-context* ""))
+    (js-string "betaDisclaimer" (or (:beta-disclaimer env) ""))
     (apply include-js scripts)]])
