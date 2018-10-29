@@ -17,13 +17,21 @@
       (reader/read-string)))
 
 (defn default-db []
-  (merge {:page              :rooms
-          :token             ""
-          :user              {}
-          :rooms             []
-          :rooms/time-filter #{}
-          :users/role-filter #{:student :teacher :admin}
-          :users             []
-          :search            ""
-          :date              nil}
+  (merge {:page                :rooms
+          :login/token         ""
+          :login/user          {}
+          :login/open          false
+          :navbar/options-open false
+          :navbar/page-zoom    true
+          :reminder/open       false
+          :rooms               []
+          :rooms/modal-open    false
+          :rooms/time-filter   #{}
+          :users/modal-open    false
+          :users/password      ""
+          :users/role-filter   #{:student :teacher :admin}
+          :users               []
+          :search              ""
+          :search-debounced ""
+          :date                ""}
          (get-localstorage)))

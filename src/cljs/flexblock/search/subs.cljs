@@ -7,6 +7,11 @@
    (:search db)))
 
 (rf/reg-sub
+ :search-debounced
+ (fn [db _]
+   (:search-debounced db)))
+
+(rf/reg-sub
  :date
  (fn [db _]
    (:date db)))
