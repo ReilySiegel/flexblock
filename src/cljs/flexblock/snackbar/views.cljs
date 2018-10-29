@@ -11,4 +11,6 @@
       :autoHideDuration 2000
       :onClose          (fn []
                           (rf/dispatch-sync [:set-snackbar nil]))
-      :message          (str message)}]))
+      :message          (or message "")
+      :ContentProps     {:variant :body1}
+      :anchorOrigin     {:horizontal :left :vertical :bottom}}]))
