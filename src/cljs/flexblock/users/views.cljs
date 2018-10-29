@@ -370,7 +370,9 @@
       :justify   :center
       :style     {:padding-top "3vh"}}
      [material/Collapse
-      {:in show?}
+      {:in            show?
+       :mountOnEnter  true
+       :unmountOnExit true}
       [material/Grid
        {:container true
         :justify   :center}
