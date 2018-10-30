@@ -379,10 +379,11 @@
        [search/date-bar]
        (for [k (keys users/roles)]
          [material/Grid
-          {:item true
-           :sm   4
-           :xs   12
-           :key  k}
+          {:item  true
+           :sm    4
+           :xs    12
+           :key   k
+           :style {:padding-left "14px"}}
           [material/FormControlLabel
            {:label (str/capitalize (name k))
             :control

@@ -340,10 +340,11 @@
        {:container true}
        (for [[k s] rooms/sorted-times]
          [material/Grid
-          {:item true
-           :sm   3
-           :xs   6
-           :key  k}
+          {:item  true
+           :sm    3
+           :xs    6
+           :key   k
+           :style {:padding-left "14px"}}
           [material/FormControlLabel
            {:label s
             :control
