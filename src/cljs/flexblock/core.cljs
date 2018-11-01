@@ -26,8 +26,6 @@
    [flexblock.navbar.views :as navbar]
    [flexblock.snackbar.views :as snackbar]
    [flexblock.users.views :as users.views]
-   ;; Konami Code Easter Egg
-   [flexblock.components.konami :as konami]
    [flexblock.components.material :as material]
    ;; Load the rooms and student pages.
    [flexblock.rooms.views :as rooms]
@@ -47,8 +45,6 @@
                :secondary (material/color :deepOrange)}})}
     [navbar/navbar]
     [login/modal]
-    ;; Konami Code Easter Egg
-    [konami/egg]
     [(pages @(rf/subscribe [:page]))]
     [users.views/password-modal]
     [snackbar/snackbar]]])

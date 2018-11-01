@@ -141,7 +141,7 @@
     {:item true :xs 12}
     [material/TextField
      {:label       "Email"
-      :placeholder "20xx@ellingtonschools.net"
+      :placeholder "20XXaveragej@ellingtonschools.net"
       :fullWidth   true
       :value       @email
       :onChange    #(reset! email (-> % .-target .-value))}]]
