@@ -265,7 +265,7 @@
      {:in true}
      [material/Button
       {:variant :fab
-       :color   :primary
+       :color   :secondary
        :onClick #(rf/dispatch [:users/set-modal-open true])
        :style   {:position :fixed
                  :right    "2em"

@@ -44,7 +44,7 @@
              {:typography {:useNextVariants true}
               :palette
               {:primary   (material/color :purple)
-               :secondary (material/color :amber)}})}
+               :secondary (material/color :deepOrange)}})}
     [navbar/navbar]
     [login/modal]
     ;; Konami Code Easter Egg

@@ -296,7 +296,7 @@
      {:in true}
      [material/Button
       {:variant :fab
-       :color   :primary
+       :color   :secondary
        :onClick #(rf/dispatch [:rooms/set-modal-open true])
        :style   {:position :fixed
                  :right    "2em"
