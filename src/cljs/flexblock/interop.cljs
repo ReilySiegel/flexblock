@@ -13,5 +13,6 @@
   [s]
   (->> (str/split s #"-")
        (map #(.parseInt js/window %))
-       (apply #(.UTC js/Date %1 %2 %3))
+       ;; Dec month, as JS dates are zero-based.
+       (apply #(.UTC js/Date %1 (dec %2) %3))
        (js/Date.)))
