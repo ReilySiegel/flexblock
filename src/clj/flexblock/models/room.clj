@@ -20,7 +20,7 @@
                       "Please fill out all required fields."))
   (ex-info-assert (:teacher *master*)
                   "Only teachers can create Sessions.")
-  (update room :date #(timec/to-sql-date (timec/from-date %))))
+  room)
 
 (defn post-insert [room]
   (db/simple-insert! 'UsersRooms
@@ -76,6 +76,10 @@
     (for [room rooms]
       (assoc room :users (get room-id->users (:id room))))))
 
+(models/add-type! :date
+  :in  timec/to-sql-date
+  :out timec/to-date)
+
 (extend (class Room)
   models/IModel
   (merge models/IModelDefaults
@@ -83,4 +87,5 @@
           :pre-insert     pre-insert
           :post-insert    post-insert
           :pre-delete     pre-delete
-          :types          (constantly {:time :keyword})}))
+          :types          (constantly {:time :keyword
+                                       :date :date})}))

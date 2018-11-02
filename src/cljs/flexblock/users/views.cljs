@@ -90,7 +90,7 @@
        :secondary (gstring/format "%s: %s %s"
                                   (rooms/room-number-str room)
                                   (rooms/time-str room)
-                                  (.toDateString (:date room)))}]]))
+                                  (interop/date->str (:date room)))}]]))
 
 (defn sessions [user]
   (let [sessions (:rooms user)]
@@ -141,7 +141,7 @@
     {:item true :xs 12}
     [material/TextField
      {:label       "Email"
-      :placeholder "20xx@ellingtonschools.net"
+      :placeholder "20XXaveragej@ellingtonschools.net"
       :fullWidth   true
       :value       @email
       :onChange    #(reset! email (-> % .-target .-value))}]]
@@ -265,7 +265,7 @@
      {:in true}
      [material/Button
       {:variant :fab
-       :color   :primary
+       :color   :secondary
        :onClick #(rf/dispatch [:users/set-modal-open true])
        :style   {:position :fixed
                  :right    "2em"
@@ -370,17 +370,20 @@
       :justify   :center
       :style     {:padding-top "3vh"}}
      [material/Collapse
-      {:in show?}
+      {:in            show?
+       :mountOnEnter  true
+       :unmountOnExit true}
       [material/Grid
        {:container true
         :justify   :center}
        [search/date-bar]
        (for [k (keys users/roles)]
          [material/Grid
-          {:item true
-           :sm   4
-           :xs   12
-           :key  k}
+          {:item  true
+           :sm    4
+           :xs    12
+           :key   k
+           :style {:padding-left "14px"}}
           [material/FormControlLabel
            {:label (str/capitalize (name k))
             :control

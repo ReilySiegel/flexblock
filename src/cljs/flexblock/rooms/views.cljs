@@ -217,15 +217,6 @@
                             :expand_less
                             :expand_more)]]]]))
 
-(defn date-string [date]
-  (-> date
-      (.toUTCString)
-      ;; Remove time data.
-      (str/split #"\d\d:\d\d")
-      first
-      ;; Remove comma.
-      (str/replace #"," "")))
-
 (defn card
   "Creates a card with information about a `room`."
   [index room]
@@ -265,7 +256,7 @@
            {:variant :body1
             :color   :textSecondary
             :noWrap  true}
-           (date-string date)]
+           (interop/date->str date)]
           [material/Typography
            {:variant :body1
             :color   :textSecondary
@@ -296,7 +287,7 @@
      {:in true}
      [material/Button
       {:variant :fab
-       :color   :primary
+       :color   :secondary
        :onClick #(rf/dispatch [:rooms/set-modal-open true])
        :style   {:position :fixed
                  :right    "2em"
@@ -333,15 +324,18 @@
       :justify   :center
       :style     {:padding-top "3vh"}}
      [material/Collapse
-      {:in show?}
+      {:in            show?
+       :mountOnEnter  true
+       :unmountOnExit true}
       [material/Grid
        {:container true}
        (for [[k s] rooms/sorted-times]
          [material/Grid
-          {:item true
-           :sm   3
-           :xs   6
-           :key  k}
+          {:item  true
+           :sm    3
+           :xs    6
+           :key   k
+           :style {:padding-left "14px"}}
           [material/FormControlLabel
            {:label s
             :control

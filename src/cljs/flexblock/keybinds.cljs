@@ -1,14 +1,20 @@
 (ns flexblock.keybinds
-  (:require [re-frame.core :as rf]
+  (:require [flexblock.users :as users]
+            [re-frame.core :as rf]
             [re-pressed.core :as rp]))
 
 (rf/reg-event-fx
  :key/set-main-modal
  (fn [{:keys [db]} [_ open?]]
-   (case (:page db)
-     :rooms {:dispatch [:rooms/set-modal-open open?]}
-     :users {:dispatch [:users/set-modal-open open?]}
-     {})))
+   (cond
+     (and (= :rooms (:page db))
+          (:teacher (:login/user db)))
+     {:dispatch [:rooms/set-modal-open open?]}
+
+     (and (= :users (:page db))
+          (some #{:teacher :admin}  (users/user-roles (:login/user db))))
+     {:dispatch [:users/set-modal-open open?]}
+     :else {})))
 
 (rf/reg-event-fx
  :key/try-login

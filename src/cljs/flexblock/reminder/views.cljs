@@ -12,7 +12,7 @@
          (:admin @(rf/subscribe [:login/user]))
          (not (str/blank? @(rf/subscribe [:login/token]))))
     [material/Button
-     {:color     :secondary
+     {:color     :inherit
       :fullWidth true
       :onClick   #(rf/dispatch [:reminder/set-open true])}
      "Reminder"]))
