@@ -34,7 +34,8 @@
         teacher (rooms/get-teacher room-h)]
     (helpers/assert-master)
     ;; Assert that master is the owner of the room.
-    (ex-info-assert (= (:id *master*) (:id teacher))
+    (ex-info-assert (or (= (:id *master*) (:id teacher))
+                        (:admin *master*))
                     "You can't delete this room.")
     ;; Remove all students from the room, sending a delete-specific
     ;; notification.

@@ -2,6 +2,7 @@
   "This namespace contains the subscription handlers relating to students."
   (:require [cljsjs.zxcvbn]
             [clojure.string :as str]
+            [flexblock.interop :as interop]
             [flexblock.users :as users]
             [re-frame.core :as rf]))
 
@@ -21,10 +22,7 @@
     (if (nil? date)
       users
       (->> users
-           (remove #(users/flexblock-on-date? %
-                                              (js/Date.
-                                               (.setUTCHours date
-                                                             0 0 0 0))))))))
+           (remove #(users/flexblock-on-date? % (interop/str->date date)))))))
 
 (rf/reg-sub
  :users/filtered
@@ -41,7 +39,7 @@
  :users/sorted
  ;; Subscribe to filtered users and search as signals.
  :<- [:users/filtered]
- :<- [:search]
+ :<- [:search-debounced]
 
  ;; Sort the users.
  (fn [[users search] _]
@@ -110,6 +108,9 @@
                            (> 0 score)   0
                            (< 100 score) 100
                            :else         (.round js/Math score))]
-     (-> results
-         (assoc :score processed-score)
-         (assoc :score% (str processed-score "%"))))))
+     (assoc results :score processed-score))))
+
+(rf/reg-sub
+ :users/modal-open
+ (fn [db _]
+   (:users/modal-open db)))

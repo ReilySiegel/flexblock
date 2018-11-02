@@ -37,6 +37,13 @@
        (sort-by second)
        (sort-by #(count (second %)))))
 
+(def attendance->icon
+  {1  [:check "Present"]
+   0  [:remove "Indeterminate"]
+   -1 [:clear "Absent"]
+   -2 [:priority_high "Late"]})
+
+
 (s/def ::id ::primitives/pos-int?)
 (s/def ::title (s/and string?
                       #(not (str/blank? %))

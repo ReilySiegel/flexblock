@@ -25,7 +25,7 @@
  :users/reset-password-success
  (fn [_ [_ response]]
    {:notification "Password reset."
-    :close-modal  "#password-modal"}))
+    :dispatch     [:users/set-password-modal nil]}))
 
 (rf/reg-event-fx
  :users/reset-password
@@ -43,8 +43,8 @@
  :users/post-user-success
  (fn [_ [_ response]]
    {:notification "User added."
-    :dispatch     [:users/get]
-    :close-modal  "#add-user-modal"}))
+    :dispatch-n   [[:users/get]
+                   [:users/set-modal-open false]]}))
 
 (rf/reg-event-fx
  :users/post-user
@@ -113,14 +113,12 @@
 (rf/reg-event-fx
  :users/set-session-modal
  (fn [{:keys [db]} [_ user]]
-   {:db         (assoc db :session-modal user)
-    :open-modal "#session-modal"}))
+   {:db (assoc db :session-modal user)}))
 
 (rf/reg-event-fx
  :users/set-password-modal
  (fn [{:keys [db]} [_ user]]
-   {:db         (assoc db :password-modal user)
-    :open-modal "#password-modal"}))
+   {:db (assoc db :password-modal user)}))
 
 (rf/reg-event-fx
  :users/set-password
@@ -138,3 +136,8 @@
    (if filter?
      (update db :users/role-filter conj key)
      (update db :users/role-filter disj key))))
+
+(rf/reg-event-db
+ :users/set-modal-open
+ (fn [db [_ open?]]
+   (assoc db :users/modal-open open?)))
