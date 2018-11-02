@@ -16,3 +16,12 @@
        ;; Dec month, as JS dates are zero-based.
        (apply #(.UTC js/Date %1 (dec %2) %3))
        (js/Date.)))
+
+(defn date->str [date]
+  (-> date
+      (.toUTCString)
+      ;; Remove time data.
+      (str/split #"\d\d:\d\d")
+      first
+      ;; Remove comma.
+      (str/replace #"," "")))

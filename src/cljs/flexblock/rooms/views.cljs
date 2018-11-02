@@ -217,15 +217,6 @@
                             :expand_less
                             :expand_more)]]]]))
 
-(defn date-string [date]
-  (-> date
-      (.toUTCString)
-      ;; Remove time data.
-      (str/split #"\d\d:\d\d")
-      first
-      ;; Remove comma.
-      (str/replace #"," "")))
-
 (defn card
   "Creates a card with information about a `room`."
   [index room]
@@ -265,7 +256,7 @@
            {:variant :body1
             :color   :textSecondary
             :noWrap  true}
-           (date-string date)]
+           (interop/date->str date)]
           [material/Typography
            {:variant :body1
             :color   :textSecondary

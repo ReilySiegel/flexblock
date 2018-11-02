@@ -90,7 +90,7 @@
        :secondary (gstring/format "%s: %s %s"
                                   (rooms/room-number-str room)
                                   (rooms/time-str room)
-                                  (.toDateString (:date room)))}]]))
+                                  (interop/date->str (:date room)))}]]))
 
 (defn sessions [user]
   (let [sessions (:rooms user)]
