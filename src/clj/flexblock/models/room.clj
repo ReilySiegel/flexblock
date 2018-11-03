@@ -5,12 +5,15 @@
             [flexblock.models.helpers :as helpers :refer [*master* ex-info-assert]]
             [flexblock.notifier.core :as n]
             [flexblock.rooms :as rooms]
+            [flexblock.search :as search]
             [phrase.alpha :as phrase]
             [toucan.db :as db]
             [toucan.hydrate :as hydrate]
             [toucan.models :as models]))
 
 (models/defmodel Room :rooms)
+
+;;; Hooks
 
 (defn pre-insert [room]
   (helpers/assert-master)
@@ -20,7 +23,7 @@
                       "Please fill out all required fields."))
   (ex-info-assert (:teacher *master*)
                   "Only teachers can create Sessions.")
-  room)
+  (assoc room :tokens (rooms/tokenize room)))
 
 (defn post-insert [room]
   (db/simple-insert! 'UsersRooms
@@ -47,6 +50,8 @@
                           :recipient user
                           :room      room-h}))
     room))
+
+;;; Hydration
 
 (defn- users-for-room
   "Takes a seq of `user-ids`, a seq of `rooms`, and a seq of
@@ -87,5 +92,6 @@
           :pre-insert     pre-insert
           :post-insert    post-insert
           :pre-delete     pre-delete
-          :types          (constantly {:time :keyword
-                                       :date :date})}))
+          :types          (constantly {:time   :keyword
+                                       :date   :date
+                                       :tokens :edn})}))
