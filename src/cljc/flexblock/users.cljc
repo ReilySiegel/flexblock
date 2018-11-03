@@ -124,7 +124,6 @@
    :advisor 1})
 
 (defn tokenize [user]
-  (println "Tokenizing " (:name user))
   (apply concat
          (for [[key weight] search-weights]
            (search/tokenize (get user key "") weight false))))
