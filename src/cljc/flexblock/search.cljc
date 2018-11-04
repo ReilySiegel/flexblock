@@ -40,33 +40,32 @@
   3)
 
 (defn- score [search-token word-token]
-  (* (:weight word-token 1)
-     (cond
-       ;; Exact match.
-       (= (:exact word-token)
-          (:exact search-token))
-       exact-score
+  (let [word-metaphone   (:metaphone word-token)
+        search-metaphone (:metaphone search-token)]
+    (* (:weight word-token 1)
+       (cond
+         ;; Exact match.
+         (= (:exact word-token)
+            (:exact search-token))
+         exact-score
 
-       ;; Stem match
-       (and (not (nil? (:stem word-token)))
-            (= (:stem word-token)
-               (:stem search-token)))
-       exact-score
+         ;; Stem match
+         (and (not (nil? (:stem word-token)))
+              (= (:stem word-token)
+                 (:stem search-token)))
+         exact-score
 
-       ;; Exact metaphone match.
-       (= (:metaphone word-token)
-          (:metaphone search-token))
-       metaphone-match-score
-       #_#_
-       ;; Partial metaphone match.
-       (some true?
-             (for [word-m-p   (:metaphone word-token)
-                   search-m-p (:metaphone search-token)]
-               (= word-m-p search-m-p)))
-       patial-metaphone-score
+         ;; Exact metaphone match.
+         (= word-metaphone
+            search-metaphone)
+         metaphone-match-score
+         ;; Partial metaphone match.
+         (not (apply distinct? (concat word-metaphone
+                                       search-metaphone)))
+         patial-metaphone-score
 
-       ;; No match.
-       :else 0)))
+         ;; No match.
+         :else 0))))
 
 (defn score-document
   [tokenized-search tokenized-document]
