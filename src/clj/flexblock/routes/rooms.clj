@@ -12,8 +12,16 @@
             :handler   (fn [_]
                          (response/ok (vec (db/get-rooms))))}
      :post {:summary "Add a room."
-            :handler (fn [{room :body-params}]
-                       (db/insert-room! room)
+            :handler (fn [{{:keys [time]
+                            :as   room} :body-params}]
+                       (if-not (sequential? time)
+                         ;; If only one time is selected.
+                         (db/insert-room! room)
+                         ;; If more than one time is selected.
+                         (doseq [t time]
+                           (-> room
+                               (assoc :time t)
+                               db/insert-room!)))
                        (response/ok))}}]
    ["/attendance"
     {:get {:summary     "Get attendance for all rooms."

@@ -19,7 +19,7 @@
         capacity    (r/atom "")
         description (r/atom "")
         date        (r/atom "")
-        time        (r/atom "")
+        time        (r/atom [])
         open        (rf/subscribe [:rooms/modal-open])
         reset-fn    (fn []
                       (reset! title "")
@@ -27,7 +27,7 @@
                       (reset! number "")
                       (reset! description "")
                       (reset! date "")
-                      (reset! time ""))]
+                      (reset! time []))]
     (fn []
       [material/Dialog
        {:open    @open
@@ -38,7 +38,8 @@
                    (reset-fn))}
        [material/DialogTitle "Add Session"]
        [material/DialogContent
-        [material/Grid {:container true :spacing 16}
+        [material/Grid {:container true :spacing 16
+                        :style     {:align-items :flex-end}}
          [material/Grid {:item true :xs 12}
           [material/TextField
            {:label     "Title"
@@ -75,12 +76,28 @@
             :InputLabelProps {:shrink true}}]]
          [material/Grid {:item true :xs 12 :sm 6}
           [material/TextField
-           {:label     "Time"
-            :fullWidth true
-            :select    true
-            :value     @time
-            :onChange  #(reset! time
-                                (-> % .-target .-value))}
+           {:label       "Time"
+            :fullWidth   true
+            :select      true
+            :SelectProps {:multiple true
+                          :renderValue
+                          (fn [selected]
+                            (r/as-element
+                             [:div
+                              {:style {:display  :flex
+                                       :flexWrap :wrap}}
+                              (for [time (->> selected
+                                              js->clj
+                                              sort
+                                              (sort-by count))]
+                                [material/Chip
+                                 {:key   time
+                                  :value time
+                                  :label time
+                                  :style {:margin "0.25em"}}])]))}
+            :value       @time
+            :onChange    #(reset! time
+                                  (-> % .-target .-value js->clj))}
            (for [[time label] rooms/sorted-times]
              [material/MenuItem
               {:key   time
@@ -98,8 +115,8 @@
                                    :date
                                    (interop/str->date @date)
                                    :time
-                                   (get (set/map-invert rooms/times)
-                                        @time)}])
+                                   (mapv #(get (set/map-invert rooms/times) %)
+                                         @time)}])
                      (reset-fn))}
          "Submit"]]])))
 

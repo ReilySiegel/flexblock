@@ -9,6 +9,7 @@
     CardContent
     CardHeader
     Checkbox
+    Chip
     Collapse
     CssBaseline
     Dialog
