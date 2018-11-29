@@ -12,12 +12,13 @@
   "Dispatches each notification in a batch to its service.
   Batches are taken from the channel `in`."
   [in]
-  (a/go-loop []
-    (when-let [batch (a/<! in)]
-      (doseq [event   (distinct batch)
-              service services/enabled-services]
-        (services/send-notification service event))
-      (recur))))
+  (a/thread
+    (loop []
+      (when-let [batch (a/<!! in)]
+        (doseq [event   (distinct batch)
+                service services/enabled-services]
+          (services/send-notification service event))
+        (recur)))))
 
 (defn batch
   "Batches notifications.
@@ -38,9 +39,9 @@
             (recur [] (a/timeout max-time)))
 
           (nil? val)
-          (when (seq buf)
-            (a/>! out buf)
-            (a/close! out))
+          (do (when (seq buf)
+                (a/>! out buf))
+              (a/close! out))
 
           (== (count buf) lim-1)
           (do
@@ -52,17 +53,19 @@
 
 (defn run-notifier!
   "Sets up the channels for `batch` and `notify`."
-  [batch-time batch-size]
+  [batch-time batch-size notify-threads]
   (let [in  (a/chan 100)
         out (a/chan 100)]
     (batch in out batch-time batch-size)
-    (notify out)
+    (dotimes [_ notify-threads]
+      (notify out))
     in))
 
 (mount/defstate notifier
-  :start (let [{:keys [batch-time batch-size]
-                :or   {batch-time (* 30 60 1000)
-                       batch-size 1}}
+  :start (let [{:keys [batch-time batch-size notify-threads]
+                :or   {batch-time     (* 30 60 1000)
+                       batch-size     1
+                       notify-threads 1}}
                (:notifier env)]
-           (run-notifier! batch-time batch-size))
+           (run-notifier! batch-time batch-size notify-threads))
   :stop (a/close! notifier))

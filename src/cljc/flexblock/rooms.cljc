@@ -119,17 +119,14 @@
    :description 1
    :teacher     2})
 
+(defn tokenize [room]
+  (apply concat
+         (for [[key weight] room-weights]
+           (search/tokenize (get room key "") weight))))
+
 (defn make-search
-  "Room-specific version of `flexblock.search/make-search`.
-  Stems the tokenized words.
-  See `flexblock.search/make-search` for more details."
   [search]
-  (fn [room]
-    ((search/make-search room-weights
-                         search
-                         (fn [s]
-                           (map search/*stem-fn*
-                                (search/tokenize s))))
-     ;; Add the teacher's name to the room map, so that it can be
-     ;; searched.
-     (assoc room :teacher (:name (get-teacher room))))))
+  (comp (partial search/score-document (search/tokenize search))
+        #(or (:tokens %) (tokenize %))
+        ;; Make the teacher's name available to the tokenize function.
+        #(assoc % :teacher (:name (get-teacher %)))))

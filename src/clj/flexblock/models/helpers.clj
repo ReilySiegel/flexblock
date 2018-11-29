@@ -1,4 +1,6 @@
-(ns flexblock.models.helpers)
+(ns flexblock.models.helpers
+  (:require [clojure.edn :as edn]
+            [toucan.models :as models]))
 
 (def ^:dynamic *master*)
 
@@ -15,3 +17,7 @@
   action."
   []
   (ex-info-assert (thread-bound? #'*master*) "*master* is not set."))
+
+(models/add-type! :edn
+  :in  pr-str
+  :out edn/read-string)

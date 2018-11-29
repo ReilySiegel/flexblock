@@ -76,7 +76,8 @@
          (if (contains? user :password)
            {:passwordhash
             (h/derive (:password user))}))
-        (dissoc :password))))
+        (dissoc :password)
+        (assoc :tokens (users/tokenize user)))))
 
 (defn pre-insert [user]
   (let [user (merge
@@ -150,11 +151,12 @@
   (merge
    models/IModelDefaults
    {:default-fields
-    (constantly [:id :name :email :class :advisor-id :teacher :admin])
+    (constantly [:id :name :email :class :advisor-id :teacher :admin :tokens])
 
     :hydration-keys
     (constantly [:advisor :advisor-name :rooms])
     :pre-update  pre-update
     :pre-delete  pre-delete
     :pre-insert  pre-insert
-    :post-insert post-insert}))
+    :post-insert post-insert
+    :types       (constantly {:tokens :edn})}))

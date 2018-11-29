@@ -123,6 +123,12 @@
    :email   2
    :advisor 1})
 
+(defn tokenize [user]
+  (apply concat
+         (for [[key weight] search-weights]
+           (search/tokenize (get user key "") weight false))))
+
 (defn make-search
   [search]
-  (search/make-search search-weights search))
+  (comp (partial search/score-document (search/tokenize search 1 false))
+        #(or (:tokens %) (tokenize %))))

@@ -11,12 +11,23 @@
     "it" "of" "on" "or" "that" "the" "this" "to" "was" "what" "when" "where"
     "who" "will" "with"})
 
-(defn tokenize [s]
-  (if-not s
-    []
-    (remove
-     stopwords
-     (str/split (str/lower-case s) #"[^a-z]+"))))
+(defn tokenize
+  ([s] (tokenize s 1 true))
+  ([s weight] (tokenize s weight true))
+  ([s weight stem?]
+   (if-not s
+     []
+     (let [words (remove stopwords
+                         (str/split (str/lower-case s) #"[^a-z]+"))]
+       (for [[word count] (frequencies words)]
+         (let [stem (stemmers/lancaster word)]
+           (merge
+            {:weight    (* count weight)
+             :exact     word
+             :metaphone (phonetics/double-metaphone word)}
+            (when stem?
+              {:stem           stem
+               :stem-metaphone (phonetics/double-metaphone stem)}))))))))
 
 (def exact-score
   "The number of points given for an exact match."
@@ -28,62 +39,36 @@
   "The number of points given for a partial metaphone match."
   3)
 
-;; Make it possible to use and discard a memoized version of the
-;; metaphone function and stem function.
-(def ^:dynamic *metaphone-fn* (memoize phonetics/double-metaphone))
-(def ^:dynamic *stem-fn* (memoize stemmers/lancaster))
+(defn- score [search-token word-token]
+  (let [word-metaphone   (:metaphone word-token)
+        search-metaphone (:metaphone search-token)]
+    (* (:weight word-token 1)
+       (cond
+         ;; Exact match.
+         (= (:exact word-token)
+            (:exact search-token))
+         exact-score
 
+         ;; Stem match
+         (and (not (nil? (:stem word-token)))
+              (= (:stem word-token)
+                 (:stem search-token)))
+         exact-score
 
-(defn- double-metaphone-score [search search-m word]
-  (let [word-m (*metaphone-fn* word)]
-    (cond
-      ;; Exact match.
-      (= word search)
-      exact-score
+         ;; Exact metaphone match.
+         (= word-metaphone
+            search-metaphone)
+         metaphone-match-score
+         ;; Partial metaphone match.
+         (not (apply distinct? (concat word-metaphone
+                                       search-metaphone)))
+         patial-metaphone-score
 
-      ;; Exact metaphone match.
-      (= word-m search-m)
-      metaphone-match-score
-      #_#_
-      ;; Partial metaphone match.
-      (some true?
-            (for [word-m-p   word-m
-                  search-m-p search-m]
-              (= word-m-p search-m-p)))
-      patial-metaphone-score
+         ;; No match.
+         :else 0))))
 
-      ;; No match.
-      :else 0)))
-
-(defn- score-document
+(defn score-document
   [tokenized-search tokenized-document]
-  (apply + (for [[term term-m] tokenized-search
-                 word          tokenized-document]
-             (double-metaphone-score term term-m word))))
-
-(defn- make-document-str
-  "Returns a string given a string `s` and a weight `n`."
-  [weight-map document]
-  (str/join " "
-            (for [[key weight] weight-map]
-              (str/join " " (repeat weight (get document key ""))))))
-
-(defn make-search
-  "Takes a `weight-map`, a `search` term, and optionally a `tokenize-fn`.
-  The `search` term should be a string.
-
-  Returns a function which takes one `document` as an argument, and
-  returns the search score between the `search` term and the
-  `document`. The `document` must be a map.
-
-  `tokenize-fn` defaults to `flexblock.search/tokenize`."
-  ([weight-map search] (make-search weight-map search tokenize))
-  ([weight-map search tokenize-fn]
-   (let [tokenized-search (map (fn [search]
-                                 [search (*metaphone-fn* search)])
-                               (tokenize-fn search))]
-     (fn search [document]
-       (score-document tokenized-search
-                       (tokenize-fn (make-document-str
-                                     weight-map
-                                     document)))))))
+  (apply + (for [term tokenized-search
+                 word tokenized-document]
+             (score term word))))
