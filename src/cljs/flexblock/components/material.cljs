@@ -3,20 +3,7 @@
             [clojure.set :as set]
             [material-ui]
             [reagent.core :as r]
-            [reagent.impl.template :as rtpl])
-  (:require-macros
-   [flexblock.components.macros
-    :refer [export-material-ui-react-classes]]))
-
-(defn- update-keys [m f]
-  (set/rename-keys m
-                   (apply merge (map (fn [key]
-                                       {key (f key)})
-                                     (keys m)))))
-
-(defn- update-props [props]
-  (-> props
-      (update-keys case/->camelCaseKeyword)))
+            [reagent.impl.template :as rtpl]))
 
 (defn color [color]
   (aget js/MaterialUIColors (name color)))
@@ -70,4 +57,46 @@
            (map r/as-element children))))
 
 
-(export-material-ui-react-classes)
+(defn material-component [key]
+  (r/adapt-react-class (aget js/MaterialUI (name key))))
+
+(def AppBar (material-component :AppBar))
+(def Avatar (material-component :Avatar))
+(def Button (material-component :Button))
+(def Card (material-component :Card))
+(def CardActions (material-component :CardActions))
+(def CardContent (material-component :CardContent))
+(def CardHeader (material-component :CardHeader))
+(def Checkbox (material-component :Checkbox))
+(def Chip (material-component :Chip))
+(def Collapse (material-component :Collapse))
+(def CssBaseline (material-component :CssBaseline))
+(def Dialog (material-component :Dialog))
+(def DialogActions (material-component :DialogActions))
+(def DialogContent (material-component :DialogContent))
+(def DialogTitle (material-component :DialogTitle))
+(def Drawer (material-component :Drawer))
+(def FormControl (material-component :FormControl))
+(def FormControlLabel (material-component :FormControlLabel))
+(def Grid (material-component :Grid))
+(def Grow (material-component :Grow))
+(def IconButton (material-component :IconButton))
+(def InputLabel (material-component :InputLabel))
+(def LinearProgress (material-component :LinearProgress))
+(def List (material-component :List))
+(def ListItem (material-component :ListItem))
+(def ListItemAvatar (material-component :ListItemAvatar))
+(def ListItemSecondaryAction (material-component :ListItemSecondaryAction))
+(def ListItemText (material-component :ListItemText))
+(def Menu (material-component :Menu))
+(def MenuItem (material-component :MenuItem))
+(def Portal (material-component :Portal))
+(def Select (material-component :Select))
+(def Snackbar (material-component :Snackbar))
+(def Slide (material-component :Slide))
+(def Tab (material-component :Tab))
+(def Tabs (material-component :Tabs))
+(def Toolbar (material-component :Toolbar))
+(def Tooltip (material-component :Tooltip))
+(def Typography (material-component :Typography))
+(def Zoom (material-component :Zoom))
