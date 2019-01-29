@@ -1,0 +1,8 @@
+{:nrepl  {:middleware [refactor-nrepl.middleware/wrap-refactor]}
+ :deps   true
+ :builds {:app {:target     :browser
+                :output-dir "resources/public/js"
+                :asset-path "/js"
+                :modules    {:app {:entries [flexblock.core]
+                                   :init-fn flexblock.core/init!}}
+                :devtools   {:after-load flexblock.core/reload!}}}}

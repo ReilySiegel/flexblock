@@ -1,1 +1,1 @@
-web: java -cp target/uberjar/flexblock.jar clojure.main -m flexblock.core
+web: java -cp flexblock.jar clojure.main -m flexblock.core

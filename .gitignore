@@ -14,3 +14,11 @@ profiles.clj
 /log
 figwheel_server.log
 /.m2
+/.cpcache
+/.shadow-cljs
+package-lock.json
+yarn.lock
+node_modules
+/resources/public/js/cljs-runtime
+/resources/public/js/app.js
+/resources/public/js/manifest.edn

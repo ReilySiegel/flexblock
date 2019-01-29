@@ -1,6 +1,6 @@
 (ns flexblock.users.subs
   "This namespace contains the subscription handlers relating to students."
-  (:require [cljsjs.zxcvbn]
+  (:require ["zxcvbn" :as zxcvbn]
             [clojure.string :as str]
             [flexblock.interop :as interop]
             [flexblock.users :as users]
@@ -100,8 +100,8 @@
  :<- [:users/password]
  :<- [:users/password-dict]
  (fn [[password dict] _]
-   (let [results         (js->clj (js/zxcvbn (str password)
-                                             (clj->js dict))
+   (let [results         (js->clj (zxcvbn (str password)
+                                          (clj->js dict))
                                   :keywordize-keys true)
          score           (* 10 (+ -3 (:guesses_log10 results) ))
          processed-score (cond

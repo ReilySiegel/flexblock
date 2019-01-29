@@ -233,7 +233,7 @@
         {:value          @tab
          :indicatorColor :primary
          :textColor      :primary
-         :fullWidth      true
+         :variant        :fullWidth
          :onChange       (fn [_ selected]
                            (reset-fn)
                            (reset! tab selected))}
@@ -263,9 +263,8 @@
          (not (str/blank? @(rf/subscribe [:login/token]))))
     [material/Zoom
      {:in true}
-     [material/Button
-      {:variant :fab
-       :color   :secondary
+     [material/Fab
+      {:color   :secondary
        :onClick #(rf/dispatch [:users/set-modal-open true])
        :style   {:position :fixed
                  :right    "2em"

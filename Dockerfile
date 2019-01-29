@@ -1,8 +1,11 @@
-FROM java:8-alpine
-MAINTAINER Your Name <you@example.com>
+FROM clojure:openjdk-8-tools-deps-alpine
 
-ADD target/uberjar/flexblock.jar /flexblock/app.jar
+RUN apk add --no-cache make npm
 
-EXPOSE 3000
+COPY . /app
+RUN npm config set unsafe-perm true
+RUN make init build -C /app
 
-CMD ["java", "-jar", "/flexblock/app.jar"]
+EXPOSE 5000
+
+CMD ["java", "-cp", "/app/flexblock.jar", "clojure.main", "-m", "flexblock.core"]

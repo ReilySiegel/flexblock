@@ -1,18 +1,21 @@
 (ns flexblock.components.material
+  (:refer-clojure :exclude [List])
   (:require [camel-snake-kebab.core :as case]
             [clojure.set :as set]
-            [material-ui]
+            ["@material-ui/core" :as material]
+            ["@material-ui/core/colors" :as material-colors]
+            ["@material-ui/core/styles" :as material-styles]
             [reagent.core :as r]
             [reagent.impl.template :as rtpl]))
 
 (defn color [color]
-  (aget js/MaterialUIColors (name color)))
+  (aget material-colors (name color)))
 
 (defn createMuiTheme [theme]
-  ((aget js/MaterialUIStyles "createMuiTheme") (clj->js theme)))
+  (material-styles/createMuiTheme (clj->js theme)))
 
-(def MuiThemeProvider (-> js/MaterialUIStyles
-                          (aget "MuiThemeProvider")
+
+(def MuiThemeProvider (-> material-styles/MuiThemeProvider
                           (reagent.core/adapt-react-class)))
 
 (def ^:private input-component
@@ -52,13 +55,13 @@
                         input-component))
             rtpl/convert-prop-value)]
     (apply r/create-element
-           (aget js/MaterialUI "TextField")
+           material/TextField
            props
            (map r/as-element children))))
 
 
 (defn material-component [key]
-  (r/adapt-react-class (aget js/MaterialUI (name key))))
+  (r/adapt-react-class (aget material (name key))))
 
 (def AppBar (material-component :AppBar))
 (def Avatar (material-component :Avatar))
@@ -76,6 +79,7 @@
 (def DialogContent (material-component :DialogContent))
 (def DialogTitle (material-component :DialogTitle))
 (def Drawer (material-component :Drawer))
+(def Fab (material-component :Fab))
 (def FormControl (material-component :FormControl))
 (def FormControlLabel (material-component :FormControlLabel))
 (def Grid (material-component :Grid))
