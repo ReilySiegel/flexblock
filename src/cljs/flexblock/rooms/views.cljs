@@ -302,9 +302,8 @@
          (not (str/blank? @(rf/subscribe [:login/token]))))
     [material/Zoom
      {:in true}
-     [material/Button
-      {:variant :fab
-       :color   :secondary
+     [material/Fab
+      {:color   :secondary
        :onClick #(rf/dispatch [:rooms/set-modal-open true])
        :style   {:position :fixed
                  :right    "2em"

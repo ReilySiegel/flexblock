@@ -36,13 +36,13 @@
    :users #'users/page})
 
 (defn page []
-  [material/CssBaseline
-   [material/MuiThemeProvider
-    {:theme (material/createMuiTheme
-             {:typography {:useNextVariants true}
-              :palette
-              {:primary   (material/color :purple)
-               :secondary (material/color :deepOrange)}})}
+  [material/MuiThemeProvider
+   {:theme (material/createMuiTheme
+            {:typography {:useNextVariants true}
+             :palette
+             {:primary   (material/color :deepPurple)
+              :secondary (material/color :deepOrange)}})}
+   [material/CssBaseline
     [navbar/navbar]
     [login/modal]
     [(pages @(rf/subscribe [:page]))]
@@ -61,4 +61,7 @@
                   (* 60 1000))
   (load-interceptors!)
   (keybinds/init-keybindings!)
+  (mount-components))
+
+(defn reload! []
   (mount-components))
