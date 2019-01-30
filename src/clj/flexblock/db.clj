@@ -19,7 +19,8 @@
             [mount.core :as mount]
             [toucan.db :as db]
             [toucan.hydrate :as hydrate]
-            [toucan.models :as models]))
+            [toucan.models :as models]
+            [clojure.string :as str]))
 
 ;;;; This section is responsible for setting up a database connection.
 ;;;; Things like database settings, delimiters, and connections are
@@ -66,7 +67,11 @@
                        :admin    true})
         ;; Select the correct db-spec.
         db        (cond
-                    jdbc-url  {:connection-uri jdbc-url}
+                    jdbc-url  {:connection-uri (str/replace-first
+                                                jdbc-url
+                                                #"postgres"
+                                                "jdbc:postgresql")
+                               :classname      "org.postgresql.Driver"}
                     jdbc-spec jdbc-spec
                     :else     {:dbtype     "h2:mem"
                                :dbname     "flexblockdb"
