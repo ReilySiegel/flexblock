@@ -11,7 +11,8 @@
             reitit.coercion.spec
             [reitit.ring :as ring]
             [reitit.swagger :as swagger]
-            [reitit.swagger-ui :as swagger-ui]))
+            [reitit.swagger-ui :as swagger-ui]
+            [ring.middleware.gzip :as gzip]))
 
 (mount/defstate init-app
   :start ((or (:init defaults) identity))
@@ -56,7 +57,8 @@
     (swagger-ui/create-swagger-ui-handler
      {:path   "/api"
       :config {:validatorUrl nil}})
-    (ring/create-resource-handler {:path "/"})
+    (gzip/wrap-gzip
+     (ring/create-resource-handler {:path "/"}))
     (ring/create-default-handler
      {:not-found (constantly
                   (error-page
