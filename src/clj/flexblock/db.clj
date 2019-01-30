@@ -31,12 +31,12 @@
   `flexblock.config/env`, but can be swapped for any associative data
   structure that contains the required keys.
 
-  First, `start-db` looks for a :jdbc-database-url key in `env`. This
+  First, `start-db` looks for a :database-url key in `env`. This
   beavior allows for zero configuration when run on Heroku, as Heroku
   automatically sets this key in the environment variable. This key
   should contain a valid JDBC url.
 
-  If a :jdbc-database-url key is not found in `env`, `start-db` looks
+  If a :database-url key is not found in `env`, `start-db` looks
   for the key :database in `env`. If the :database key is found, it
   will look for a nested :spec key. This key should contain a full
   JDBC database spec, which will be used to connect to the database.
@@ -55,7 +55,7 @@
   provided, it will create a default one, with the email
   \"example@example.com\" and the password \"password\"."
   [env]
-  (let [jdbc-url  (get-in env [:jdbc-database-url])
+  (let [jdbc-url  (get-in env [:database-url])
         jdbc-spec (get-in env [:database :spec])
         seed-user (or (get-in env [:database :seed-user])
                       ;; Default seed user.
