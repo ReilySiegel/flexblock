@@ -67,11 +67,7 @@
                        :admin    true})
         ;; Select the correct db-spec.
         db        (cond
-                    jdbc-url  {:connection-uri (str/replace-first
-                                                jdbc-url
-                                                #"postgres"
-                                                "jdbc:postgresql")
-                               :classname      "org.postgresql.Driver"}
+                    jdbc-url  {:connection-uri jdbc-url}
                     jdbc-spec jdbc-spec
                     :else     {:dbtype     "h2:mem"
                                :dbname     "flexblockdb"
@@ -89,10 +85,10 @@
     ;; Add the seed user, if they don't already exist.
     (when-not (db/exists? User :email (:email seed-user))
       (db/simple-insert! User
-        (-> seed-user
-            (assoc :passwordhash
-                   (h/derive (:password seed-user)))
-            (dissoc :password))))
+                         (-> seed-user
+                             (assoc :passwordhash
+                                    (h/derive (:password seed-user)))
+                             (dissoc :password))))
     db))
 
 (mount/defstate db
