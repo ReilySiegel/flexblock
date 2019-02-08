@@ -9,6 +9,7 @@
     [material/Snackbar
      {:open             (not (nil? message))
       :autoHideDuration 2000
+      :color            :inherit
       :onClose          (fn []
                           (rf/dispatch-sync [:set-snackbar nil]))
       :message          (or message "")

@@ -18,10 +18,11 @@
 (rf/reg-event-fx
  :logout
  (fn [{:keys [db]} _]
-   {:overwrite-localstorage {}
-    :notification           "Logged Out"
+   {:localstorage   {:login/token ""
+                     :login/user  {}}
+    :notification   "Logged Out"
     ;; Wait for localstorage to be overwritten.
-    :dispatch-later         [{:ms 250 :dispatch [:initialize-db]}]}))
+    :dispatch-later [{:ms 250 :dispatch [:initialize-db]}]}))
 
 (rf/reg-event-fx
  :login

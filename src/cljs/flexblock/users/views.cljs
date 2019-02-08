@@ -231,8 +231,8 @@
         :fullWidth true}
        [material/Tabs
         {:value          @tab
-         :indicatorColor :primary
-         :textColor      :primary
+         :indicatorColor :secondary
+         :textColor      :secondary
          :variant        :fullWidth
          :onChange       (fn [_ selected]
                            (reset-fn)
@@ -399,8 +399,7 @@
        :justify   :center
        :style     {:padding-top (if show? "2vh" "0px")}}
       [material/Button
-       {:color   :inherit
-        :onClick #(rf/dispatch [:users/toggle-filter])}
+       {:onClick #(rf/dispatch [:users/toggle-filter])}
        (if show? "Hide Filters" "Show Filters")]]]))
 
 

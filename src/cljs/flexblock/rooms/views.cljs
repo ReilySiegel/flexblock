@@ -407,8 +407,7 @@
        :justify   :center
        :style     {:padding-top (if show? "2vh" "0px")}}
       [material/Button
-       {:color   :inherit
-        :onClick #(rf/dispatch [:rooms/toggle-filter])}
+       {:onClick #(rf/dispatch [:rooms/toggle-filter])}
        (if show? "Hide Filters" "Show Filters")]]]))
 
 

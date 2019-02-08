@@ -41,7 +41,8 @@
             {:typography {:useNextVariants true}
              :palette
              {:primary   (material/color :deepPurple)
-              :secondary (material/color :deepOrange)}})}
+              :secondary (material/color :deepOrange)
+              :type      @(rf/subscribe [:theme])}})}
    [material/CssBaseline
     [navbar/navbar]
     [login/modal]

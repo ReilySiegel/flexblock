@@ -21,6 +21,14 @@
    (merge db
           (db/default-db))))
 
+(rf/reg-event-fx
+ :theme/toggle
+ (fn [{:keys [db]} _]
+   (let [theme (case (:theme db)
+                 :dark  :light
+                 :light :dark)]
+     {:db           (assoc db :theme theme)
+      :localstorage {:theme theme}})))
 
 (rf/reg-event-fx
  :http/success

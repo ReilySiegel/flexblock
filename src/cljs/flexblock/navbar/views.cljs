@@ -45,6 +45,13 @@
        :open     @(rf/subscribe [:navbar/options-open])
        :onClose  #(rf/dispatch [:navbar/set-options-open false])}
       [material/MenuItem
+       {:on-click (fn []
+                    (rf/dispatch [:navbar/set-options-open false])
+                    (rf/dispatch [:theme/toggle]))}
+       (case @(rf/subscribe [:theme])
+         :dark  "Light Theme"
+         :light "Dark Theme")]
+      [material/MenuItem
        {:onClick (fn []
                    (rf/dispatch [:users/set-password-modal
                                  @(rf/subscribe [:login/user])])

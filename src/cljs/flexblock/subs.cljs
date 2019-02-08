@@ -9,3 +9,8 @@
             [flexblock.snackbar.subs]
             [flexblock.users.subs]
             [re-frame.core :as rf]))
+
+(rf/reg-sub
+ :theme
+ (fn [db _]
+   (:theme db)))

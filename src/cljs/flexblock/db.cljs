@@ -34,6 +34,7 @@
           :users               []
           :search              ""
           :search-debounced    ""
-          :date                ""}
+          :date                ""
+          :theme               :dark}
          rooms/default-db
          (get-localstorage)))
