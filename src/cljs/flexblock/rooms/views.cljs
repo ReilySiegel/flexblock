@@ -14,20 +14,20 @@
 (defn add
   "The form for creating a new room."
   []
-  (let [title       (r/atom "")
-        number      (r/atom "")
-        capacity    (r/atom "")
-        description (r/atom "")
-        date        (r/atom "")
-        time        (r/atom [])
+  (let [title       (rf/subscribe [:rooms.form/title])
+        number      (rf/subscribe [:rooms.form/number])
+        capacity    (rf/subscribe [:rooms.form/capacity])
+        description (rf/subscribe [:rooms.form/description])
+        date        (rf/subscribe [:rooms.form/date])
+        time        (rf/subscribe [:rooms.form/time])
         open        (rf/subscribe [:rooms/modal-open])
         reset-fn    (fn []
-                      (reset! title "")
-                      (reset! capacity "")
-                      (reset! number "")
-                      (reset! description "")
-                      (reset! date "")
-                      (reset! time []))]
+                      (rf/dispatch [:rooms.form/set-title ""])
+                      (rf/dispatch [:rooms.form/set-number ""])
+                      (rf/dispatch [:rooms.form/set-capacity ""])
+                      (rf/dispatch [:rooms.form/set-description ""])
+                      (rf/dispatch [:rooms.form/set-date ""])
+                      (rf/dispatch [:rooms.form/set-time []]))]
     (fn []
       [material/Dialog
        {:open    @open
@@ -46,33 +46,38 @@
             :autoFocus true
             :fullWidth true
             :value     @title
-            :onChange  #(reset! title (-> % .-target .-value))}]]
+            :onChange  #(rf/dispatch [:rooms.form/set-title
+                                      (interop/event->value %)])}]]
          [material/Grid {:item true :xs 12 :sm 6}
           [material/TextField
            {:label     "Room Number"
             :fullWidth true
             :value     @number
-            :onChange  #(reset! number (-> % .-target .-value))}]]
+            :onChange  #(rf/dispatch [:rooms.form/set-number
+                                      (interop/event->value %)])}]]
          [material/Grid {:item true :xs 12 :sm 6}
           [material/TextField
            {:label     "Max Capacity"
             :fullWidth true
             :value     @capacity
             :type      :number
-            :onChange  #(reset! capacity (-> % .-target .-value))}]]
+            :onChange  #(rf/dispatch [:rooms.form/set-capacity
+                                      (interop/event->value %)])}]]
          [material/Grid {:item true :xs 12}
           [material/TextField
            {:label     "Description"
             :fullWidth true
             :value     @description
-            :onChange  #(reset! description (-> % .-target .-value))}]]
+            :onChange  #(rf/dispatch [:rooms.form/set-description
+                                      (interop/event->value %)])}]]
          [material/Grid {:item true :xs 12 :sm 6}
           [material/TextField
            {:label           "Date"
             :fullWidth       true
             :type            :date
             :value           @date
-            :onChange        #(reset! date (-> % .-target .-value))
+            :onChange        #(rf/dispatch [:rooms.form/set-date
+                                            (interop/event->value %)])
             :InputLabelProps {:shrink true}}]]
          [material/Grid {:item true :xs 12 :sm 6}
           [material/TextField
@@ -96,8 +101,8 @@
                                   :label time
                                   :style {:margin "0.25em"}}])]))}
             :value       @time
-            :onChange    #(reset! time
-                                  (-> % .-target .-value js->clj))}
+            :onChange    #(rf/dispatch [:rooms.form/set-time
+                                        (interop/event->value %)])}
            (for [[time label] rooms/sorted-times]
              [material/MenuItem
               {:key   time
@@ -297,18 +302,52 @@
             description]]]]]])))
 
 (defn fab []
-  (when (and
-         (:teacher @(rf/subscribe [:login/user]))
-         (not (str/blank? @(rf/subscribe [:login/token]))))
-    [material/Zoom
-     {:in true}
-     [material/Fab
-      {:color   :secondary
-       :onClick #(rf/dispatch [:rooms/set-modal-open true])
-       :style   {:position :fixed
-                 :right    "2em"
-                 :bottom   "2em"}}
-      [:i.material-icons :add]]]))
+  (let [open (r/atom false)]
+    (fn []
+      (let [user  @(rf/subscribe [:login/user])
+            rooms (:rooms user)]
+        (when (and
+               (:teacher user)
+               (not (str/blank? @(rf/subscribe [:login/token]))))
+          [material/Zoom
+           {:in true}
+           [material/SpeedDial
+            {:ariaLabel    "Add Room"
+             :open         @open
+             :ButtonProps  {:color :secondary
+                            :onClick
+                            #(rf/dispatch [:rooms/set-modal-open true])}
+             :icon         (r/as-element [material/Icon :add])
+             :onMouseEnter #(reset! open true)
+             :onMouseLeave #(reset! open false)
+             :style        {:position :fixed
+                            :right    "2em"
+                            :bottom   "2em"}}
+            (for [room (->> rooms
+                            ;; Ensure that titles are unique, so that
+                            ;; rooms with the same content in
+                            ;; different blocks are not duplicated.
+                            (group-by :title)
+                            vals
+                            (map first)
+                            ;; Only show five items.
+                            (take 5))]
+              [material/SpeedDialAction
+               {:key          (:id room)
+                :icon         (r/as-element [material/Icon "file_copy"])
+                :tooltipTitle (:title room)
+                :ButtonProps
+                {:onClick
+                 (fn []
+                   (rf/dispatch-sync [:rooms.form/set-title
+                                      (:title room)])
+                   (rf/dispatch-sync [:rooms.form/set-number
+                                      (:room-number room)])
+                   (rf/dispatch-sync [:rooms.form/set-capacity
+                                      (:max-capacity room)])
+                   (rf/dispatch-sync [:rooms.form/set-description
+                                      (:description room)])
+                   (rf/dispatch-sync [:rooms/set-modal-open true]))}}])]])))))
 
 (defn grid
   "Returns a grid of rooms."

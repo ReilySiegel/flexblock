@@ -19,6 +19,4 @@ figwheel_server.log
 package-lock.json
 yarn.lock
 node_modules
-/resources/public/js/cljs-runtime
-/resources/public/js/app.js
-/resources/public/js/manifest.edn
+/resources/public/js
