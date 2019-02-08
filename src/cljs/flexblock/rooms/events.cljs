@@ -146,3 +146,33 @@
  :rooms/set-modal-open
  (fn [db [_ open?]]
    (assoc db :rooms/modal-open open?)))
+
+(rf/reg-event-db
+ :rooms.form/set-title
+ (fn [db [_ x]]
+   (assoc-in db [:rooms/form :title] x)))
+
+(rf/reg-event-db
+ :rooms.form/set-number
+ (fn [db [_ x]]
+   (assoc-in db [:rooms/form :number] x)))
+
+(rf/reg-event-db
+ :rooms.form/set-capacity
+ (fn [db [_ x]]
+   (assoc-in db [:rooms/form :capacity] x)))
+
+(rf/reg-event-db
+ :rooms.form/set-description
+ (fn [db [_ x]]
+   (assoc-in db [:rooms/form :description] x)))
+
+(rf/reg-event-db
+ :rooms.form/set-date
+ (fn [db [_ x]]
+   (assoc-in db [:rooms/form :date] x)))
+
+(rf/reg-event-db
+ :rooms.form/set-time
+ (fn [db [_ x]]
+   (assoc-in db [:rooms/form :time] x)))

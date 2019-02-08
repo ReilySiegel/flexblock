@@ -2,11 +2,12 @@
   (:require [clojure.string :as str]))
 
 (defn event->value
-  "Calls (-> event .-target .-vaule)."
+  "Calls (-> event .-target .-vaule clj->js)."
   [event]
   (-> event
       .-target
-      .-value))
+      .-value
+      clj->js))
 
 (defn str->date
   "Converts a date string in ISO8601 format to a js date object."

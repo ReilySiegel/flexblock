@@ -1,5 +1,6 @@
 (ns flexblock.db
-  (:require [cljs.reader :as reader]))
+  (:require [cljs.reader :as reader]
+            [flexblock.rooms.db :as rooms]))
 
 (defn set-localstorage!
   "Sets the LocalStorage key 'flexblock' with the value of (prn-str x)."
@@ -32,6 +33,7 @@
           :users/role-filter   #{:student :teacher :admin}
           :users               []
           :search              ""
-          :search-debounced ""
+          :search-debounced    ""
           :date                ""}
+         rooms/default-db
          (get-localstorage)))

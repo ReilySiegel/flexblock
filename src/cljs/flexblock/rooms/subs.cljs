@@ -58,3 +58,33 @@
  :rooms/modal-open
  (fn [db _]
    (:rooms/modal-open db)))
+
+(rf/reg-sub
+ :rooms.form/title
+ (fn [db _]
+   (get-in db [:rooms/form :title])))
+
+(rf/reg-sub
+ :rooms.form/number
+ (fn [db _]
+   (get-in db [:rooms/form :number])))
+
+(rf/reg-sub
+ :rooms.form/capacity
+ (fn [db _]
+   (get-in db [:rooms/form :capacity])))
+
+(rf/reg-sub
+ :rooms.form/description
+ (fn [db _]
+   (get-in db [:rooms/form :description])))
+
+(rf/reg-sub
+ :rooms.form/date
+ (fn [db _]
+   (get-in db [:rooms/form :date])))
+
+(rf/reg-sub
+ :rooms.form/time
+ (fn [db _]
+   (get-in db [:rooms/form :time])))

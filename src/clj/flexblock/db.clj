@@ -199,7 +199,7 @@
         user         (db/select-one User :email email)]
     (if (and passwordhash
              (h/check password  passwordhash))
-      user
+      (get-user (:id user))
       false)))
 
 (defn set-password!

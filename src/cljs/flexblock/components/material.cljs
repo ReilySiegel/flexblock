@@ -5,6 +5,7 @@
             ["@material-ui/core" :as material]
             ["@material-ui/core/colors" :as material-colors]
             ["@material-ui/core/styles" :as material-styles]
+            ["@material-ui/lab" :as material-lab]
             [reagent.core :as r]
             [reagent.impl.template :as rtpl]))
 
@@ -63,6 +64,9 @@
 (defn material-component [key]
   (r/adapt-react-class (aget material (name key))))
 
+(defn material-lab-component [key]
+  (r/adapt-react-class (aget material-lab (name key))))
+
 (def AppBar (material-component :AppBar))
 (def Avatar (material-component :Avatar))
 (def Button (material-component :Button))
@@ -84,6 +88,7 @@
 (def FormControlLabel (material-component :FormControlLabel))
 (def Grid (material-component :Grid))
 (def Grow (material-component :Grow))
+(def Icon (material-component :Icon))
 (def IconButton (material-component :IconButton))
 (def InputLabel (material-component :InputLabel))
 (def LinearProgress (material-component :LinearProgress))
@@ -98,6 +103,8 @@
 (def Select (material-component :Select))
 (def Snackbar (material-component :Snackbar))
 (def Slide (material-component :Slide))
+(def SpeedDial (material-lab-component :SpeedDial))
+(def SpeedDialAction (material-lab-component :SpeedDialAction))
 (def Tab (material-component :Tab))
 (def Tabs (material-component :Tabs))
 (def Toolbar (material-component :Toolbar))
