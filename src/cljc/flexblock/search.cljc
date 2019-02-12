@@ -59,9 +59,11 @@
          (= word-metaphone
             search-metaphone)
          metaphone-match-score
+
          ;; Partial metaphone match.
-         (not (apply distinct? (concat word-metaphone
-                                       search-metaphone)))
+         (some true? (for [x word-metaphone
+                           y search-metaphone]
+                       (= x y)))
          patial-metaphone-score
 
          ;; No match.
