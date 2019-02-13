@@ -4,6 +4,7 @@
   (:require [day8.re-frame.http-fx]
             [clojure.string :as str]
             [flexblock.db :as db]
+            [flexblock.about.events]
             [flexblock.login.events]
             [flexblock.navbar.events]
             [flexblock.reminder.events]

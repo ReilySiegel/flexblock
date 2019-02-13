@@ -61,7 +61,12 @@
        {:onClick (fn []
                    (rf/dispatch [:navbar/set-options-open false])
                    (rf/dispatch [:logout]))}
-       "Log Out"]]]))
+       "Log Out"]
+      [material/MenuItem
+       {:onClick (fn []
+                   (rf/dispatch [:navbar/set-options-open false])
+                   (rf/dispatch [:about/open? true]))}
+       "About"]]]))
 
 (defn navbar []
   (let [user  (rf/subscribe [:login/user])

@@ -81,6 +81,7 @@
 (def Dialog (material-component :Dialog))
 (def DialogActions (material-component :DialogActions))
 (def DialogContent (material-component :DialogContent))
+(def DialogContentText (material-component :DialogContentText))
 (def DialogTitle (material-component :DialogTitle))
 (def Drawer (material-component :Drawer))
 (def Fab (material-component :Fab))

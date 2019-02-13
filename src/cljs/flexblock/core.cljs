@@ -22,6 +22,7 @@
    [flexblock.effects]
    [flexblock.keybinds :as keybinds]
    ;; Load components that need to be displayed on every page.
+   [flexblock.about.views :as about]
    [flexblock.login.views :as login]
    [flexblock.navbar.views :as navbar]
    [flexblock.snackbar.views :as snackbar]
@@ -33,7 +34,7 @@
 
 (def pages
   {:rooms #'rooms/page
-   :users #'users/page})
+   :users #'users.views/page})
 
 (defn page []
   [material/MuiThemeProvider
@@ -48,6 +49,7 @@
     [login/modal]
     [(pages @(rf/subscribe [:page]))]
     [users.views/password-modal]
+    [about/modal]
     [snackbar/snackbar]]])
 
 (defn mount-components []

@@ -1,5 +1,6 @@
 (ns flexblock.db
   (:require [cljs.reader :as reader]
+            [flexblock.about.db :as about]
             [flexblock.rooms.db :as rooms]))
 
 (defn set-localstorage!
@@ -36,5 +37,6 @@
           :search-debounced    ""
           :date                ""
           :theme               :dark}
+         about/default-db
          rooms/default-db
          (get-localstorage)))
