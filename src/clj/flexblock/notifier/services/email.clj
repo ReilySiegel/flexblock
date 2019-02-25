@@ -18,7 +18,7 @@
      :body    message}))
 
 
-(defn send [message]
+(defn send-email! [message]
   (try (postal/send-message (:smtp email) message)
        (catch Exception e (println e))))
 
@@ -26,4 +26,4 @@
   (->>
    event
    create
-   send))
+   send-email!))
