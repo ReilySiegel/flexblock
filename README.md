@@ -1,6 +1,10 @@
 # Flexblock
 
-# Welcome to Flexblock!
+## WARNING:
+After I graduated, my school never expressed further interest in developing this
+project. As such, this repository has been archived.
+
+## Welcome to Flexblock!
 
 Flexblock is an application to manage student-teacher meetings, either
 during its namesake Flexblock, before school, or after school.
